@@ -2,95 +2,123 @@
 
 ## Current Milestone
 
-Phase 0 — Project Analysis and Scope Validation.
+Phase 0 Repair — Documentation and Governance Consistency Repair.
 
 ## Status
 
-Complete for supervisor review. No architecture design, application code,
-dataset selection, dependency installation, experiment, or deployment began.
+Completed by Codex and pending external supervisor review. This does **not**
+mean Phase 0 has passed. Phase 1 remains blocked and unexecuted.
 
-## Analysis Performed
+## Confirmed Starting State
 
-- Read governance, prompt, report, architecture status, execution plan, and
-  previous handoff.
-- Narrowed the proposal to a research-first audit of tabular credit-risk
-  classifiers rather than a generic prediction dashboard or enterprise platform.
-- Defined users, requirements, research questions, dataset/model/evaluation
-  criteria, XAI boundaries, risks, MVP, strong semester scope, and deferrals.
+- The latest relevant commit was `8c54b98 docs: add current task workflow`.
+- The user-provided `docs/CURRENT_TASK.md` was the only starting uncommitted
+  change and remains the current authorized task.
+- Repository inspection found only planning/governance documents: no dataset,
+  EDA, dependency, application code, model artifact, test suite, experiment,
+  API, frontend, database, deployment, or approved architecture.
+- The first Phase 0 attempt had not passed external review.
 
-## Files Changed
+## Exact Files Modified
 
+- `AGENTS.md`
 - `docs/PROJECT_REPORT.md`
+- `docs/EXECUTION_PLAN.md`
 - `docs/SUPERVISOR_HANDOFF.md`
 
-No application, architecture, execution-plan, dependency, infrastructure, or
-dataset files were changed.
+No files were created. `docs/CURRENT_TASK.md` was not edited.
 
-## Important Decisions and Why
+## Planning Inconsistencies Repaired
 
-- Research and reproducibility precede APIs, dashboards, databases, tracking,
-  and deployment, so platform work cannot hide invalid or absent evidence.
-- Credit-risk tabular classification is a laptop-feasible reference use case,
-  not a banking deployment claim.
-- Regularised Logistic Regression is the interpretable baseline, with only a
-  limited set of nonlinear comparators to make a real trade-off study.
-- Fairness analysis is conditional on legitimate audit attributes and adequate
-  subgroup support; no fairness result is promised.
-- Technology choices (including FastAPI, MLflow, PostgreSQL, React/Next,
-  Docker, XAI/counterfactual libraries, and MLP) remain unfinalized.
+- Replaced architecture-first planning with research-first sequence: Phase 0,
+  Phase 0 Repair, blocked Phase 1 data audit, then architecture/technology and
+  later implementation planning.
+- Distinguished Research MVP, later semester application/demo scope, and
+  enterprise extensions.
+- Made explanation stability part of the complete research question but not an
+  initial Research MVP completion requirement; it is required before claiming
+  the complete stability-inclusive question is answered.
+- Added a measurable Phase 0 record and precise status categories without
+  rewriting history to claim external approval.
+- Corrected the report/handoff wording so Phase 0 is proposed pending review.
 
-## Unresolved Questions
+## Governance Changes
 
-1. Which public dataset meets provenance/licence, target, semantics, leakage,
-   class-support, and possible subgroup-audit requirements?
-2. What are the positive class, error-cost framing, primary metric, and correct
-   split strategy (stratified, temporal, or group-aware)?
-3. Which features are prediction, audit-only, excluded, immutable, mutable, or
-   constrained?
-4. Which minimal XAI/counterfactual tools are compatible, reproducible, and
-   justified after model/data review?
-5. Are stability and fairness feasible in the approved schedule after MVP work?
+`AGENTS.md` now permanently governs `docs/CURRENT_TASK.md`: one approved task,
+mandatory reading before work, task boundaries, non-override of permanent rules
+or `prompt.txt`, and supervisor review before progression. It also records that
+Codex must not commit, push, merge, mutate branches, rewrite history, or make
+equivalent remote Git mutations unless the user explicitly changes the policy;
+Codex recommends a commit message and the user performs Git operations.
 
-## Risks Identified
+## Checks Executed
 
-Target/temporal/preprocessing/entity leakage; class imbalance; unrepresentative
-public data; causal or fairness overclaims; implausible counterfactuals;
-underpowered subgroup analysis; XAI dependency compatibility; premature
-infrastructure; and premature microservice/abstraction complexity.
+Starting-state checks:
 
-## Verification Performed
+- `git status --short` → `M docs/CURRENT_TASK.md` only.
+- `git log -1 --oneline` → `8c54b98 docs: add current task workflow`.
+- `git diff --name-status` → `M docs/CURRENT_TASK.md` only.
+- `rg --files` → only repository planning/governance files; no implementation,
+  dataset, or test files.
 
-- Cross-checked documentation against `AGENTS.md`, `prompt.txt`,
-  `docs/ARCHITECTURE.md`, and `docs/EXECUTION_PLAN.md`.
-- Inspected repository files: there is no application source, test suite,
-  dataset, or implementation artifact.
-- No automated tests were applicable or run. No ML experiment or metric exists.
+Final documentation-only checks:
 
-## Documentation Changed
+- `git diff --check` → exit code 0; no whitespace errors (Git issued only LF to
+  CRLF working-copy warnings for the four edited documents).
+- `git status --short` and `git diff --name-only` → exactly `AGENTS.md`,
+  `docs/CURRENT_TASK.md`, `docs/EXECUTION_PLAN.md`,
+  `docs/PROJECT_REPORT.md`, and `docs/SUPERVISOR_HANDOFF.md` modified.
+- `git diff -- prompt.txt docs/ARCHITECTURE.md` → no output; both are unchanged.
+- Scope/status searches found research-first order, explicit Research MVP /
+  semester application / enterprise extension labels, blocked Phase 1,
+  conditional fairness, and no claim that stability is implemented or that
+  Phase 0 is supervisor-approved.
+- Final changed-file and tree inspection found no dataset, code, dependency,
+  architecture, experiment, test, or future-task artifact.
 
-`docs/PROJECT_REPORT.md` now records planning facts, alternatives, constraints,
-and explicit conditional/deferred work. `docs/ARCHITECTURE.md` and
-`docs/EXECUTION_PLAN.md` remain intentionally unchanged.
+No automated tests were applicable or run; no ML experiments or metrics exist.
 
-## Evidence the Supervisor Should Inspect
+## Unresolved Issues
 
-Review the report sections Scope, Users, and Assumptions; Research Questions;
-Dataset Requirements; Planned ML and Evaluation Strategy; Explainability and
-Audit Requirements; Risks and Controls; Scope Boundaries; and Decisions to
-Finalize Before Implementation. Confirm that architecture remains unapproved
-and later execution-plan phases remain provisional.
+- The supervisor must decide whether this repair satisfies the prior Phase 0
+  review failure.
+- Dataset selection, target semantics, feature roles, leakage/split choice,
+  metric choice, fairness feasibility, and technology decisions remain
+  deliberately unresolved and are not authorized here.
 
 ## Known Limitations
 
-No data-based conclusion, technology selection, implementation, experiment,
-architecture approval, or production validation exists. Scope depends on finding
-a vetted dataset that supports the study.
+There is no selected dataset, evidence-producing prototype, architecture,
+implementation, experiment, or production validation. The planning scope is
+proposed only and cannot establish empirical performance, stability, or
+fairness claims.
 
-## Suggested Next Step
+## Architecture Status
 
-If the supervisor approves Phase 0, conduct a separate dataset-selection and
-data-audit milestone before architecture or implementation. Resolve provenance,
-target, feature roles, leakage, splitting, and fairness feasibility there.
+`docs/ARCHITECTURE.md` is unchanged, unapproved, and intentionally contains no
+implementation architecture.
 
-The suggested next step is advisory only; the external supervisor determines
-whether the project advances.
+## Documentation Updated
+
+- `AGENTS.md`: permanent current-task and Git-authority rules.
+- `PROJECT_REPORT.md`: task authority, scoped MVP vocabulary, research-first
+  reason, stability status, and Phase 0 repair learning record.
+- `EXECUTION_PLAN.md`: research-first order, Phase 0 measurable acceptance
+  record, blocked Phase 1, and scope terminology.
+- This handoff: current repair evidence and approval boundary.
+
+## Evidence the Supervisor Should Inspect
+
+- Current-task and Git-authority section in `AGENTS.md`.
+- Phase 0 acceptance record, sequence, and scope vocabulary in
+  `docs/EXECUTION_PLAN.md`.
+- Scope Boundaries and Phase 0 Repair timeline entry in
+  `docs/PROJECT_REPORT.md`.
+- Final diff and final verification results for unchanged `prompt.txt`,
+  unchanged/unapproved `docs/ARCHITECTURE.md`, and absence of later-phase work.
+
+## Suggested Next Action
+
+External supervisor review only. The user should inspect the working tree and,
+if satisfied, perform the commit/push. No subsequent phase is authorized until
+a replacement `docs/CURRENT_TASK.md` is externally approved.

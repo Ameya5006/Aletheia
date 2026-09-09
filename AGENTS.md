@@ -619,3 +619,28 @@ The external supervisor determines whether the project advances.
 
 Do not use SUPERVISOR_HANDOFF.md as a substitute for updating
 PROJECT_REPORT.md or ARCHITECTURE.md.
+
+# Current Task and Git Authority
+
+`docs/CURRENT_TASK.md` contains exactly one currently approved Codex milestone
+or repair task. Codex must read it before beginning project work. The external
+supervisor replaces its contents only when approving a different task.
+
+The current task may narrow work but cannot override the permanent safety,
+machine-learning correctness, testing, evidence-integrity, or governance rules
+in this file. It cannot silently redefine the permanent original project vision
+in `prompt.txt`. Completing a task does not authorize a subsequent milestone:
+work must stop at the task's stated boundary and await external supervisor
+review before progression.
+
+Document responsibilities are deliberately narrow: this file contains permanent
+operating and engineering rules; `prompt.txt` preserves the original project
+vision; `CURRENT_TASK.md` authorizes only the current task; `PROJECT_REPORT.md`
+records completed work and learning; `ARCHITECTURE.md` records only approved
+architecture; `EXECUTION_PLAN.md` records approved sequencing and milestone
+definitions of done; and `SUPERVISOR_HANDOFF.md` is concise evidence for review.
+
+Codex must not commit, push, merge, create or move branches, rewrite Git
+history, or make equivalent remote Git mutations unless the user explicitly
+changes this policy. At the end of a completed task, Codex should recommend a
+commit message; the user performs commit and push operations.

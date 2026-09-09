@@ -46,6 +46,16 @@ subgroup support exist; protected attributes must not be inferred from proxies.
 The positive class, threshold, and decision/error-cost framing cannot be chosen
 before the dataset is understood.
 
+### Permanent Vision and Current Authorization
+
+`prompt.txt` preserves Aletheia's permanent original vision. It describes the
+complete platform ambition, not permission to implement every feature now.
+`docs/CURRENT_TASK.md` authorizes exactly one bounded task and cannot override
+the project's safety, ML-validity, evidence, or governance rules. At this point
+the authorized work is a Phase 0 documentation repair; Phase 1 and all later
+work remain blocked pending external review. This distinction prevents a broad
+vision from being mistaken for an approved implementation plan.
+
 ## Functional Requirements
 
 The planned research prototype must:
@@ -198,22 +208,37 @@ and later privacy-conscious audit design.
 
 ## Scope Boundaries
 
-**MVP — research prototype:** one documented dataset; leakage-safe reproducible
-training; Logistic Regression plus two nonlinear comparators; cross-validated
-selection and held-out evaluation; global/local explanations; constrained
-counterfactual proof of concept; experiment metadata; and concise
-comparison/prediction-inspection presentation. Fairness belongs only if data
-permits it; stability may follow once core evidence works.
+**Research MVP:** the minimum evidence-producing ML/XAI prototype: one approved
+documented dataset; leakage-safe reproducible preprocessing and splitting; an
+interpretable baseline and justified nonlinear comparators; cross-validated
+selection within training data; untouched held-out evaluation; global/local
+explanation evidence; a constrained counterfactual proof of concept; traceable
+experiment metadata; and a concise research comparison or prediction-inspection
+presentation. Fairness remains conditional on legitimate audit attributes,
+adequate subgroup support, and appropriate methodology.
 
-**Strong semester scope:** verified stability analysis, conditional fairness,
-an MLP only if useful, experiment/model metadata persistence, small API and
-reviewer dashboard, basic audit records, tests, and reproducible local container
-demonstration—only after they can show real results.
+Explanation stability remains part of Aletheia's complete research question but
+is not required to complete the initial Research MVP. It is required before
+claiming that the complete research question, including stability, has been
+answered. Its perturbation rules, eligible features, sample selection,
+background/reference data, similarity metrics, and boundary-crossing treatment
+must follow dataset inspection; it is not implemented, measured, or validated.
 
-**Explicitly postponed enterprise extensions:** RBAC/multi-user administration,
-CI/CD, cloud deployment, Kubernetes, microservices, approval workflows,
-scheduled retraining, production registry, drift/explanation-drift monitoring,
-incidents, real-lender integrations, large deep learning, and local LLMs.
+**Semester application/demo scope:** a later usable application built only after
+reliable Research MVP evidence exists. Subject to separate approval and
+justification, it may add a minimal API, reviewer-facing interface, experiment
+tracking or appropriate persistence, targeted tests, audit records, and local
+reproducibility/containerization. FastAPI, MLflow, PostgreSQL, React/Next, and
+Docker are unselected technologies. Finishing the Research MVP neither completes
+the original platform vision nor automatically completes this application scope;
+application features must present verified research evidence rather than conceal
+weak methodology.
+
+**Enterprise extensions:** explicitly deferred are unnecessary early
+microservices, Kubernetes, RBAC, CI/CD, cloud infrastructure, approval
+workflows, production monitoring, scheduled retraining, production registry,
+drift/explanation-drift monitoring, real-lender integration, large deep
+learning, and local LLMs.
 
 ## Decisions to Finalize Before Implementation
 
@@ -250,7 +275,18 @@ boundaries, risks, MVP, and deferred work. Concepts: supervised tabular
 classification, held-out evaluation, cross-validation, leakage,
 intrinsic/post-hoc interpretability, counterfactuals, stability, and subgroup
 measurement. Result: a scope exists for supervisor approval; no implementation
-started.
+started. The work is proposed and documented, but Phase 0 has **not** passed
+external supervisor review.
+
+### Phase 0 Repair — Documentation and Governance Consistency Repair
+
+This repair followed an external `FAIL — FIX BEFORE CONTINUING` finding on the
+first Phase 0 attempt. It reconciles scope terminology, research-first order,
+stability status, task authority, Git authority, and the measurable Phase 0
+record. A Definition of Done and external approval gate matter because written
+planning is only trustworthy when it names the evidence needed to advance and
+does not silently authorize later work. This repair is pending external review;
+it does not begin Phase 1.
 
 ## Technical Decisions
 
@@ -337,8 +373,9 @@ implementation, architecture approval, or production validation exists.
 
 ## Future Work
 
-**Useful next step, subject to approval:** dataset selection and data/leakage
-audit, then architecture design and a reproducible baseline.
+**Useful next step, subject to approval:** external review of the Phase 0 repair.
+If approved and authorized through a replacement current task, dataset selection
+and data/leakage audit precede architecture design and a reproducible baseline.
 
 **Later extensions:** richer fairness/robustness methodology, monitoring,
 deployment workflows, multi-user controls, integrations, and cloud operations.
