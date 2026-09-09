@@ -32,11 +32,13 @@ measure selected properties, not legal compliance or universal fairness.
 
 ## Scope, Users, and Assumptions
 
-**Established scope:** South German Credit is the selected public tabular
-classification dataset, pending external review of Phase 1. It supports a small
-laptop-feasible classical-model study and evidence-backed model audit. No model,
-experiment, metric, application, architecture, or deployment exists yet. Deep
-learning is optional, not central.
+**Established scope:** South German Credit is externally supervisor-approved as
+suitable for the academic Research MVP. That approval does not establish model
+performance, calibration, fairness, stability, production suitability, or
+modern-lending validity. The proposed Phase 2 architecture supports a small
+laptop-feasible classical-model study and evidence-backed audit; it remains
+pending external review. No model, experiment, metric, application, or
+deployment exists yet. Deep learning is optional, not central.
 
 **Assumptions requiring validation:** the selected data must have a clear
 target, source/licence, data dictionary, sufficient observations/minority-class
@@ -52,8 +54,9 @@ before the dataset is understood.
 complete platform ambition, not permission to implement every feature now.
 `docs/CURRENT_TASK.md` authorizes exactly one bounded task and cannot override
 the project's safety, ML-validity, evidence, or governance rules. At this point
-the authorized work is Phase 1 dataset selection/audit; architecture and all
-later work remain blocked pending external review. This distinction prevents a
+the authorized work is Phase 2 system design only. Its proposed architecture
+does not authorize implementation; every later milestone remains blocked
+pending external review and a replacement task. This distinction prevents a
 broad vision from being mistaken for an approved implementation plan.
 
 ## Functional Requirements
@@ -129,6 +132,8 @@ support.
 ### Phase 1 Dataset Decision
 
 South German Credit was selected after comparing four official UCI candidates.
+Phase 1 and dataset suitability for the academic Research MVP are externally
+supervisor-approved, within the limitations above.
 It passed the gates for traceable provenance, CC BY 4.0 usage, explicit contract-
 compliance target, corrected feature meanings, modest minority-class support,
 laptop size, and constrained counterfactual semantics. The official raw file
@@ -274,27 +279,68 @@ learning, and local LLMs.
 
 ## Decisions to Finalize Before Implementation
 
-Phase 1 selects the dataset and raw adverse label, but does not finalize a
-business threshold, primary model metric, future pipeline, or application
-architecture. Before modelling, later approved work must resolve the exact
-prediction feature set, treatment of categorical expert scores, observation
-cutoffs for concurrent-credit fields, counterfactual dependencies, folds/seed,
-and final-test protocol. XAI/counterfactual libraries, MLP inclusion,
-visualisation, FastAPI, MLflow, PostgreSQL, React/Next, Docker, and deployment
-remain unselected. Reproducible research still precedes platform infrastructure.
+Phase 2 selects a research-first modular monolith, Python 3.12, pandas,
+scikit-learn, standard TOML/JSON configuration/artifacts, pytest, Ruff,
+Matplotlib/Markdown reporting, and an immutable local run-store concept. These
+are design choices pending external review; exact compatible package versions
+and dependency files remain for an authorized implementation task.
+
+Before modelling, later approved work must resolve or exclude bishkred; freeze
+the prediction feature set and categorical/ordinal treatment; set split
+seed/folds; predeclare the primary metric, threshold rule and error-cost
+interpretation; bound model search; and approve serialization. SHAP and a small
+custom counterfactual search are provisional. DiCE, FastAPI, frontend
+frameworks, MLflow, databases, Docker, deployment, authentication, and enterprise
+infrastructure remain deferred or unselected.
 
 ## System Architecture
 
-Not finalized. No module layout, public API, database schema, technology stack,
-deployment design, or infrastructure commitment has been approved.
+**Proposed pending external supervisor review:** a research-first modular
+monolith. One Python research core will contain small components for verified
+data acquisition/loading, schema/target/feature policy, deterministic splitting,
+preprocessing, model training/evaluation, audit methods, and immutable local
+experiment evidence. A CLI/report adapter will eventually compose it. Future
+API and UI layers may call the same use cases and load explicit validated runs;
+they may not duplicate preprocessing, feature-code mapping, model inference, or
+explanation logic.
+
+Dependencies point from delivery/orchestration toward the research modules and
+simple contracts. Research code must not import HTTP, UI, database, or deployment
+frameworks. The exact fitted preprocessing/model pipeline, transformed-feature
+map, feature-policy version, and run hash bind training, inference, and
+explanations together. Local run directories are staged, checksummed, validated,
+published atomically, and never overwritten; reports consume them without
+implicitly rerunning training.
+
+The proposed components, inputs/outputs/callers/prohibitions, failure modes,
+tests, technology matrix, and diagrams are in docs/ARCHITECTURE.md. The major
+decision and alternatives are recorded in
+docs/decisions/0001-research-first-modular-monolith.md. Neither document is
+implementation.
+
+Important planned failure boundaries are checksum/schema/category mismatch,
+invalid target or forbidden feature roles, split overlap, preprocessing fitted
+outside training data, incompatible pipeline artifacts, explanation/run
+mismatch, invalid or absent counterfactuals, and insufficient fairness support.
+Future unit/data/integration tests will exercise these refusals plus target
+mapping, deterministic splits, transformed-feature consistency, metric fixtures,
+atomic artifact publication, exact explainer association, and constraint guards.
 
 ## Data Flow
 
-No implemented flow exists. The future analytical flow is: documented dataset
-→ schema/leakage review → training-only preprocessing → cross-validated
-candidate evaluation → one held-out evaluation → defined explanation,
-counterfactual, stability, and conditional fairness analysis → traceable report.
-The separation prevents inflated results from unavailable prediction-time data.
+No implemented flow exists. The proposed training flow is: official source →
+checksum verification → immutable raw reference → schema/semantic validation →
+explicit adverse-target mapping → feature-role enforcement → fixed stratified
+membership → fold-local preprocessing and bounded validation → final training
+fit → one held-out evaluation → predeclared XAI/audit analysis → immutable run
+artifacts → human-readable report. Only training folds fit transforms; the
+held-out set cannot choose models or settings. Audit-only columns stay aligned
+by a non-feature row key.
+
+The future inference flow is: raw request → the same schema and feature policy →
+the exact frozen preprocessing/model pipeline → score/prediction → optional
+exact-run explanation/counterfactual → audit event → response. Inference never
+refits or independently interprets source codes.
 
 ## Implementation Timeline
 
@@ -323,7 +369,7 @@ supervisor-approved.
 
 **What was accomplished:** Four official UCI candidates were compared using
 explicit gates, their permitted raw files were inspected outside the repository,
-and South German Credit was selected pending supervisor review. Its identity,
+and South German Credit was selected and audited. Its identity,
 structure, target, feature roles, leakage risks, split direction, and conditional
 fairness/counterfactual feasibility were documented.
 
@@ -335,8 +381,33 @@ constraints rather than guesses.
 bias, outcome timing, audit-only versus prediction features, leakage review,
 stratified splitting, subgroup support, and counterfactual feasibility.
 
-**Result:** Phase 1 is completed by Codex and pending external supervisor review;
-architecture and implementation remain blocked.
+**Result:** Phase 1 and South German Credit's academic Research MVP suitability
+are externally supervisor-approved. The approval does not validate any future
+model or real-lending use.
+
+### Phase 2 — System Architecture, Technology Selection, and Roadmap
+
+**What was accomplished:** A proposed research-first modular-monolith design was
+documented with component contracts, dependency direction, shared
+training/inference preprocessing, dataset invariants, local artifact manifests,
+XAI/counterfactual/stability/fairness boundaries, a minimal technology matrix,
+planned repository structure, tests/errors/security, a gated roadmap, and one
+ADR.
+
+**Why this came now:** The approved data audit supplies the target, feature
+roles, split limitations, and semantic constraints needed to design correct
+boundaries. Designing them earlier would have encoded guesses.
+
+**Alternatives/trade-offs:** Notebook-centric work was rejected as the canonical
+pipeline because of hidden state; a heavily layered architecture would add
+ceremony; framework-first web design would couple evidence to delivery; and
+microservices/MLflow/database infrastructure have no present scale or workflow
+need. The modular monolith trades built-in distributed isolation and query
+features for simplicity, inspectability, and one source of ML truth.
+
+**Result:** Phase 2 is completed by Codex and pending external supervisor review.
+No proposed package, dependency, artifact directory, test, or application was
+created, and implementation remains blocked.
 
 ## Technical Decisions
 
@@ -355,6 +426,18 @@ when another family answers a distinct question.
 **Conditional fairness:** avoids proxy-based or underpowered claims, but the
 first study may have no fairness result.
 
+**Research-first modular monolith:** one package and process keep data, fitted
+pipeline, evaluation, and audit evidence consistent while future delivery
+adapters depend on the core. The accepted trade-off is fewer built-in
+concurrency/scale boundaries; reconsider only when real workload, team, or
+deployment evidence requires them.
+
+**Immutable local experiment artifacts before MLflow/database:** a versioned
+JSON manifest and checksummed run directory are sufficient for inspectable
+single-user research. Reports name exact runs and never trigger training.
+Reconsider when concurrent users, remote storage, query volume, or approval
+workflows appear.
+
 ## ML Experiments
 
 No ML experiments, model metrics, or model results exist. Phase 1 performed a
@@ -371,6 +454,12 @@ importantly, one sentence in the linked report appears to reverse the target
 codes; UCI's distributed code table, R reader, and observed 300/700 counts agree
 on `0=bad`, `1=good`. The lesson is to cross-check narrative documentation
 against the exact distributed artifact rather than silently choosing a label.
+
+Phase 2 identified model serialization as an architectural risk rather than
+silently selecting pickle/joblib. Such formats can execute code and are not
+supported across mismatched scikit-learn versions. The design therefore requires
+trusted checksummed artifacts, exact environment metadata, and a later
+compatibility decision between skops and a restricted local joblib fallback.
 
 ## Concepts Learned Through This Project
 
@@ -398,6 +487,22 @@ capabilities. Phase 1 uses this ordering without designing architecture.
 measure subgroup behaviour without being supplied to the classifier. In this
 audit, age, combined personal-status/sex, and foreign-worker status are proposed
 audit-only candidates; that does not make their fairness use automatically valid.
+
+**Modular monolith:** independently understandable modules run in one package
+and process. Here it prevents unnecessary distributed infrastructure while
+preserving data, ML, audit, and delivery boundaries.
+
+**Dependency direction:** outer delivery code may call the research core, but
+the core cannot import API/UI/database code. This keeps research results usable
+without a web application and prevents duplicate preprocessing.
+
+**Fitted pipeline contract:** preprocessing and the estimator form one
+versioned artifact. Training, inference, and explanations identify the same
+pipeline and feature map, preventing a separately reimplemented inference path.
+
+**Immutable run manifest:** every result records its dataset hash, target/feature
+policy, split, configuration, environment, code revision, artifact hashes, and
+limitations. Publishing a new run instead of overwriting avoids result drift.
 
 ## Project Defence and Interview Preparation
 
@@ -431,6 +536,31 @@ has no dates or entity identifiers needed for temporal/group-aware splitting.
 Stratification preserves class support; it cannot solve undisclosed repeated-
 borrower or forward-time generalisation risks.
 
+**Why a modular monolith instead of microservices?** The current research is
+single-user and laptop-bound. Networked services would add contracts,
+deployment, and failure modes without answering the research question. Small
+modules in one Python package give testable boundaries and one source of ML
+truth.
+
+**How do training and inference stay consistent?** Both use one checksummed
+fitted preprocessing/model pipeline and the same schema/feature-policy contract.
+Inference may transform and predict but must never refit or recreate encodings.
+
+**Why not start with MLflow, a database, or FastAPI?** Immutable local manifests
+already provide the traceability the Research MVP needs. Those tools become
+useful only when approved workflows require querying, concurrency, serving, or
+lifecycle management.
+
+**How are audit-only attributes kept out of predictions?** The versioned
+feature policy creates disjoint model and audit views joined only by a stable
+row key. Construction fails if audit-only, target, excluded, or unresolved
+columns enter the model matrix.
+
+**What should be inspected for Phase 2?** docs/ARCHITECTURE.md contains the
+complete design, docs/decisions/0001-research-first-modular-monolith.md records
+the decision trade-offs, docs/EXECUTION_PLAN.md contains the gates, and this
+report is the concise defence record.
+
 ## Semester Viva Preparation
 
 **Basic:** Why can accuracy be insufficient? What is leakage?
@@ -440,12 +570,15 @@ explanations differ? Why constrain counterfactuals?
 
 **Difficult:** Why can explanations vary near a decision boundary? Why can
 fairness metrics conflict? When is temporal/group-aware splitting necessary?
+How would an immutable run manifest prevent result drift? Why must an explainer
+identify the exact fitted preprocessor as well as the estimator?
 
 ## Resume Evidence
 
 Verified evidence: four official dataset candidates compared; one selected raw
-file audited at 1,000 rows × 21 columns; zero model comparisons, implemented
-XAI techniques, application tests, or deployments.
+file audited at 1,000 rows × 21 columns; one proposed architecture and one ADR
+documented pending review; zero model comparisons, implemented XAI techniques,
+application tests, or deployments.
 
 ## Limitations
 
@@ -455,12 +588,17 @@ and uses an unknown monotonic transformation for amount. Sex cannot be recovered
 cleanly from its combined field, and only 37 rows are foreign workers, so robust
 fairness analysis is not currently justified. Future results remain dataset- and
 method-bound. No model, architecture approval, or production validation exists.
+The Phase 2 design itself is unimplemented and may change after external review
+or compatibility tests. A local artifact store has limited concurrency/querying;
+cross-model explanations remain method-dependent; and dependency/version
+controls reduce but cannot eliminate reproducibility risk.
 
 ## Future Work
 
-**Useful next step, subject to approval:** external supervisor review of Phase 1
-and `docs/DATASET_AUDIT.md`. Architecture remains blocked unless a later current
-task explicitly authorizes it.
+**Useful next step, subject to approval:** external supervisor review of Phase 2,
+docs/ARCHITECTURE.md, the ADR, and the gated roadmap. If approved, a replacement
+current task may authorize only the small reproducible data-foundation
+milestone. No implementation is authorized by this report.
 
 **Later extensions:** richer fairness/robustness methodology, monitoring,
 deployment workflows, multi-user controls, integrations, and cloud operations.

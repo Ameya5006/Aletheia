@@ -2,8 +2,10 @@
 
 ## Status and Evidence Labels
 
-**Decision:** Select **South German Credit** for the proposed Aletheia Research
-MVP, pending external supervisor review of this milestone.
+**Decision (externally supervisor-approved):** **South German Credit** is
+approved as suitable for Aletheia's academic Research MVP. This approval is
+limited to dataset suitability and does not validate any model or modern-lending
+use.
 
 This document uses three evidence labels:
 

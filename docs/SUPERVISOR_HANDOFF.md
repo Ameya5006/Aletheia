@@ -2,197 +2,319 @@
 
 ## Current Milestone and Status
 
-**Phase 1 — Dataset Selection and Data Audit.** Completed by Codex and pending
-external supervisor review. This handoff is navigation evidence, not supervisor
-approval. Architecture and every implementation milestone remain blocked.
+**Phase 2 — System Architecture, Technology Selection, and Implementation
+Roadmap.**
 
-Phase 0 and its repair are recorded as externally supervisor-approved because
-the approved Phase 1 task explicitly establishes that starting state.
+Completed by Codex and **proposed pending external supervisor review**. This is
+a design milestone, not an implemented or approved architecture. Every
+implementation milestone remains blocked.
 
-## Starting Repository State
+Phase 1 is externally supervisor-approved. South German Credit is approved only
+as suitable for an academic Research MVP; this does not validate model
+performance, calibration, fairness, explanation stability, production use, or
+modern-lending validity.
 
-- Latest commit at inspection: `9f9aae2 docs: repair Phase 0 planning governance`.
-- The only starting working-tree change was the user-provided replacement of
-  `docs/CURRENT_TASK.md` with the approved Phase 1 task.
-- The tree contained planning/governance Markdown and `prompt.txt`; it contained
-  no dataset, code, dependency, notebook, model, experiment, test, application,
-  deployment, or approved architecture artifact.
+## Verified Starting State
 
-## Dataset Decision
+- Latest commit: e60d6ef docs: select and audit Aletheia dataset.
+- Starting status: only M docs/CURRENT_TASK.md, reflecting the user-installed
+  Phase 2 task.
+- The Phase 1 commit contains the selected-dataset audit and documentation.
+- ARCHITECTURE.md contained only the unapproved placeholder.
+- Repository inspection found no raw data, source package, dependency file,
+  notebook, test, split, model, experiment, API, database, frontend, container,
+  CI/CD, or deployment artifact.
 
-**Selected pending review:** South German Credit, UCI dataset 573, DOI
-`10.24432/C5QG88`.
+## Proposed Architecture
 
-- Source: `https://archive.ics.uci.edu/dataset/573/south+german+credit`
-- Official archive: `https://archive.ics.uci.edu/static/public/573/south+german+credit+update.zip`
-- Licence: CC BY 4.0. Reuse and redistribution are allowed with attribution, a
-  licence link, and an indication of changes. No raw data was added here.
-- Retrieval date: 2026-09-09.
-- Source file: `SouthGermanCredit.asc`, space-delimited text with a header;
-  47,940 bytes; SHA-256
-  `5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f`.
-- Archive: 13,130 bytes; SHA-256
-  `0b40d40eb7321693d559e247a556f88a6cc8df8489c3cb2ae084db7592584551`.
+Aletheia is designed as a **research-first modular monolith**. One future Python
+package owns dataset contracts, loading/validation, target and feature policy,
+splitting/preprocessing, training/evaluation, XAI/audit methods, and local
+experiment evidence. Small functions are preferred over ceremonial services or
+interfaces.
 
-It passed the traceable-source, licence, target, observation-unit,
-documentation/leakage-review, sample/minority support, laptop-size, provenance,
-and constrained-counterfactual gates. This choice does not imply that any
-future model will be accurate, stable, fair, causal, or suitable for lending.
+A future CLI/report adapter composes the research core. A later API and reviewer
+interface may call the same use cases and load explicit validated run artifacts;
+they must not duplicate source-code mappings, preprocessing, inference,
+explanations, or metrics. Microservices and platform infrastructure are
+deferred.
 
-Three alternatives were not selected: Default of Credit Card Clients has a
-larger, better-timed target and stronger potential audit groups, but its useful
-inputs are largely historical or lender-controlled and its raw codes contain
-undocumented categories; the old Statlog German Credit entry has known code-
-table errors and a corrected successor; Credit Approval anonymizes feature
-meanings and does not define the `+`/`-` target mapping.
+The ADR rejects notebook-only core logic, heavy Clean Architecture ceremony,
+framework-first web development, microservices, and an external experiment
+platform at this stage. The chosen trade-off favors one testable source of ML
+truth and laptop simplicity over built-in distribution, concurrency, and
+artifact querying.
 
-## Target, Observation Unit, and Computed Audit Facts
+## Key Component and Dependency Boundaries
 
-One row represents one granted credit contract/case from a 1973–1975 southern
-German bank sample, not a random application or necessarily a unique customer.
-`kredit=0` means bad/non-compliant and `kredit=1` means good/compliant according
-to the distributed code table and reader. The future adverse event must be
-mapped explicitly as raw `0`. The outcome is known after contract performance;
-the intended research prediction moment is immediately before granting, after
-proposed terms are known.
+The proposed architecture defines components for:
 
-Actual inspection found:
+- acquisition/integrity, loading, schema validation, explicit target mapping,
+  feature roles, and deterministic split membership;
+- preprocessing, model construction, training orchestration, fold-local
+  cross-validation, final fit, and one held-out evaluation;
+- manifest validation, atomic immutable artifact publication, global/local
+  explanations, counterfactual constraints/search, stability, conditional
+  fairness, and report generation; and
+- future API and UI adapters.
 
-- 1,000 rows × 21 columns: 20 predictors plus target;
-- target `0=300` (30.00%) and `1=700` (70.00%); counts sum to 1,000;
-- 0 missing cells in every column;
-- 0 exact full-row duplicates and 0 predictor-only duplicates;
-- no identifier or row date, so person uniqueness, repeated borrowers, and
-  chronological ordering cannot be verified;
-- all observed categorical codes are documented; purpose code 7 is documented
-  but absent; no constant field; foreign-worker status is near-constant at
-  37 yes and 963 no;
-- legitimate source-defined subgroup counts include personal-status/sex groups
-  of 50, 310, 548, and 92, and foreign-worker groups of 37 and 963. Only four
-  bad outcomes occur in the 37-row foreign-worker group.
+Each component in ARCHITECTURE.md states responsibility, input/output,
+dependencies/caller, prohibited work, failure modes, and planned tests.
+Dependency direction is delivery adapters → research orchestration → data/ML/
+audit/artifact modules → simple contracts. Research code does not depend on
+FastAPI, frontend, database, or deployment code. Reports read completed
+artifacts and cannot start training.
 
-The correction report's extracted prose appears to reverse target codes in one
-sentence. The exact archive's code table, R reader, and 300/700 distribution
-agree on `0=bad`, `1=good`; the discrepancy is retained in the audit rather than
-hidden.
+## Training and Inference Flows
 
-## Leakage, Feature Roles, and Split Recommendation
+Proposed training:
 
-No direct target-derived field or exact duplicate was found, but important risks
-remain: the sample contains granted credits only; bad credits were oversampled
-from an approximately 5% source prevalence to 30%; timestamps and entity IDs
-are absent; concurrent-credit/history cutoffs are not explicit; `bishkred`
-includes the current credit; amount uses an unknown monotonic transformation;
-and coded categories are expert scores rather than continuous quantities.
+official source → checksum verification → immutable raw reference → schema and
+semantic validation → explicit adverse-target mapping → feature-role
+enforcement → fixed stratified membership → fold-local preprocessing/bounded
+CV → selected final pipeline fit on all training rows → one held-out evaluation
+→ predeclared XAI/audit analyses → validated immutable run → report.
 
-Age, combined personal-status/sex, and foreign-worker status are proposed
-audit-only candidates, not prediction features. Telephone is proposed excluded
-as an obsolete socioeconomic proxy. `bishkred` remains unresolved. All other
-prediction candidates remain provisional and require later approval; none was
-selected by correlation or used for modelling.
+Only fold-training/all-training data fits transformations. The held-out
+partition cannot choose preprocessing, models, thresholds, metrics, or
+explanation settings. Training data supplies explanation background/reference
+data. Audit-only fields remain in a separate aligned row-keyed view.
 
-Recommend a future fixed-seed **stratified random split**, with one final test
-set isolated before learned preprocessing/model selection and cross-validation
-inside training data. Dates and entity IDs do not support temporal or group-
-aware splitting. This recommendation cannot eliminate undisclosed repeated-
-borrower leakage or establish forward-time generalisation. No split was created.
+Proposed inference:
 
-## Fairness and Counterfactual Feasibility
+raw request → same schema/policy → exact checksum-verified fitted
+preprocessing/model pipeline → prediction/score → optional exact-run explanation
+and constrained counterfactual → audit event → response.
 
-No fairness analysis was performed. Fairness support is weak: the source combines
-sex with personal status so sex cannot be recovered cleanly, the foreign-worker
-comparison has only 37 rows/four bad outcomes, and age has no source-defined
-grouping. Arbitrary regrouping and proxy inference are prohibited. These fields
-may support only carefully justified audit work, not a claim of fairness.
+Inference never refits, reconstructs encodings, or interprets raw German codes
+inside application code. Explanations and counterfactuals identify and invoke
+the exact pipeline used for the prediction.
 
-No counterfactual was generated. A bounded proof of concept is feasible around
-proposed amount, duration, instalment-rate band, and guarantor structure, with
-joint constraints. Protected/demographic and historical fields are immutable or
-non-actionable; purpose must not be changed to game a decision; the transformed
-amount prevents literal currency-distance claims. Any later output would explain
-model behaviour, not guaranteed real-world recourse.
+## Dataset Invariants
 
-## Files Changed
+The design fails closed on these Phase 1 facts:
 
-Codex changes:
+- raw kredit 0 = bad/non-compliant and 1 = good/compliant; adverse_event is
+  derived explicitly while raw target stays traceable;
+- target cannot enter predictors;
+- age, personal-status/sex, and foreign-worker status remain audit-only
+  candidates and separate from model inputs;
+- telephone is excluded;
+- bishkred is unresolved/default-deny;
+- categorical integer codes are not automatically continuous;
+- the file's oversampled 30% adverse rate cannot be reported as source-population
+  prevalence or population-calibrated risk;
+- transformed amount cannot be described as literal currency;
+- absent dates/entity IDs permit the current fixed stratified strategy but no
+  temporal/entity-generalisation claim; and
+- all learned transforms fit on training data only.
 
-- modified `AGENTS.md` with the authorized concise project-report clarification;
-- created `docs/DATASET_AUDIT.md`;
-- modified `docs/PROJECT_REPORT.md`;
-- modified `docs/EXECUTION_PLAN.md`;
-- rewrote `docs/SUPERVISOR_HANDOFF.md`.
+Schema, target, role, split, preprocessing, report, and counterfactual
+components each own a corresponding refusal/test boundary.
 
-Existing user change: `docs/CURRENT_TASK.md` remains modified because the user
-installed this approved task; Codex did not replace or edit it.
+## Experiment and Artifact Strategy
 
-Intentionally unchanged: `prompt.txt` and `docs/ARCHITECTURE.md`.
+The Research MVP uses planned local artifacts/runs/<run-id> directories and a
+versioned JSON manifest rather than MLflow or a database. The manifest binds
+dataset/source/hash, target and feature policy, split seed/membership,
+preprocessing/feature map, models/configuration, code/environment, validation
+and held-out results, fitted-pipeline hash/compatibility, XAI reference/cases,
+counterfactual/stability/fairness configuration, timestamps, and limitations.
 
-## Verification Performed and Exact Results
+Runs are written to staging, validated/checksummed, atomically published, and
+never overwritten. Reports and later APIs name explicit run IDs and hashes, not
+“latest.” Serialization remains provisional: evaluate skops; use joblib only as
+a trusted, checksummed, exact-environment fallback if approved.
 
-Authoritative UCI pages, DOI records, archive documentation, the linked South
-German correction report, and CC BY 4.0 terms were inspected. Four official UCI
-ZIPs were downloaded with `Invoke-WebRequest` to
-`%TEMP%\aletheia-phase1-audit`, outside the repository. Python `zipfile`
-extracted the archives; a temporary isolated environment used `xlrd 2.0.2` only
-to inspect the legacy XLS candidate. No project dependency file was changed.
+## XAI, Counterfactual, Stability, and Fairness Boundaries
 
-Tool versions: Windows PowerShell `5.1.26100.9278`, Git
-`2.53.0.windows.1`, Python `3.12.10`, and temporary `xlrd 2.0.2`.
+- **XAI:** native coefficients/tree evidence and original-feature permutation
+  importance are the selected foundation. SHAP is provisional pending bounded
+  compatibility/methodology tests; LIME/PDP are deferred. Every explanation
+  records model/pipeline, transformed-to-original feature map, output/class,
+  held-out case, training-only reference, configuration, and limitations.
+- **Counterfactuals:** a transparent custom constrained search is provisional;
+  DiCE is deferred pending compatibility and rule-coverage testing. Search
+  occurs in raw feature space and validates immutable/audit/history/mutable/
+  dependent rules before exact-pipeline scoring. Amount-duration-rate
+  dependencies, purpose prohibition, guarantor practicality, and transformed
+  amount limitations are explicit. No valid candidate is an allowed result.
+- **Stability:** later seeded valid perturbations, repeated runs, top-k overlap,
+  rank correlation and normalized attribution change are planned; boundary
+  crossings are reported separately. No threshold or result exists.
+- **Fairness:** disabled and not authorized for South German Credit. A future
+  path must check source-supported groups and cell counts before metrics,
+  preserve aligned audit-only data, represent uncertainty, and refuse weak
+  support. It cannot infer identities or return a fair/unfair verdict.
 
-Executed identity/data checks included `Get-Item`, `Get-FileHash -Algorithm
-SHA256`, and Python standard-library parsing with `csv`, `Counter`, and tuple
-duplicate checks. Recheck result: header has the 21 documented names; rows
-`1000`; columns `21`; target `{0: 300, 1: 700}`; target sum `1000`; missing
-total `0`; full duplicates `0`; predictor duplicates `0`; file/archive sizes
-and hashes match the values above. Per-column ranges/categories and subgroup-by-
-target counts are preserved in `docs/DATASET_AUDIT.md`.
+## Technology Decisions
 
-Repository checks completed after documentation edits:
+Selected for a future authorized research implementation:
 
-- `git diff --check` → exit 0, no whitespace errors; only Git LF/CRLF warnings.
-- `git diff -- prompt.txt docs/ARCHITECTURE.md` → no output; both unchanged.
-- `rg --files` and extension/status inspection → no raw data, temporary audit
-  environment, dependency file, notebook, source, model, experiment, API,
-  frontend, database, Docker, MLflow, deployment, or future-task artifact.
-- `git status --short` → the six paths listed in the final handoff/status only.
-- final changed-file inspection → Phase 1 evidence/status is internally
-  consistent; architecture and later implementation remain blocked.
+- CPython 3.12 on Windows using venv/pip;
+- pandas for labelled tabular data;
+- scikit-learn pipelines, classical models, splitting and metrics;
+- TOML via tomllib for human configuration and JSON for generated manifests;
+- small explicit schema/feature contracts rather than a validation framework;
+- pytest;
+- Ruff;
+- Matplotlib plus JSON/Markdown research reports;
+- native explanation evidence and scikit-learn permutation importance; and
+- immutable local run directories.
 
-No automated application/ML tests were applicable because neither application
-nor ML implementation exists. No ML experiment or model metric was produced.
+Current project compatibility was not tested because installation is out of
+scope. Official metadata checked on 2026-09-09 publishes Python 3.12/Windows
+support for the selected ecosystem, with permissive PSF/BSD/MIT-family licences.
 
-## Problems, Unresolved Questions, and Limitations
+Provisional: exact versions/lock format, model serialization, optional mypy,
+SHAP, and a small custom counterfactual search.
 
-Temporary tooling issues: an initially guessed South German URL returned HTTP
-404 before the official `+update` URL was used; Windows `Expand-Archive` could
-not handle the BZIP2 ZIP entries, so Python's standard library extracted them.
+Deferred/unselected: DiCE dependency, FastAPI, React/Next or another frontend,
+SQLite/PostgreSQL, MLflow/DVC, Docker, cloud/deployment, authentication/RBAC,
+microservices, XGBoost and deep learning.
 
-Unresolved for future approved work: whether `bishkred` is safely available at
-the prediction moment; exact cutoffs for concurrent/history fields; categorical
-score treatment; dependent counterfactual constraints; fixed split seed/folds;
-primary metric, threshold, and error-cost framing; and whether any fairness
-analysis can be statistically and semantically justified.
+## Planned Structure and Tests
 
-Inherited limitations: small and old data, one region/bank, granted-only
-selection bias, altered class prevalence, no dates/IDs, possible undisclosed
-repeated customers, transformed amount, and weak protected-group support. The
-data cannot validate modern lending deployment or population probabilities.
+ARCHITECTURE.md proposes—but Phase 2 did not create—configs, one
+src/aletheia package with data/ML/audit/experiment modules, focused unit/data/
+integration/end-to-end tests, ignored run artifacts, optional presentation
+notebooks, and future-only API/web directories. Only configuration, minimal
+data-foundation modules, and their tests are candidates for the next separately
+authorized milestone.
 
-## Evidence the Supervisor Should Inspect
+Planned tests cover dataset checksums/schema/target, disjoint/forbidden roles,
+categorical semantics, deterministic disjoint splits, fold-local fitting,
+training/inference transformed-feature consistency, estimator/metric contracts,
+artifact compatibility/atomicity, explainer/run association, counterfactual
+constraints, fairness guards, and later API/end-to-end flows. Phase 2 created no
+tests because it created no implementation.
 
-1. `docs/DATASET_AUDIT.md`: gates, candidate evidence, file identity, target,
-   profiles, feature table, leakage, split, fairness/counterfactual feasibility,
-   reproducibility, and sources.
-2. `docs/PROJECT_REPORT.md`: concise Phase 1 learning/defence record and honest
-   boundary between completed audit and planned modelling.
-3. `docs/EXECUTION_PLAN.md`: Phase 1 gate/status and blocked later milestones.
-4. `AGENTS.md`: only the authorized report-governance clarification.
-5. Final Git diff/status, especially unchanged `prompt.txt` and
-   `docs/ARCHITECTURE.md` and absence of raw data or implementation artifacts.
+## Proposed Roadmap
+
+Every item is blocked and requires external review plus a replacement current
+task:
+
+1. reproducible data foundation;
+2. leakage-safe dummy/logistic baseline;
+3. bounded classical comparator evaluation;
+4. global/local explanation evidence;
+5. constrained counterfactual proof of concept;
+6. explanation-stability experiment;
+7. conditional fairness authorization gate;
+8. research synthesis;
+9. later thin API;
+10. later reviewer interface/minimal persistence;
+11. optional evidence-driven enterprise extensions.
+
+The next advisory milestone is deliberately small: acquisition/checksums,
+schema/target/feature roles, deterministic split membership, and tests—no model
+training.
+
+## ADR
+
+Created docs/decisions/0001-research-first-modular-monolith.md with context,
+decision, alternatives, reasons, trade-offs, consequences, deferred decisions,
+and reconsideration conditions.
+
+## Exact Files Changed
+
+User-provided existing change:
+
+- docs/CURRENT_TASK.md — Phase 2 authorization; Codex did not replace it.
+
+Modified by Codex:
+
+- docs/DATASET_AUDIT.md — Phase 1 approval-status wording only;
+- docs/ARCHITECTURE.md — rewritten as the proposed Phase 2 design;
+- docs/EXECUTION_PLAN.md — approved history, Phase 2 gate, and blocked roadmap;
+- docs/PROJECT_REPORT.md — concise Phase 2 learning/defence record;
+- docs/SUPERVISOR_HANDOFF.md — this current handoff.
+
+Created by Codex:
+
+- docs/decisions/0001-research-first-modular-monolith.md.
+
+Intentionally unchanged: AGENTS.md, prompt.txt, README.md, and .gitignore.
+
+## Checks Actually Run
+
+Starting-state inspection:
+
+- git status --short → M docs/CURRENT_TASK.md only.
+- git log -3 --oneline → e60d6ef Phase 1 commit followed by the two Phase 0
+  documentation commits.
+- rg --files and git ls-files inspection → documentation plus .gitignore only;
+  no implementation/artifact files.
+- git show --stat e60d6ef → Phase 1 changed its five required documents and
+  created DATASET_AUDIT.md.
+
+Final design/repository checks:
+
+- git diff --check → exit 0; no whitespace errors (line-ending warnings only).
+- protected-file diff for AGENTS.md, prompt.txt, README.md, and .gitignore →
+  exit 0; unchanged.
+- git status --short → six expected modified-document entries plus the untracked
+  docs/decisions/ directory entry; the untracked-file listing resolves that
+  directory to the single expected ADR.
+- git ls-files --others --exclude-standard → only the ADR.
+- prohibited-artifact extension/path scan → 0.
+- component-contract check → all 21 required component boundaries found; each
+  table defines responsibility/I-O, dependency/caller, prohibition, failure,
+  and planned test.
+- architecture invariant checks → target mapping, role exclusions, training-only
+  fit, exact fitted pipeline, oversampling/population warning, disabled
+  fairness, delivery-to-core direction, and blocked roadmap all found.
+- document-status consistency check → Phase 1 approved; Phase 2 pending external
+  review; no implementation claim across the architecture, plan, report, audit,
+  ADR, and handoff.
+- Markdown fence check → balanced in architecture, execution plan, and ADR.
+- complete final diff inspected; only authorized documentation changed.
+
+No automated implementation tests were applicable or run. No experiment,
+metric, model, fairness result, explanation, counterfactual, or stability result
+was produced.
+
+## Unresolved Decisions
+
+bishkred treatment; final predictor/encoding policy; exact package versions and
+lock format; split seed/folds; primary metric, threshold and error costs; bounded
+model search; serialization; SHAP/background/case/grouping method;
+counterfactual constraints/cost/library; stability cases/perturbations/repeats/
+interpretation; whether fairness can be authorized; and all application,
+persistence, security, container and deployment choices.
+
+## Risks and Limitations
+
+The dataset is small, old, regional, granted-only, oversampled, unidentifiable
+by time/entity, weak for fairness, and has transformed amount/coarse categories.
+Architecture cannot remove those limitations. A filesystem store lacks
+concurrency/query features; post-hoc explanations remain correlation- and
+configuration-sensitive; recourse may be mathematically valid but unrealistic;
+model persistence is version/security-sensitive; and module discipline still
+requires tests. All technology compatibility remains unverified in this project
+until an authorized dependency milestone.
+
+## Architecture and Implementation Status
+
+Architecture changed from an unapproved placeholder to a detailed **proposal
+pending external supervisor review**. No source code, package structure,
+dependency/configuration file, raw/processed data, split, test, model, result,
+run artifact, API, database, frontend, container, CI/CD, or deployment was
+created. Codex did not commit or push.
+
+## Evidence for Supervisor Inspection
+
+1. ARCHITECTURE.md — complete boundaries, flows, invariants, technology matrix,
+   planned tests/errors/security and risks.
+2. decisions/0001-research-first-modular-monolith.md — the major decision and
+   alternatives/trade-offs.
+3. EXECUTION_PLAN.md — Phase 2 completion criteria and blocked gated roadmap.
+4. PROJECT_REPORT.md — concise learning/interview/viva defence.
+5. DATASET_AUDIT.md — only its Phase 1 approval status changed.
+6. The final diff/status and protected/prohibited-artifact checks.
 
 ## Suggested Next Action
 
-External supervisor review only. If satisfied, the user may commit and push the
-working tree. Codex did not commit or push. No architecture, preprocessing,
-model, XAI, fairness measurement, application, dependency, deployment, or next
-milestone work began.
+External supervisor review of Phase 2 only. If approved, the supervisor may
+authorize the bounded reproducible-data-foundation milestone through a
+replacement CURRENT_TASK.md. This handoff and roadmap do not authorize it.
