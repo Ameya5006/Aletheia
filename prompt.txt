@@ -1,0 +1,785 @@
+Project Title
+Explainable AI Decision Auditing Platform for High-Stakes Machine Learning Systems
+Project Vision
+The goal of this project is to build an enterprise-style Explainable Artificial Intelligence platform that does more than simply train a machine learning model and display predictions.
+The system should allow machine learning models used in high-stakes decision-making environments to be trained, evaluated, compared, explained, audited, monitored, and deployed in a transparent manner.
+The central problem being addressed is that many powerful machine learning models can achieve strong predictive performance while behaving like “black boxes.” In domains such as finance, insurance, healthcare, fraud detection, hiring, cybersecurity, and risk assessment, a prediction alone is often insufficient.
+Users also need to understand:
+•	Why was this prediction produced?
+•	Which features influenced the prediction?
+•	How confident is the model?
+•	Would a small change in the input change the decision?
+•	Is the model behaving consistently?
+•	Is one group being treated significantly differently from another?
+•	Is a more accurate model actually worth using if it is significantly harder to interpret?
+•	Can the reasoning behind a prediction be presented in a form understandable to a human reviewer?
+The proposed system should therefore treat predictive performance, explainability, fairness, confidence, robustness, and auditability as first-class characteristics of an ML system.
+________________________________________
+Primary Reference Use Case
+For the first implementation, use credit-risk / loan-risk assessment as the reference domain.
+This does NOT mean the system should be hard-coded specifically for banking.
+The architecture should be designed so that the ML and explainability platform can later support other structured/tabular classification problems such as:
+•	insurance risk,
+•	customer churn,
+•	fraud detection,
+•	employee attrition,
+•	equipment failure,
+•	cybersecurity risk,
+•	healthcare risk scoring where appropriate datasets are available,
+•	or other binary/multiclass classification problems.
+The credit-risk domain is simply the initial demonstration problem because it makes explainability easy to understand.
+Example:
+A model predicts:
+High Risk
+Instead of returning only that classification, the platform should be capable of explaining something conceptually similar to:
+Factors increasing predicted risk:
+•	high credit utilisation,
+•	high debt-to-income ratio,
+•	previous missed payments.
+Factors reducing predicted risk:
+•	stable employment,
+•	long credit history.
+The system should also be capable of showing what reasonable feature changes could potentially change the prediction.
+________________________________________
+Core Research Question
+The project should investigate:
+What trade-offs exist between predictive performance, interpretability, explanation stability, robustness, and fairness across different machine-learning models?
+The purpose is NOT simply to determine which model has the highest accuracy.
+The project should investigate whether the highest-performing model is necessarily the most appropriate model for a high-stakes decision system.
+________________________________________
+Main Objectives
+The finished platform should be able to:
+1.	ingest and validate a structured machine-learning dataset;
+2.	preprocess and transform the dataset reproducibly;
+3.	perform feature engineering and feature selection;
+4.	train multiple machine-learning models;
+5.	evaluate models using appropriate classification metrics;
+6.	compare interpretable and black-box models;
+7.	generate global model explanations;
+8.	generate local explanations for individual predictions;
+9.	provide counterfactual explanations;
+10.	evaluate explanation stability;
+11.	evaluate model confidence and uncertainty where feasible;
+12.	perform fairness and subgroup analysis where appropriate;
+13.	maintain experiment history and model versions;
+14.	expose model predictions through APIs;
+15.	provide an interactive dashboard for analysts/reviewers;
+16.	log predictions and explanations for auditing;
+17.	support reproducibility;
+18.	eventually support production deployment and monitoring.
+________________________________________
+Machine Learning Models
+The platform should initially compare several models with different levels of complexity and interpretability.
+Possible models include:
+Interpretable baseline models
+•	Logistic Regression
+•	Decision Tree
+Ensemble models
+•	Random Forest
+•	Gradient Boosting
+•	optionally AdaBoost
+Other comparison models
+•	Support Vector Machine
+•	K-Nearest Neighbours where appropriate
+Neural model
+•	A small feed-forward Artificial Neural Network / Multilayer Perceptron
+The purpose of including multiple models is not merely to increase the number of algorithms used.
+Each model should contribute to a structured comparison between:
+•	predictive performance,
+•	complexity,
+•	inference speed,
+•	interpretability,
+•	explanation quality,
+•	stability,
+•	and deployment characteristics.
+________________________________________
+Model Evaluation
+Classification models should be evaluated using appropriate metrics such as:
+•	Accuracy
+•	Precision
+•	Recall
+•	F1-score
+•	ROC-AUC
+•	Confusion Matrix
+•	optionally PR-AUC where class imbalance makes it useful
+The system should explicitly explain why accuracy alone may be misleading.
+Cross-validation should be used appropriately.
+The platform should help analyse:
+•	training performance,
+•	validation performance,
+•	test performance,
+•	overfitting,
+•	underfitting,
+•	bias,
+•	variance,
+•	hyperparameter behaviour.
+Model selection should therefore be evidence-based rather than simply selecting the model with the highest accuracy.
+________________________________________
+Explainability Layer
+Explainability is the central contribution of this project.
+The platform should support multiple levels of explanation.
+1. Global Explainability
+Answer:
+“What does the model generally consider important?”
+Possible techniques:
+•	model coefficients,
+•	decision-tree structure,
+•	permutation importance,
+•	feature importance,
+•	SHAP global importance,
+•	partial dependence where appropriate.
+The system should visualise how different features affect predictions across the dataset.
+________________________________________
+2. Local Explainability
+Answer:
+“Why did the model make this specific prediction?”
+For a selected prediction, show:
+•	features contributing positively,
+•	features contributing negatively,
+•	relative contribution strength,
+•	model confidence where meaningful,
+•	understandable explanation text.
+Possible techniques:
+•	SHAP
+•	LIME where useful
+•	native model explanations for inherently interpretable models.
+The system should distinguish between:
+model-native interpretation
+and
+post-hoc explanation techniques.
+________________________________________
+Counterfactual Explanations
+One of the distinctive features of the project should be counterfactual reasoning.
+Instead of only explaining:
+“Why did the model produce this prediction?”
+the system should also attempt to answer:
+“What realistic changes to the input could change the prediction?”
+Example:
+Current result:
+High predicted credit risk.
+Possible counterfactual:
+If:
+•	credit utilisation decreased,
+•	debt-to-income ratio improved,
+then the model may classify the case as lower risk.
+Counterfactual generation should respect practical constraints.
+Some attributes should be immutable or protected from unrealistic modification.
+For example:
+A counterfactual should not suggest changing someone's age, ethnicity, or other immutable characteristic merely to receive a favourable result.
+The design should therefore distinguish between:
+•	mutable features,
+•	immutable features,
+•	constrained features.
+________________________________________
+Explanation Stability
+A powerful explanation should not behave unpredictably.
+The project should investigate:
+If the input changes only slightly, does the explanation change dramatically?
+The platform should experiment with explanation stability.
+Possible procedure:
+1.	generate an original prediction and explanation;
+2.	introduce small valid perturbations;
+3.	recompute prediction and explanation;
+4.	measure similarity between explanation rankings;
+5.	identify unstable explanations.
+This can become an important research component.
+________________________________________
+Explainability vs Performance Trade-off
+The platform should produce a comparison dashboard.
+Conceptual example:
+Model	F1	ROC-AUC	Explainability	Stability	Inference Time
+Logistic Regression	...	...	High	...	...
+Decision Tree	...	...	High	...	...
+Random Forest	...	...	Medium	...	...
+Gradient Boosting	...	...	Medium	...	...
+Neural Network	...	...	Low/Post-hoc	...	...
+Do not invent an arbitrary “explainability score” without a defensible methodology.
+If a composite transparency/reliability score is introduced, clearly define:
+•	what components contribute,
+•	how they are normalised,
+•	how they are weighted,
+•	why those weights were selected,
+•	and what limitations the score has.
+________________________________________
+Fairness and Responsible AI Analysis
+Where the dataset permits legitimate subgroup analysis, the system should analyse whether model behaviour differs significantly between groups.
+Potential metrics may include:
+•	selection/prediction rates,
+•	false-positive rates,
+•	false-negative rates,
+•	precision/recall differences,
+•	calibration differences.
+The system should not make simplistic claims such as:
+“The model is fair.”
+Instead, it should report measurable differences and clearly communicate limitations.
+Sensitive attributes should be handled carefully.
+The platform should distinguish between using sensitive attributes:
+•	as prediction features,
+•	for fairness auditing,
+•	and for dataset analysis.
+________________________________________
+Feature Engineering and Data Processing
+The ML pipeline should support:
+•	missing-value handling,
+•	categorical encoding,
+•	numerical scaling,
+•	outlier analysis where appropriate,
+•	class imbalance analysis,
+•	feature engineering,
+•	feature selection,
+•	train/validation/test splitting.
+All transformations should be reproducible.
+Avoid data leakage.
+Training-only transformations must not accidentally learn information from the test set.
+Prefer proper scikit-learn pipelines or equivalent mechanisms.
+________________________________________
+Dataset Management
+The project should use a legitimate public dataset suitable for structured classification.
+The dataset should be documented with:
+•	source,
+•	licence,
+•	number of observations,
+•	features,
+•	target variable,
+•	missing values,
+•	class distribution,
+•	limitations,
+•	ethical considerations.
+Create a data dictionary explaining every important feature.
+Do not silently fabricate data.
+Synthetic data may be used for testing software functionality, but it must be clearly labelled as synthetic.
+________________________________________
+System Users
+Design the platform for multiple potential roles.
+ML Engineer / Data Scientist
+Can:
+•	create experiments,
+•	choose models,
+•	configure hyperparameters,
+•	train models,
+•	evaluate experiments,
+•	compare models,
+•	inspect explanations.
+Risk Analyst / Human Reviewer
+Can:
+•	inspect an individual prediction,
+•	view explanation,
+•	view counterfactuals,
+•	review model confidence,
+•	flag questionable predictions.
+Administrator
+Can eventually:
+•	manage users,
+•	manage deployed models,
+•	inspect system health,
+•	review audit logs.
+For an academic MVP, authentication/authorization can be simplified while preserving an extensible architecture.
+________________________________________
+Main Application Modules
+The system should be decomposed into clear modules.
+Possible modules include:
+Dataset Module
+•	upload/import dataset,
+•	schema inspection,
+•	validation,
+•	dataset statistics.
+Preprocessing Module
+•	transformations,
+•	pipelines,
+•	feature engineering.
+Experiment Module
+•	configure experiment,
+•	train models,
+•	tune hyperparameters,
+•	cross-validation.
+Evaluation Module
+•	calculate metrics,
+•	confusion matrices,
+•	ROC curves,
+•	model comparisons.
+Explainability Module
+•	global explanations,
+•	local explanations,
+•	feature contribution visualisations.
+Counterfactual Module
+•	generate actionable counterfactuals,
+•	enforce feature constraints.
+Fairness Module
+•	subgroup evaluation,
+•	disparity metrics,
+•	comparison visualisations.
+Model Registry
+•	model version,
+•	training configuration,
+•	metrics,
+•	artifacts,
+•	deployment status.
+Prediction Service
+•	serve predictions,
+•	return explanations,
+•	record requests.
+Audit Module
+•	log:
+o	model version,
+o	input reference,
+o	prediction,
+o	explanation,
+o	timestamp,
+o	reviewer feedback.
+Dashboard
+•	model comparison,
+•	prediction explorer,
+•	explanation visualisations,
+•	experiment history.
+________________________________________
+Suggested Technology Stack
+The final technology choice should be justified rather than blindly following this list.
+Backend
+Python with FastAPI.
+Reasons:
+•	strong ML ecosystem,
+•	typed API development,
+•	good performance,
+•	simple integration with scikit-learn/PyTorch.
+ML
+•	NumPy
+•	pandas
+•	scikit-learn
+Deep Learning
+PyTorch only where the ANN comparison actually adds value.
+Do NOT make deep learning the centre of the project unnecessarily.
+Explainability
+Potential libraries:
+•	SHAP
+•	LIME
+•	potentially DiCE or another suitable counterfactual library
+Evaluate each dependency before adopting it.
+Database
+PostgreSQL.
+Store structured metadata such as:
+•	experiments,
+•	users,
+•	model versions,
+•	predictions,
+•	audit events.
+Large ML artifacts should not necessarily be stored directly inside relational database columns.
+Experiment Tracking
+MLflow.
+Use it for:
+•	experiment tracking,
+•	hyperparameters,
+•	model metrics,
+•	artifacts,
+•	model versions.
+Frontend
+React or Next.js.
+The frontend should focus on:
+•	dashboards,
+•	graphs,
+•	explanations,
+•	comparison screens,
+•	prediction inspection.
+Deployment
+Eventually:
+•	Docker
+•	Docker Compose where useful
+•	cloud deployment
+Do not introduce Kubernetes unless there is a genuine requirement.
+________________________________________
+Architectural Expectations
+Design the system using sound software-engineering principles.
+The project should follow:
+SOLID principles
+Single Responsibility Principle
+Each module/class/service should have one clear responsibility.
+Open/Closed Principle
+The architecture should make it possible to add new:
+•	models,
+•	explanation techniques,
+•	evaluation metrics,
+without rewriting unrelated code.
+Liskov Substitution Principle
+Model/evaluator abstractions should allow implementations to be substituted safely.
+Interface Segregation Principle
+Avoid giant interfaces that force components to implement unrelated behaviour.
+Dependency Inversion Principle
+High-level services should depend on abstractions rather than concrete implementations.
+________________________________________
+Additional Engineering Principles
+Apply where appropriate:
+•	separation of concerns,
+•	clean architecture,
+•	dependency injection,
+•	repository pattern where justified,
+•	service layer,
+•	typed domain models,
+•	configuration management,
+•	environment isolation,
+•	defensive input validation,
+•	structured error handling,
+•	logging,
+•	testability,
+•	reproducibility.
+Avoid over-engineering.
+This is an academic project intended to demonstrate enterprise thinking, not simulate a 10,000-engineer corporation.
+Every abstraction should have a reason.
+________________________________________
+Suggested High-Level Architecture
+Consider a modular monolith initially rather than microservices.
+Possible structure:
+Frontend
+↓ REST API
+FastAPI Application
+├── Dataset Service
+├── Experiment Service
+├── Prediction Service
+├── Evaluation Service
+├── Explainability Service
+├── Counterfactual Service
+├── Fairness Service
+├── Model Registry Service
+└── Audit Service
+↓
+ML Pipeline / Explainability Engine
+↓
+PostgreSQL + MLflow Artifact Storage
+Microservices should only be considered later if the architecture genuinely requires independent scaling or deployment.
+________________________________________
+Suggested Backend Layering
+Consider something conceptually similar to:
+presentation/
+•	API routes
+•	schemas
+application/
+•	use cases
+•	orchestration
+domain/
+•	entities
+•	domain rules
+•	interfaces
+infrastructure/
+•	database
+•	MLflow
+•	model persistence
+•	external libraries
+ml/
+•	preprocessing
+•	training
+•	evaluation
+•	explainability
+•	counterfactuals
+•	fairness
+The architecture should keep ML experimentation logic separate from HTTP/API concerns.
+________________________________________
+API Design
+Design REST APIs around resources/use cases rather than frontend screens.
+Potential endpoints:
+•	datasets
+•	experiments
+•	models
+•	predictions
+•	explanations
+•	counterfactuals
+•	evaluations
+•	fairness reports
+•	audit events.
+Use:
+•	validation,
+•	consistent response schemas,
+•	versioning where needed,
+•	clear HTTP status semantics.
+Generate OpenAPI documentation through FastAPI.
+________________________________________
+Testing Strategy
+The project should have a genuine test strategy.
+Include:
+Unit Tests
+For:
+•	transformations,
+•	metrics,
+•	validators,
+•	explanation utilities,
+•	business rules.
+Integration Tests
+For:
+•	API + database,
+•	model loading,
+•	MLflow integration.
+ML Tests
+Examples:
+•	expected feature schema,
+•	acceptable missing-value bounds,
+•	metric regression checks,
+•	model artifact compatibility.
+End-to-End Tests
+For important user flows.
+Do not target meaningless 100% code coverage.
+Test important behaviour.
+________________________________________
+Reproducibility
+Training runs should record:
+•	dataset version,
+•	preprocessing configuration,
+•	random seed,
+•	algorithm,
+•	hyperparameters,
+•	evaluation metrics,
+•	training timestamp,
+•	package/environment version where practical.
+A model result should be reproducible as far as reasonably possible.
+________________________________________
+MLOps Requirements
+Introduce MLOps gradually.
+The final architecture should demonstrate understanding of:
+•	experiment tracking,
+•	model registry,
+•	model versioning,
+•	model artifacts,
+•	deployment stages,
+•	reproducibility,
+•	monitoring,
+•	model regression.
+Potential workflow:
+Dataset
+→ preprocessing
+→ experiment
+→ model evaluation
+→ explainability evaluation
+→ model registration
+→ approved model
+→ deployment
+→ prediction monitoring.
+________________________________________
+Monitoring
+The production-oriented version should consider monitoring:
+System monitoring
+•	latency,
+•	errors,
+•	throughput.
+ML monitoring
+•	feature distribution changes,
+•	prediction distribution,
+•	confidence changes,
+•	model performance when labels become available.
+Explainability monitoring
+Potentially monitor whether feature-attribution patterns change significantly over time.
+Do not implement every monitoring concept in the MVP.
+Design for future extensibility.
+________________________________________
+Security and Privacy
+Although the academic project will likely use public datasets, design with realistic principles.
+Consider:
+•	input validation,
+•	authentication,
+•	authorization,
+•	secret/environment management,
+•	logging without unnecessary sensitive information,
+•	database access controls,
+•	safe model-artifact handling.
+Never hard-code API keys or passwords.
+________________________________________
+User Interface Expectations
+The frontend should feel like an ML auditing application rather than a generic CRUD dashboard.
+Important screens might include:
+Overview Dashboard
+•	deployed model,
+•	primary metrics,
+•	recent experiments,
+•	model health.
+Experiment Comparison
+Compare models across:
+•	F1,
+•	ROC-AUC,
+•	inference time,
+•	complexity,
+•	explainability metrics.
+Prediction Inspector
+Show:
+•	input,
+•	prediction,
+•	probability,
+•	local explanation,
+•	counterfactual.
+Global Explainability
+Display:
+•	feature importance,
+•	SHAP summaries,
+•	feature behaviour.
+Fairness Dashboard
+Compare subgroup metrics.
+Model Registry
+View:
+•	model versions,
+•	experiment,
+•	metrics,
+•	deployment state.
+________________________________________
+Academic Connection
+This project should help practically demonstrate concepts from an undergraduate AI/ML curriculum including:
+•	supervised learning,
+•	Logistic Regression,
+•	Decision Trees,
+•	Random Forest,
+•	Gradient Boosting,
+•	SVM,
+•	ANN,
+•	feature engineering,
+•	feature selection,
+•	cross-validation,
+•	classification metrics,
+•	overfitting,
+•	underfitting,
+•	bias/variance,
+•	regularisation,
+•	model evaluation,
+•	MLflow,
+•	MLOps.
+Do not artificially force unrelated topics such as:
+•	CNN,
+•	RNN,
+•	LSTM,
+•	GRU,
+•	reinforcement learning,
+•	ant colony optimisation,
+into the project unless a legitimate extension arises.
+________________________________________
+Expected Academic Contribution
+The project should not claim to invent Explainable AI.
+Its contribution should instead be framed around:
+designing and implementing an integrated decision-auditing platform that systematically compares predictive performance, interpretability, counterfactual behaviour, explanation stability, and fairness across multiple machine-learning models.
+Potential research experiments include:
+Experiment 1
+Performance vs interpretability across model families.
+Experiment 2
+SHAP explanation differences across different models for identical observations.
+Experiment 3
+Explanation stability under small input perturbations.
+Experiment 4
+Counterfactual distance:
+How much must features change to alter predictions?
+Experiment 5
+Subgroup performance/fairness differences.
+Experiment 6
+Does the highest-accuracy model remain preferable after transparency and stability are considered?
+________________________________________
+Hardware Constraint
+Assume development is being performed by a student without a high-end GPU.
+Therefore:
+•	prefer tabular datasets,
+•	classical ML should run locally,
+•	ANN should remain small,
+•	avoid large local LLMs,
+•	avoid unnecessary GPU dependencies,
+•	keep the system runnable on a normal student laptop.
+Cloud resources may be used selectively, but the project should not depend on expensive infrastructure.
+________________________________________
+Development Philosophy
+Do NOT attempt to build the entire enterprise version immediately.
+Design enterprise-capable architecture but implement incrementally.
+Suggested stages:
+Phase 1 — ML research prototype
+Notebook-based exploration and baseline models.
+Phase 2 — Reproducible ML package
+Move preprocessing/training/evaluation into reusable Python modules.
+Phase 3 — Explainability
+Implement global and local explanations.
+Phase 4 — Counterfactual explanations
+Introduce actionable explanation functionality.
+Phase 5 — Experiment tracking
+Add MLflow.
+Phase 6 — Backend
+Expose experiments/models/predictions through FastAPI.
+Phase 7 — Database
+Persist experiments, model metadata, predictions and audit records.
+Phase 8 — Frontend
+Build analyst/reviewer dashboard.
+Phase 9 — Responsible AI analysis
+Add fairness and explanation-stability experiments.
+Phase 10 — Production engineering
+Docker, tests, logging, CI/CD and deployment.
+Explain why each phase belongs in that position before implementation begins.
+________________________________________
+MVP Definition
+The minimum successful version should include:
+•	one well-documented dataset,
+•	reproducible preprocessing pipeline,
+•	at least 3–4 model families,
+•	model evaluation,
+•	cross-validation,
+•	global explainability,
+•	local explainability,
+•	counterfactual explanations,
+•	FastAPI prediction API,
+•	model comparison dashboard,
+•	experiment tracking with MLflow.
+________________________________________
+Strong Semester Version
+Add:
+•	explanation stability analysis,
+•	fairness analysis,
+•	PostgreSQL persistence,
+•	audit logging,
+•	ANN comparison,
+•	Docker,
+•	automated tests,
+•	deployed frontend/backend.
+________________________________________
+Enterprise-Oriented Extension
+Only after the core project works:
+•	RBAC,
+•	CI/CD,
+•	model approval workflow,
+•	prediction monitoring,
+•	drift detection,
+•	explanation drift,
+•	richer model registry,
+•	scheduled evaluation,
+•	containerised deployment,
+•	cloud infrastructure.
+________________________________________
+What I Need From You as the AI Engineering Assistant
+Do NOT begin by generating hundreds of files.
+First produce:
+1.	a critical assessment of the project idea;
+2.	assumptions and scope boundaries;
+3.	functional requirements;
+4.	non-functional requirements;
+5.	personas and main use cases;
+6.	domain model;
+7.	system architecture;
+8.	component responsibilities;
+9.	database design;
+10.	ML system architecture;
+11.	training pipeline;
+12.	inference pipeline;
+13.	explainability pipeline;
+14.	counterfactual pipeline;
+15.	fairness-analysis design;
+16.	API design;
+17.	frontend information architecture;
+18.	observability strategy;
+19.	testing strategy;
+20.	security considerations;
+21.	MLOps workflow;
+22.	deployment architecture;
+23.	repository/folder structure;
+24.	technology decisions and alternatives;
+25.	detailed execution roadmap;
+26.	milestone dependencies;
+27.	major technical risks;
+28.	academic/research evaluation plan;
+29.	semester-demo strategy;
+30.	potential viva questions.
+For every significant architectural decision explain:
+•	what problem it solves,
+•	alternatives considered,
+•	why the chosen approach is appropriate,
+•	disadvantages/trade-offs,
+•	whether it belongs in the MVP or later.
+Follow SOLID principles and clean architecture where they provide genuine value.
+Do not create unnecessary abstractions merely to make the project appear enterprise-grade.
+Prefer a well-designed modular monolith for the initial system unless there is a compelling reason for microservices.
+Most importantly:
+The project should remain understandable enough that a CSE student can personally explain and defend every important technical decision.
+The goal is not only to create software.
+The goal is to build an academically defensible, technically credible, industry-relevant Explainable AI platform that demonstrates both machine-learning understanding and strong software-engineering practices
