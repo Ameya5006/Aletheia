@@ -2,22 +2,21 @@
 
 ## Status and Authority
 
-This is the proposed, research-first milestone sequence. It is not a blanket
-authorization to start work. `docs/CURRENT_TASK.md` is the sole current task;
-each later milestone remains blocked until the external supervisor reviews the
-previous work, the user commits/pushes it, and a replacement current task is
-approved. `prompt.txt` remains the permanent original vision.
+This research-first sequence is not blanket authorization. `docs/CURRENT_TASK.md`
+is the sole current task; every later milestone remains blocked until external
+review, user commit/push, and approval of a replacement task. `prompt.txt`
+remains the permanent original vision.
 
-Current state: Phase 0 was attempted and received **FAIL — FIX BEFORE
-CONTINUING**. The current Phase 0 Repair is complete only after its documented
-checks; it remains **proposed pending external supervisor review**, not
-supervisor-approved.
+Phase 0 and its repair are externally supervisor-approved. Phase 1 dataset
+selection/audit is completed by Codex and pending external supervisor review;
+this status does not authorize architecture or implementation.
 
 ## Proposed Research-First Sequence
 
 1. **Phase 0 — Project Analysis and Scope Validation**
 2. **Phase 0 Repair — Documentation and Governance Consistency Repair**
-3. **Phase 1 — Dataset Selection and Data Audit** *(future and blocked)*
+3. **Phase 1 — Dataset Selection and Data Audit** *(completed by Codex; pending
+   external supervisor review)*
 4. **Architecture, technology, and detailed implementation-roadmap planning**
    *(future and blocked)*
 5. **Reproducible ML and later implementation milestones** *(future and
@@ -92,10 +91,9 @@ Phase 0 is complete **by Codex** only when all of the following are documented:
 - an updated report and handoff containing no fabricated implementation,
   experiment, metric, result, or approval claim.
 
-**Verified from repository evidence:** the prior Phase 0 report documents these
-items, while no implementation artifacts exist. **Pending external supervisor
-approval:** whether the Phase 0 scope and its repair are accepted. **Not
-supervisor-approved:** Phase 0 and every later phase.
+**Verified from repository evidence:** the Phase 0 report documents these items
+and no implementation artifacts were introduced. **Supervisor-approved:** Phase
+0 and its repair, as recorded by the externally approved Phase 1 task.
 
 ### Required Documentation Updates
 
@@ -105,10 +103,64 @@ unapproved architecture in `ARCHITECTURE.md`.
 
 ## Phase 0 Repair — Documentation and Governance Consistency Repair
 
-This is the current documentation-only task. It reconciles the Phase 0 record,
-milestone order, task authority, and Git authority; it does not execute Phase
-1. Its acceptance criteria and verification evidence are in
-`docs/CURRENT_TASK.md` and the repair handoff.
+This documentation-only repair reconciled the Phase 0 record, milestone order,
+task authority, and Git authority. It is externally supervisor-approved.
+
+## Phase 1 — Dataset Selection and Data Audit
+
+### Objective and Prerequisites
+
+Select and audit one public tabular credit-risk dataset capable of supporting
+the Research MVP. Prerequisites were the approved Phase 0 scope/repair, no prior
+dataset or implementation, and an unapproved architecture; repository evidence
+confirmed that state.
+
+### Concepts and Scope
+
+Concepts: provenance/licensing, file identity, target/observation semantics,
+structural profiling, feature timing and roles, leakage, split families,
+subgroup support, and counterfactual feasibility.
+
+In scope: compare authoritative candidates; inspect permitted raw files outside
+the repository; select through explicit gates; record checksum/schema/counts,
+feature roles, leakage risks, a future split recommendation, and conditional
+fairness/counterfactual feasibility. Out of scope: preprocessing, train/test
+file creation, model training/metrics, fairness measurement, counterfactual
+generation, architecture, technology selection, application work, and
+dependencies persisted in the project.
+
+### Evidence and Affected Files
+
+Four UCI candidates were compared and their official files inspected. South
+German Credit was selected pending review. The detailed evidence is in
+`docs/DATASET_AUDIT.md`; the concise learning record is in
+`docs/PROJECT_REPORT.md`; this plan and `docs/SUPERVISOR_HANDOFF.md` record the
+gate. `AGENTS.md` received the authorized report-guide clarification.
+
+### Measurable Definition of Done and Status
+
+- at least three authoritative candidates compared using transparent gates;
+- selected dataset has verified source/licence, original filename, retrieval
+  date, byte size, SHA-256, shape, target, observation unit, and reacquisition;
+- computed missingness, duplicates, identifier/repeated-entity evidence, class
+  arithmetic, categories/ranges, and legitimate subgroup support recorded;
+- every selected feature has meaning, semantic type, timing, proposed role,
+  leakage concern, and counterfactual category;
+- leakage/chronology review and evidence-based split-family recommendation
+  recorded;
+- fairness and counterfactual feasibility assessed without implementing either;
+- no raw data, model, code, architecture, project dependency, or future task
+  introduced; protected documents unchanged; final documentation checks pass.
+
+These criteria are completed by Codex and verified from the evidence recorded in
+the audit and handoff. Phase 1 remains **pending external supervisor review** and
+is not supervisor-approved.
+
+### Required Documentation Updates
+
+Created `docs/DATASET_AUDIT.md`; incrementally updated the project report and
+this plan; rewrote the supervisor handoff. `prompt.txt`, `ARCHITECTURE.md`, and
+the approved current task remain unchanged.
 
 ## Scope Vocabulary
 
@@ -151,11 +203,7 @@ and real-lender integration.
 
 ## Future Blocked Milestones
 
-**Phase 1 — Dataset Selection and Data Audit** will be defined only in a future
-approved `CURRENT_TASK.md`. It may investigate data provenance, target,
-semantics, missingness, leakage risk, candidate split strategy, feature roles,
-and fairness feasibility. It is not authorized or executable now.
-
-Architecture, technology decisions, detailed roadmap, and reproducible ML work
-follow only after Phase 1 evidence and external review. Their precise milestones
-are intentionally not defined yet.
+Architecture, technology decisions, the detailed roadmap, and all reproducible
+ML/application work remain blocked until Phase 1 is externally reviewed and a
+replacement `CURRENT_TASK.md` explicitly authorizes one next milestone. Their
+precise scopes are intentionally not defined here.

@@ -32,11 +32,11 @@ measure selected properties, not legal compliance or universal fairness.
 
 ## Scope, Users, and Assumptions
 
-**Established scope:** one lawful, documented public tabular classification
-dataset (preferably binary), a small laptop-feasible set of classical models,
-and evidence-backed model audit. No dataset, implementation, model, experiment,
-metric, result, architecture, or deployment exists yet. Deep learning is
-optional, not central.
+**Established scope:** South German Credit is the selected public tabular
+classification dataset, pending external review of Phase 1. It supports a small
+laptop-feasible classical-model study and evidence-backed model audit. No model,
+experiment, metric, application, architecture, or deployment exists yet. Deep
+learning is optional, not central.
 
 **Assumptions requiring validation:** the selected data must have a clear
 target, source/licence, data dictionary, sufficient observations/minority-class
@@ -52,9 +52,9 @@ before the dataset is understood.
 complete platform ambition, not permission to implement every feature now.
 `docs/CURRENT_TASK.md` authorizes exactly one bounded task and cannot override
 the project's safety, ML-validity, evidence, or governance rules. At this point
-the authorized work is a Phase 0 documentation repair; Phase 1 and all later
-work remain blocked pending external review. This distinction prevents a broad
-vision from being mistaken for an approved implementation plan.
+the authorized work is Phase 1 dataset selection/audit; architecture and all
+later work remain blocked pending external review. This distinction prevents a
+broad vision from being mistaken for an approved implementation plan.
 
 ## Functional Requirements
 
@@ -125,6 +125,38 @@ not be invented now. Synthetic data could later test software mechanics but
 cannot support the study's empirical claims. Reject data with unclear
 provenance/target, unusable feature semantics, likely leakage, or inadequate
 support.
+
+### Phase 1 Dataset Decision
+
+South German Credit was selected after comparing four official UCI candidates.
+It passed the gates for traceable provenance, CC BY 4.0 usage, explicit contract-
+compliance target, corrected feature meanings, modest minority-class support,
+laptop size, and constrained counterfactual semantics. The official raw file
+has 1,000 granted credit contracts, 20 predictors, and target `kredit` (`0=bad`
+contract compliance, `1=good`); 300 cases are bad and 700 good. The adverse
+event for future evaluation is the raw `0` value and must be mapped explicitly.
+
+Dataset audit came before architecture because the data determines target
+semantics, observable feature timing, leakage controls, split feasibility,
+audit-only attributes, counterfactual constraints, and the kind of XAI evidence
+that can be defended. Detailed sources, hashes, computed profiles, candidate
+rejections, and feature roles are in `docs/DATASET_AUDIT.md`.
+
+The alternatives were Default of Credit Card Clients (larger and better for
+potential subgroup study, but dominated by historical/lender-controlled inputs
+and undocumented raw codes), the older Statlog German Credit entry (known
+code-table defects), and Credit Approval (anonymized features and undefined
+label meaning). For the selected data, age, combined personal-status/sex, and
+foreign-worker status are proposed audit-only—not prediction—attributes;
+telephone is proposed excluded, and the current-credit count remains unresolved.
+
+A future stratified random split is recommended because no dates or entity IDs
+support temporal or group splitting. It cannot control undisclosed repeated
+borrowers or test forward-time generalisation. Only constrained contract terms
+make a limited counterfactual proof possible; immutable and historical fields
+must not become recourse. Fairness analysis is not yet justified because sex is
+not recoverable cleanly and the foreign-worker group has only 37 observations,
+including four bad outcomes.
 
 ## Planned ML and Evaluation Strategy
 
@@ -242,14 +274,14 @@ learning, and local LLMs.
 
 ## Decisions to Finalize Before Implementation
 
-Finalize dataset/source/licence/target/data dictionary; positive class and
-error-cost rationale; leakage review and split type; MVP model/search plan;
-prediction versus audit-only/excluded feature roles; counterfactual constraints;
-and reproducibility/final-test protocol. Keep flexible until evidence supports
-it: exact dataset, fold count, secondary metrics, XAI/counterfactual library,
-MLP inclusion, fairness metric set, visualisation, FastAPI, MLflow, PostgreSQL,
-React/Next, Docker, and deployment. The only architectural constraint established
-now is sequencing: reproducible research precedes platform infrastructure.
+Phase 1 selects the dataset and raw adverse label, but does not finalize a
+business threshold, primary model metric, future pipeline, or application
+architecture. Before modelling, later approved work must resolve the exact
+prediction feature set, treatment of categorical expert scores, observation
+cutoffs for concurrent-credit fields, counterfactual dependencies, folds/seed,
+and final-test protocol. XAI/counterfactual libraries, MLP inclusion,
+visualisation, FastAPI, MLflow, PostgreSQL, React/Next, Docker, and deployment
+remain unselected. Reproducible research still precedes platform infrastructure.
 
 ## System Architecture
 
@@ -274,9 +306,8 @@ users, requirements, research questions, data/model criteria, evaluation/XAI
 boundaries, risks, MVP, and deferred work. Concepts: supervised tabular
 classification, held-out evaluation, cross-validation, leakage,
 intrinsic/post-hoc interpretability, counterfactuals, stability, and subgroup
-measurement. Result: a scope exists for supervisor approval; no implementation
-started. The work is proposed and documented, but Phase 0 has **not** passed
-external supervisor review.
+measurement. Result: a coherent research scope was documented without
+implementation. Phase 0 is externally supervisor-approved.
 
 ### Phase 0 Repair — Documentation and Governance Consistency Repair
 
@@ -285,8 +316,27 @@ first Phase 0 attempt. It reconciles scope terminology, research-first order,
 stability status, task authority, Git authority, and the measurable Phase 0
 record. A Definition of Done and external approval gate matter because written
 planning is only trustworthy when it names the evidence needed to advance and
-does not silently authorize later work. This repair is pending external review;
-it does not begin Phase 1.
+does not silently authorize later work. The repair is externally
+supervisor-approved.
+
+### Phase 1 — Dataset Selection and Data Audit
+
+**What was accomplished:** Four official UCI candidates were compared using
+explicit gates, their permitted raw files were inspected outside the repository,
+and South German Credit was selected pending supervisor review. Its identity,
+structure, target, feature roles, leakage risks, split direction, and conditional
+fairness/counterfactual feasibility were documented.
+
+**Why this came now:** Dataset evidence is needed before architecture or
+modelling so later decisions use the actual target, semantics, chronology, and
+constraints rather than guesses.
+
+**Concepts involved:** provenance and licensing, observation unit, selection
+bias, outcome timing, audit-only versus prediction features, leakage review,
+stratified splitting, subgroup support, and counterfactual feasibility.
+
+**Result:** Phase 1 is completed by Codex and pending external supervisor review;
+architecture and implementation remain blocked.
 
 ## Technical Decisions
 
@@ -307,14 +357,20 @@ first study may have no fairness result.
 
 ## ML Experiments
 
-No experiments, datasets, metrics, or results exist. All strategies above are
-planned and conditional on approval and data review.
+No ML experiments, model metrics, or model results exist. Phase 1 performed a
+structural dataset audit only; its class and subgroup counts are data facts, not
+model-performance metrics.
 
 ## Important Problems Encountered
 
-No implementation problem has occurred. The meaningful planning risk is scope
-overreach: the original vision combines research and production infrastructure.
-The mitigation is staged, research-first work.
+No implementation problem has occurred. During Phase 1, Windows
+`Expand-Archive` could not extract BZIP2 entries, so Python's standard `zipfile`
+was used in the temporary audit directory. An initially guessed South German
+archive URL returned 404 before the official `+update` URL was used. More
+importantly, one sentence in the linked report appears to reverse the target
+codes; UCI's distributed code table, R reader, and observed 300/700 counts agree
+on `0=bad`, `1=good`. The lesson is to cross-check narrative documentation
+against the exact distributed artifact rather than silently choosing a label.
 
 ## Concepts Learned Through This Project
 
@@ -333,6 +389,16 @@ explain an individual decision.
 **Counterfactual:** constrained feature changes that alter a model class; not a
 guarantee of a real-world outcome.
 
+**Dataset selection before architecture:** the selected data fixes what one row
+and the target mean and exposes timing, feature, fairness, and recourse limits.
+Architecture designed earlier could encode the wrong target or unsupported
+capabilities. Phase 1 uses this ordering without designing architecture.
+
+**Prediction feature versus audit-only attribute:** a field may be retained to
+measure subgroup behaviour without being supplied to the classifier. In this
+audit, age, combined personal-status/sex, and foreign-worker status are proposed
+audit-only candidates; that does not make their fairness use automatically valid.
+
 ## Project Defence and Interview Preparation
 
 **Why is this not a prediction dashboard?** It compares performance with
@@ -349,6 +415,22 @@ test data for final evaluation.
 **Can it prove fairness or causality?** No; it reports bounded, dataset-specific
 measurements and model-output explanations with limitations.
 
+**Why choose South German Credit over the larger Taiwanese default dataset?**
+The Taiwanese data has stronger sample and target chronology, but most useful
+financial variables are historical at prediction time and its raw codes contain
+undocumented categories. South German Credit has corrected, human-readable
+contract features that better support the XAI and constrained-counterfactual
+Research MVP, accepting age and representativeness limitations.
+
+**What does one selected row represent?** One granted credit contract from a
+1973–1975 southern German bank sample. It is not a rejected application, so the
+data has historical screening/selection bias.
+
+**Why recommend stratified random splitting?** The target is 70/30, but the file
+has no dates or entity identifiers needed for temporal/group-aware splitting.
+Stratification preserves class support; it cannot solve undisclosed repeated-
+borrower or forward-time generalisation risks.
+
 ## Semester Viva Preparation
 
 **Basic:** Why can accuracy be insufficient? What is leakage?
@@ -361,21 +443,24 @@ fairness metrics conflict? When is temporal/group-aware splitting necessary?
 
 ## Resume Evidence
 
-Verified planning only: one scope-analysis milestone; zero selected datasets,
-model comparisons, implemented XAI techniques, tests, and deployments.
+Verified evidence: four official dataset candidates compared; one selected raw
+file audited at 1,000 rows × 21 columns; zero model comparisons, implemented
+XAI techniques, application tests, or deployments.
 
 ## Limitations
 
-Public data may not have both realistic actionable semantics and valid audit
-attributes. Future results will be dataset- and method-bound. Explanations,
-counterfactuals, stability studies, and fairness metrics have limitations. No
-implementation, architecture approval, or production validation exists.
+South German Credit is old (1973–1975), geographically narrow, contains only
+granted credits, oversamples bad contracts, has no row dates or identifiers,
+and uses an unknown monotonic transformation for amount. Sex cannot be recovered
+cleanly from its combined field, and only 37 rows are foreign workers, so robust
+fairness analysis is not currently justified. Future results remain dataset- and
+method-bound. No model, architecture approval, or production validation exists.
 
 ## Future Work
 
-**Useful next step, subject to approval:** external review of the Phase 0 repair.
-If approved and authorized through a replacement current task, dataset selection
-and data/leakage audit precede architecture design and a reproducible baseline.
+**Useful next step, subject to approval:** external supervisor review of Phase 1
+and `docs/DATASET_AUDIT.md`. Architecture remains blocked unless a later current
+task explicitly authorizes it.
 
 **Later extensions:** richer fairness/robustness methodology, monitoring,
 deployment workflows, multi-user controls, integrations, and cloud operations.

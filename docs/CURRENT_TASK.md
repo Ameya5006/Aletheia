@@ -1,420 +1,629 @@
 # MILESTONE
 
-Phase 0 Documentation and Governance Consistency Repair
+Phase 1 — Dataset Selection and Data Audit
 
 # GOAL
 
-Repair the planning and governance inconsistencies identified during the external supervisor’s review of Phase 0.
+Select one technically defensible public tabular credit-risk classification dataset for Aletheia and produce an evidence-based audit establishing whether it can support the planned Research MVP.
 
-The repository must end with one internally consistent account of:
+The milestone must determine:
 
-- the proposed Aletheia scope;
-- the milestone sequence;
-- the meanings of Research MVP, semester application scope, and enterprise extensions;
-- the status of explanation stability;
-- the measurable Phase 0 Definition of Done;
-- external approval status;
-- the role and authority boundaries of `docs/CURRENT_TASK.md`;
-- and responsibility for Git commits and pushes.
+* provenance and licence;
+* dataset version and file identity;
+* target semantics;
+* observation unit;
+* feature meanings;
+* class distribution;
+* missingness and duplicates;
+* chronology and repeated-entity risks;
+* potential leakage;
+* prediction, audit-only, identifier, target, and excluded feature roles;
+* candidate split strategy;
+* fairness-analysis feasibility;
+* counterfactual feasibility;
+* important dataset limitations.
 
-This is a documentation and governance repair only.
+Do not train a model or design the application architecture.
 
 # WHY THIS MILESTONE EXISTS
 
-The first Phase 0 attempt contained technically promising ML/XAI planning, but it received:
+Phase 0 and its documentation repair have passed external supervisor review.
 
-`FAIL — FIX BEFORE CONTINUING`
+Dataset evidence must now be established before architecture or implementation because it determines:
 
-The failure was caused by planning inconsistencies:
-
-1. conflicting execution order;
-2. conflicting meanings of MVP;
-3. explanation stability being described as both mandatory and optional;
-4. no measurable Phase 0 Definition of Done;
-5. wording that slightly overstated approval status;
-6. no permanent governance for `docs/CURRENT_TASK.md`;
-7. no permanent record that Codex must not commit or push.
-
-These problems must be repaired before dataset selection or any later work begins.
+* what Aletheia predicts;
+* what information is available at prediction time;
+* how leakage must be prevented;
+* which split strategy is valid;
+* what preprocessing will eventually be required;
+* which attributes may be used for prediction or auditing;
+* whether meaningful counterfactual constraints can be created;
+* whether fairness analysis is legitimate;
+* and which later ML/XAI components are actually justified.
 
 # CURRENT STATE AND PREREQUISITES
 
 At the start of this task:
 
-- Phase 0 has been attempted but has not passed external supervisor review.
-- The proposed direction is research-first.
-- No dataset has been selected or downloaded.
-- No EDA has been conducted.
-- No architecture has been approved.
-- No dependencies have been installed.
-- No application code, ML experiment, model artifact, API, frontend, database, or deployment exists.
-- `prompt.txt` is the permanent original Aletheia specification.
-- `docs/CURRENT_TASK.md` contains the only currently authorized task.
-- `docs/ARCHITECTURE.md` must remain unapproved.
-- Phase 1 is blocked pending completion, user commit/push, and external supervisor review of this repair.
+* Phase 0 and its repair are externally supervisor-approved.
+* The approved direction is research-first.
+* `prompt.txt` remains the permanent original vision.
+* No dataset has been selected.
+* No EDA, model training, architecture, dependency selection, application implementation, API, database, frontend, or deployment exists.
+* `docs/ARCHITECTURE.md` remains unapproved.
+* `docs/CURRENT_TASK.md` is the only currently authorized task.
+* The user, not Codex, performs Git commits and pushes.
 
-If repository evidence materially contradicts this state, stop and report the discrepancy before editing files.
+If the repository materially differs from this state, stop and report the discrepancy.
 
-# FILES TO INSPECT
+# FILES TO READ FIRST
 
-Before making changes, read completely:
+Read completely:
 
-- `AGENTS.md`
-- `prompt.txt`
-- `docs/CURRENT_TASK.md`
-- `docs/PROJECT_REPORT.md`
-- `docs/ARCHITECTURE.md`
-- `docs/EXECUTION_PLAN.md`
-- `docs/SUPERVISOR_HANDOFF.md`
+* `AGENTS.md`
+* `prompt.txt`
+* `docs/CURRENT_TASK.md`
+* `docs/PROJECT_REPORT.md`
+* `docs/ARCHITECTURE.md`
+* `docs/EXECUTION_PLAN.md`
+* `docs/SUPERVISOR_HANDOFF.md`
 
 Also inspect:
 
-- current Git status;
-- the latest relevant commit;
-- the current uncommitted diff;
-- the repository file tree for evidence of work outside the claimed scope.
+* `git status --short`;
+* recent Git history;
+* the repository tree;
+* any currently tracked dataset, code, dependency, or experiment artifacts.
 
-Treat repository evidence as authoritative. Do not assume that a statement is correct merely because it appears in `SUPERVISOR_HANDOFF.md`.
+Treat repository evidence as authoritative.
 
-# BEFORE EDITING
+# BEFORE CHANGING FILES
 
-Before changing files, provide a concise working update that explains:
+Provide a concise working update explaining:
 
-1. what currently exists;
-2. each inconsistency confirmed from the repository;
-3. what files you plan to modify;
-4. why each modification is necessary;
-5. what must remain unchanged;
-6. risks of making the governance too complex;
-7. the acceptance criteria you will use.
+1. the verified repository state;
+2. the Phase 1 methodology;
+3. the candidate-selection gates;
+4. the files you expect to change;
+5. any temporary tools required;
+6. risks such as unclear licensing, target ambiguity, leakage, weak feature semantics, small samples, or poor subgroup support;
+7. the measurable acceptance criteria.
 
-Do not pause for approval unless you discover a material contradiction, missing prerequisite, or required scope expansion.
+Do not select a dataset merely because it is popular or convenient.
 
 # IN SCOPE
 
-## 1. Integrate `docs/CURRENT_TASK.md` into governance
+## 1. Permanent PROJECT_REPORT clarification
 
-Update `AGENTS.md` with the minimum rules necessary to establish that:
+Add one concise governance clarification to `AGENTS.md` stating that `docs/PROJECT_REPORT.md` must eventually function as an evidence-backed engineering, learning, interview, viva, and project-defence guide.
 
-- `docs/CURRENT_TASK.md` contains exactly one currently approved Codex milestone or repair task;
-- Codex must read it before beginning project work;
-- its contents are replaced when the external supervisor approves a different task;
-- it may narrow the current work but cannot override permanent safety, ML-correctness, testing, evidence-integrity, or governance rules;
-- it cannot silently redefine `prompt.txt`;
-- completing it does not authorize the next milestone;
-- work must stop at its stated boundary;
-- external supervisor review is required before progression;
-- Codex must not commit, push, merge, create or move branches, rewrite Git history, or perform equivalent remote Git mutations unless the user explicitly changes this policy;
-- Codex must recommend a commit message, while the user performs commit and push operations.
+For each meaningful implemented component or method, where applicable, the report must explain:
 
-Do not create a new governance framework, policy hierarchy document, or ADR unless an unavoidable contradiction proves one is necessary.
+* purpose and project location;
+* data or request flow;
+* important callers and dependencies;
+* chosen approach and alternatives;
+* trade-offs and assumptions;
+* failure modes and meaningful bugs;
+* relevant tests;
+* important code/files to inspect;
+* technical or ML concepts involved;
+* limitations;
+* concise interview/viva explanations and likely follow-up questions.
 
-## 2. Reconcile repository-document responsibilities
+The report must remain structured and concise. It must never describe planned work as implemented or invent evidence to make the guide appear complete.
 
-Ensure the documentation consistently reflects:
+Do not otherwise restructure `AGENTS.md`.
 
-- `AGENTS.md`: permanent operating and engineering rules;
-- `prompt.txt`: permanent original project specification and vision;
-- `docs/CURRENT_TASK.md`: exactly one currently approved task;
-- `docs/PROJECT_REPORT.md`: actual completed work, decisions, evidence, learning, and limitations;
-- `docs/ARCHITECTURE.md`: currently approved architecture and architectural constraints;
-- `docs/EXECUTION_PLAN.md`: approved milestone sequence, dependencies, scope, and Definitions of Done;
-- `docs/SUPERVISOR_HANDOFF.md`: concise current-state evidence for external review.
+## 2. Candidate dataset comparison
 
-Do not modify `prompt.txt`.
+Identify at least three credible public tabular credit-risk or loan-risk classification datasets.
 
-## 3. Reconcile the execution order
+Use authoritative primary sources wherever possible:
 
-The current report and handoff recommend dataset selection and data audit before architecture, while the execution plan currently places architecture and technology selection first.
+* official dataset repositories;
+* official data documentation;
+* original dataset papers;
+* official licence pages.
 
-Adopt and document this research-first order:
+For every candidate, record:
 
-1. Phase 0 — Project Analysis and Scope Validation
-2. Phase 0 Repair — Documentation and Governance Consistency Repair
-3. Phase 1 — Dataset Selection and Data Audit
-4. Architecture, technology, and detailed implementation-roadmap planning
-5. Reproducible ML and later implementation milestones
+* exact dataset name;
+* authoritative source URL;
+* original paper or documentation where available;
+* licence or usage terms;
+* access method;
+* file format;
+* approximate and verified row/column counts;
+* target variable and label meaning;
+* observation unit;
+* collection period or chronology, if documented;
+* missing-value information;
+* class distribution where data access permits verification;
+* identifiers or possible repeated entities;
+* sensitive or potential audit attributes;
+* feature-semantic quality;
+* potential post-outcome or leakage-prone fields;
+* counterfactual suitability;
+* fairness-analysis feasibility;
+* laptop/runtime suitability;
+* major limitations and rejection risks.
 
-The execution plan may identify Phase 1 and its purpose as a future blocked milestone, but must not turn this task into Phase 1 or authorize its execution.
+Distinguish:
 
-Explain why dataset evidence must inform:
+* facts stated by the source;
+* facts computed from the downloaded data;
+* interpretations or unresolved questions.
 
-- target semantics;
-- feature roles;
-- leakage controls;
-- split strategy;
-- preprocessing requirements;
-- fairness feasibility;
-- counterfactual constraints;
-- XAI compatibility;
-- and later architecture decisions.
+Do not use an arbitrary composite score. Apply transparent pass/fail gates and a qualitative comparison.
 
-## 4. Add a measurable Phase 0 acceptance record
+## 3. Mandatory dataset-selection gates
 
-Update `docs/EXECUTION_PLAN.md` so Phase 0 explicitly records:
+A selected dataset must have:
 
-- objective;
-- prerequisites;
-- concepts involved;
-- in-scope work;
-- out-of-scope work;
-- expected affected files;
-- required checks and evidence;
-- measurable Definition of Done;
-- required documentation updates;
-- current approval status.
+* an authoritative, traceable source;
+* sufficiently clear lawful usage or licence terms;
+* a defined classification target;
+* an understandable observation unit;
+* enough feature documentation for leakage analysis;
+* enough observations and minority-class support for meaningful evaluation;
+* manageable size for the user’s normal student laptop;
+* no unresolved fatal target or provenance ambiguity;
+* sufficient feature semantics for at least a defensible counterfactual proof of concept.
 
-Distinguish clearly between:
+Fairness support is desirable but not mandatory. Never choose or reject a dataset solely to force fairness analysis.
 
-- completed by Codex;
-- verified from repository evidence;
-- pending external supervisor approval;
-- supervisor-approved.
+If no candidate passes these gates, do not force a selection. Report `INVESTIGATE` with the exact missing evidence.
 
-Do not rewrite history to imply that the original Phase 0 attempt passed.
+## 4. Inspect the actual candidate data
 
-## 5. Reconcile the meanings of MVP
+Where licensing and access permit, inspect the real candidate files rather than relying only on webpage summaries.
 
-Preserve `prompt.txt` as the original specification.
+Temporary raw files must remain outside the repository or in an ignored temporary location. Do not commit raw candidate datasets during this milestone.
 
-Update `PROJECT_REPORT.md` and `EXECUTION_PLAN.md` to distinguish:
+If temporary audit tooling is necessary:
 
-### Research MVP
+* prefer already available tools;
+* an isolated temporary environment outside the repository may be used;
+* explain why it is needed;
+* record relevant tool versions;
+* do not treat temporary audit packages as selected Aletheia dependencies;
+* do not create or modify project dependency files.
 
-The minimum evidence-producing ML/XAI research prototype:
+If the actual data cannot be inspected, clearly mark which claims remain source-reported rather than independently verified.
 
-- one approved, documented dataset;
-- leakage-safe reproducible preprocessing and splitting;
-- an interpretable baseline and justified nonlinear comparators;
-- cross-validated selection within training data;
-- untouched held-out evaluation;
-- global and local explanation evidence;
-- a constrained counterfactual proof of concept;
-- traceable experiment metadata;
-- a concise research comparison or prediction-inspection presentation.
+## 5. Selected dataset identity and reproducibility evidence
 
-### Semester Application/Demo Scope
+For the selected dataset, record:
 
-A later usable application built only after reliable research evidence exists. It may include, subject to later approval and justification:
+* exact source and download URL;
+* retrieval date;
+* version or release information where available;
+* original filename;
+* file format;
+* file size;
+* SHA-256 checksum;
+* row and column count;
+* source licence and attribution requirements;
+* whether redistribution is allowed;
+* instructions for reacquiring the same data.
 
-- a minimal API;
-- a reviewer-facing interface;
-- experiment tracking or appropriate persistence;
-- targeted tests;
-- audit records;
-- local reproducibility or containerization.
+Do not commit the raw dataset.
 
-FastAPI, MLflow, PostgreSQL, React/Next, and Docker must remain unselected technologies until their respective decisions are approved.
+## 6. Target and observation-unit audit
 
-### Enterprise Extensions
+Document:
 
-Keep production-oriented capabilities explicitly deferred, including unnecessary early microservices, Kubernetes, RBAC, production monitoring, CI/CD, cloud infrastructure, approval workflows, and real-lender integration.
+* what one row represents;
+* what event or condition the target represents;
+* the target label values;
+* which label represents the adverse/positive event for future classification analysis;
+* when the target becomes known;
+* the intended prediction moment;
+* whether every feature would exist at that moment;
+* whether the dataset describes applications, customers, accounts, or outcomes;
+* any ambiguity between credit risk, default prediction, approval prediction, and repayment outcome.
 
-State explicitly:
+Do not invent a business threshold or production-lending interpretation.
 
-- finishing the Research MVP does not complete the original platform vision;
-- finishing the Research MVP does not automatically complete the semester application;
-- later application components must present verified research evidence rather than conceal weak ML methodology.
+## 7. Structural data audit
 
-## 6. Resolve explanation-stability status
+Compute and record:
 
-Make all planning documents agree that:
+* shape;
+* column names;
+* data types;
+* representative value ranges or categories;
+* missing-value count and percentage per feature;
+* exact duplicate-row count;
+* identifier uniqueness;
+* possible repeated-entity evidence;
+* target counts and percentages;
+* invalid or undocumented values;
+* constant or near-constant fields where relevant;
+* obvious schema inconsistencies;
+* chronology fields and their coverage.
 
-- explanation stability remains part of Aletheia’s complete research question;
-- it is not required for completion of the initial Research MVP;
-- it is required before claiming that the complete research question, including stability, has been answered;
-- its perturbation rules, eligible features, sample selection, background/reference data, similarity metrics, and boundary-crossing treatment must be designed after dataset inspection;
-- it must not be claimed as implemented, measured, or validated yet.
+All numerical findings must come from actual executed inspection and must be reproducible from recorded commands.
 
-Keep fairness conditional on legitimate audit attributes, sufficient subgroup support, and appropriate methodology.
+Check arithmetic consistency, such as class counts summing to the audited observation count.
 
-## 7. Correct approval language
+## 8. Feature dictionary and feature roles
 
-Replace language that implies the external supervisor has already approved Phase 0.
+Create a feature-level table containing:
 
-Use precise categories where relevant:
+* source column name;
+* plain-language meaning;
+* data type;
+* important values or units;
+* timing relative to the target;
+* proposed role:
 
-- planned;
-- proposed pending review;
-- implemented but unverified;
-- verified from repository evidence;
-- experimentally demonstrated;
-- supervisor-approved.
+  * target;
+  * identifier;
+  * prediction candidate;
+  * audit-only candidate;
+  * excluded;
+  * unresolved;
+* leakage concern;
+* counterfactual category:
 
-The current Phase 0 scope is proposed and documented, but not yet supervisor-approved.
+  * immutable;
+  * mutable;
+  * constrained mutable;
+  * non-actionable;
+  * unresolved;
+* reason and source evidence.
 
-## 8. Update the supervisor handoff
+Do not finalize a prediction feature merely because it correlates with the target.
 
-Rewrite `docs/SUPERVISOR_HANDOFF.md` as the concise handoff for this repair attempt.
+Protected or sensitive attributes must not automatically become prediction features. If potentially useful for auditing, keep the prediction and audit roles conceptually separate.
 
-It must include:
+## 9. Leakage and temporal review
 
-- current milestone;
-- status;
-- confirmed starting state;
-- exact files modified;
-- planning inconsistencies repaired;
-- governance changes made;
-- checks actually executed;
-- exact check results;
-- confirmation that no automated tests were applicable, if that remains true;
-- confirmation that no dataset, architecture, dependencies, code, experiment, or later milestone work was introduced;
-- unresolved issues;
-- known limitations;
-- architecture status;
-- documentation updated;
-- evidence the supervisor should inspect;
-- suggested next action limited to external review.
+Investigate:
 
-The handoff must not claim that Phase 0 has passed.
+* target-derived fields;
+* post-outcome information;
+* information created after the intended prediction time;
+* duplicated records;
+* repeated customers or accounts;
+* chronology;
+* aggregate fields that may use future information;
+* identifiers that accidentally encode outcomes;
+* source preprocessing that may already contain leakage;
+* unclear feature timing.
+
+For every suspicious field, record the concern, evidence, proposed treatment, and unresolved questions.
+
+If a fatal leakage or target-validity problem is discovered, reject the dataset rather than hiding it.
+
+## 10. Candidate split strategy
+
+Recommend, but do not implement, the appropriate future split family:
+
+* stratified random;
+* temporal;
+* group-aware;
+* or another justified approach.
+
+Explain:
+
+* why the strategy matches the observation unit and chronology;
+* what leakage it prevents;
+* what evidence is still missing;
+* how the final test set must remain isolated later.
+
+Do not generate train/test files or begin preprocessing.
+
+## 11. Fairness feasibility audit
+
+Do not perform fairness analysis yet.
+
+Determine only whether the dataset may support it by documenting:
+
+* available legitimate audit attributes;
+* provenance and meaning of those attributes;
+* subgroup counts;
+* positive and negative target counts within candidate groups where definitions are source-supported;
+* very small or unsupported groups;
+* whether categories were encoded or combined by the source;
+* risks of arbitrary regrouping;
+* whether an attribute should be audit-only;
+* limitations of treating the public dataset as representative of real lending.
+
+Do not infer protected identities from proxy features.
+
+Do not claim the dataset or a future model is fair or unfair.
+
+## 12. Counterfactual feasibility audit
+
+Do not generate counterfactuals yet.
+
+Assess whether the feature semantics permit realistic future constraints:
+
+* immutable attributes;
+* non-actionable historical attributes;
+* mutable financial variables;
+* directionally constrained variables;
+* categorical constraints;
+* allowed ranges;
+* relationships between dependent features;
+* changes that could be mathematically valid but practically impossible.
+
+Mark uncertain classifications as unresolved instead of guessing.
+
+## 13. Dataset decision
+
+Select one dataset only if the evidence clearly supports it.
+
+Document:
+
+* why it passed the mandatory gates;
+* why it is the best fit for Aletheia’s Research MVP;
+* why each realistic alternative was not selected;
+* trade-offs accepted;
+* limitations inherited;
+* conditions that would require reconsidering the choice.
+
+Dataset selection is not evidence that the later model will be accurate, explainable, stable, fair, or suitable for real lending.
+
+# REQUIRED ARTIFACT
+
+Create:
+
+* `docs/DATASET_AUDIT.md`
+
+It must contain:
+
+1. candidate comparison;
+2. selection gates;
+3. final selection or explicit investigation result;
+4. provenance, licence, and version evidence;
+5. actual data-inspection results;
+6. target and observation-unit analysis;
+7. structural audit;
+8. feature dictionary and roles;
+9. leakage review;
+10. split recommendation;
+11. fairness feasibility;
+12. counterfactual feasibility;
+13. limitations;
+14. reproducibility instructions;
+15. evidence sources.
+
+Keep detailed dataset tables in this file rather than overloading `PROJECT_REPORT.md`.
+
+# PROJECT_REPORT REQUIREMENTS
+
+Update `docs/PROJECT_REPORT.md` with a concise, technically accurate learning and defence record covering:
+
+* which dataset was selected, if any;
+* why dataset selection came before architecture;
+* alternatives considered;
+* target semantics;
+* observation unit;
+* important feature-role distinctions;
+* major leakage risks;
+* recommended split family;
+* fairness feasibility;
+* counterfactual feasibility;
+* assumptions and limitations;
+* what evidence is in `docs/DATASET_AUDIT.md`;
+* what files the user should inspect;
+* concise interview/viva questions and model answers based on completed Phase 1 work.
+
+The report must remain a study guide rather than a raw dump of audit output.
+
+Do not document future modelling as though it exists.
+
+# EXECUTION PLAN REQUIREMENTS
+
+Update `docs/EXECUTION_PLAN.md` to record:
+
+* Phase 0 and its repair as externally supervisor-approved;
+* Phase 1 as completed by Codex and pending external supervisor review only if all acceptance criteria are met;
+* otherwise, Phase 1 as incomplete or investigate;
+* actual Phase 1 scope, evidence, and measurable Definition of Done;
+* architecture and all implementation milestones as still blocked.
+
+Do not authorize architecture or create the next executable milestone.
+
+# SUPERVISOR HANDOFF REQUIREMENTS
+
+Rewrite `docs/SUPERVISOR_HANDOFF.md` for Phase 1.
+
+Include:
+
+* current milestone and status;
+* exact selected dataset, or explicit failure to select;
+* source and licence;
+* target and observation unit;
+* actual computed audit facts;
+* important leakage findings;
+* feature-role conclusions;
+* split recommendation;
+* fairness and counterfactual feasibility;
+* exact files changed;
+* exact commands or checks run and results;
+* unresolved questions;
+* limitations;
+* confirmation that no model, preprocessing pipeline, architecture, application, or later milestone began;
+* evidence the external supervisor should inspect;
+* suggested next action limited to supervisor review.
+
+The handoff is navigation evidence, not proof.
 
 # OUT OF SCOPE
 
 Do not:
 
-- select, recommend, compare, approve, download, or commit a dataset;
-- perform EDA or data profiling;
-- define actual dataset feature roles;
-- choose the positive class, threshold, primary metric, or split strategy for an unseen dataset;
-- design module boundaries or application architecture;
-- modify `docs/ARCHITECTURE.md`;
-- modify `prompt.txt`;
-- select or install dependencies;
-- create Python, notebook, frontend, backend, database, infrastructure, or test code;
-- run ML experiments;
-- fabricate tests, metrics, results, or approvals;
-- create an executable Phase 1 task;
-- overwrite `docs/CURRENT_TASK.md` with a future task;
-- introduce ADRs without a genuine major decision requiring one;
-- add governance layers beyond what this workflow needs;
-- begin any subsequent phase;
-- commit, push, merge, create or move branches, or rewrite Git history.
+* design system architecture or module boundaries;
+* modify `docs/ARCHITECTURE.md`;
+* modify `prompt.txt`;
+* select the permanent application technology stack;
+* create project dependency files;
+* install persistent project dependencies;
+* create notebooks or permanent analysis scripts;
+* commit raw or processed datasets;
+* preprocess data for modelling;
+* create train, validation, or test datasets;
+* train or tune models;
+* choose model hyperparameters;
+* produce model metrics;
+* implement SHAP, LIME, counterfactual generation, stability, or fairness analysis;
+* create APIs, databases, frontends, Docker files, MLflow configuration, or deployment files;
+* fabricate missing documentation, licence terms, counts, metrics, or findings;
+* begin architecture planning;
+* create the next `CURRENT_TASK.md`;
+* commit, push, merge, mutate branches, or rewrite Git history.
 
 # ANTI-OVERENGINEERING RULES
 
-- Prefer small, direct edits to existing documents.
-- Do not create a policy framework for its own sake.
-- Do not duplicate the complete contents of `prompt.txt`.
-- Link responsibilities between documents instead of repeating long rules everywhere.
-- Do not design future application architecture during a planning repair.
-- Do not add technologies merely to make the project appear enterprise-grade.
-- Do not turn a documentation repair into a repository restructuring exercise.
+* Produce one focused dataset-audit document.
+* Do not create a data-catalogue system.
+* Do not create database schemas.
+* Do not add DVC, MLflow, Docker, orchestration, or cloud storage.
+* Do not create abstractions for a pipeline that does not exist.
+* Do not evaluate unnecessary datasets once a sufficiently broad and credible comparison exists.
+* Prefer verified evidence over document length.
 
-# DOCUMENTATION EXPECTATIONS
+# VERIFICATION
 
-The expected modified files are limited to:
+At minimum, perform and report:
 
-- `AGENTS.md`
-- `docs/PROJECT_REPORT.md`
-- `docs/EXECUTION_PLAN.md`
-- `docs/SUPERVISOR_HANDOFF.md`
+1. authoritative source and licence verification;
+2. actual file download or documented access attempt;
+3. SHA-256 calculation for the selected raw file;
+4. schema and shape inspection;
+5. missing-value calculations;
+6. duplicate-row check;
+7. identifier and repeated-entity check where possible;
+8. target-count and percentage calculation;
+9. arithmetic consistency checks;
+10. subgroup-support counts only where definitions are legitimate;
+11. feature-timing and leakage review;
+12. comparison of computed facts with source documentation;
+13. `git diff --check`;
+14. `git status --short`;
+15. final changed-file inspection;
+16. confirmation that no raw dataset or temporary audit artifact is tracked;
+17. confirmation that `prompt.txt` and `docs/ARCHITECTURE.md` are unchanged;
+18. confirmation that no model, application, architecture, dependency, or future-task work was introduced.
 
-`docs/CURRENT_TASK.md` should remain the approved task being executed and must not be replaced with a future task.
+Record exact commands, tool versions where relevant, and exact results.
 
-The following must remain unchanged:
-
-- `prompt.txt`
-- `docs/ARCHITECTURE.md`
-
-If another file genuinely requires modification, stop and explain why before expanding scope.
-
-# TESTING AND VERIFICATION
-
-Because this is documentation-only work, do not invent application tests.
-
-At minimum:
-
-1. inspect the complete final diff;
-2. run `git diff --check`;
-3. inspect `git status --short`;
-4. inspect the final changed-file list;
-5. verify that only authorized files changed, apart from the user-created `docs/CURRENT_TASK.md`;
-6. verify that `prompt.txt` is unchanged;
-7. verify that `docs/ARCHITECTURE.md` is unchanged;
-8. search the final documents for contradictory execution-order statements;
-9. search for inconsistent uses of “MVP” and confirm each use identifies the intended scope;
-10. search for claims that explanation stability is already implemented or is both required and optional for the same milestone;
-11. verify that no document claims supervisor approval;
-12. verify that no dataset, code, dependency, architecture, experiment, or future task was introduced;
-13. compare `PROJECT_REPORT.md`, `EXECUTION_PLAN.md`, `SUPERVISOR_HANDOFF.md`, `AGENTS.md`, `prompt.txt`, and `ARCHITECTURE.md` for consistency.
-
-Report every command or check actually performed and its exact result. If a check was not run, say so.
-
-# LEARNING AND DEFENCE NOTES
-
-Update only the appropriate existing sections of `PROJECT_REPORT.md` with concise, project-specific explanations of:
-
-- permanent vision versus current task authorization;
-- Research MVP versus semester application scope;
-- why dataset evidence precedes architecture;
-- why Definitions of Done and external gates matter;
-- why explanation stability remains part of the full research claim even if it follows the initial Research MVP.
-
-Do not turn the report into a generic project-management textbook.
+If actual data access, provenance, licensing, or target semantics cannot be verified, do not fabricate completion. Return `INVESTIGATE`.
 
 # ACCEPTANCE CRITERIA / DEFINITION OF DONE
 
-This repair is complete only if all of the following are true:
+Phase 1 is complete by Codex only if:
 
-- [ ] `AGENTS.md` formally governs `docs/CURRENT_TASK.md`.
-- [ ] `AGENTS.md` records that Codex must not commit or push under the current policy.
-- [ ] `prompt.txt` remains unchanged as the permanent original specification.
-- [ ] `docs/ARCHITECTURE.md` remains unchanged and unapproved.
-- [ ] `EXECUTION_PLAN.md` uses the research-first sequence with dataset audit before architecture.
-- [ ] Phase 0 has a measurable acceptance record.
-- [ ] Phase 0 is not represented as supervisor-approved.
-- [ ] Research MVP, semester application scope, and enterprise extensions are unambiguous.
-- [ ] Completing the Research MVP cannot be confused with completing the original platform vision.
-- [ ] Explanation stability has one consistent status across the documents.
-- [ ] Fairness remains conditional rather than promised.
-- [ ] Phase 1 remains blocked and unexecuted.
-- [ ] No executable Phase 1 task has been created.
-- [ ] `SUPERVISOR_HANDOFF.md` accurately reports this repair attempt.
-- [ ] No dataset, EDA, architecture, dependency, code, experiment, or later-phase work was introduced.
-- [ ] Documentation-only verification checks complete without unresolved inconsistency.
-- [ ] The final diff contains no unrelated changes.
-- [ ] No Git commit, push, merge, branch mutation, or history rewrite was performed by Codex.
+* [ ] At least three credible candidate datasets were compared.
+* [ ] Candidate facts use authoritative sources where available.
+* [ ] Source-reported and independently computed facts are distinguished.
+* [ ] Mandatory selection gates are explicit.
+* [ ] One dataset passes the gates and is selected, or an honest `INVESTIGATE` result explains why none can be selected.
+* [ ] The selected file has recorded identity, retrieval information, size, and SHA-256.
+* [ ] Licence and redistribution conditions are documented without guessing.
+* [ ] Target semantics and observation unit are clear.
+* [ ] Actual shape, schema, missingness, duplicates, and class distribution were computed.
+* [ ] Feature meanings and proposed roles are documented.
+* [ ] Leakage, chronology, and repeated-entity risks were investigated.
+* [ ] A future split family is recommended with evidence.
+* [ ] Fairness feasibility is assessed without performing fairness analysis.
+* [ ] Counterfactual feasibility is assessed without generating counterfactuals.
+* [ ] Dataset limitations and rejection conditions are explicit.
+* [ ] `docs/DATASET_AUDIT.md` contains reproducibility evidence.
+* [ ] `PROJECT_REPORT.md` contains concise learning and defence material based only on completed work.
+* [ ] `EXECUTION_PLAN.md` records the correct gate and Phase 1 status.
+* [ ] `SUPERVISOR_HANDOFF.md` accurately reports repository evidence.
+* [ ] No raw data, models, application code, architecture, persistent dependencies, or future task was added.
+* [ ] No Git commit or push was performed by Codex.
 
-If any item is false, report the milestone as incomplete.
+If any mandatory criterion fails, report Phase 1 as incomplete or `INVESTIGATE`.
+
+# EXPECTED GIT STATUS BEFORE USER COMMIT
+
+The expected changed files are:
+
+* Modified: `AGENTS.md`
+* Modified: `docs/CURRENT_TASK.md`
+* Modified: `docs/EXECUTION_PLAN.md`
+* Modified: `docs/PROJECT_REPORT.md`
+* Modified: `docs/SUPERVISOR_HANDOFF.md`
+* New untracked file: `docs/DATASET_AUDIT.md`
+
+Notes:
+
+* `docs/CURRENT_TASK.md` is modified because the user replaced the previous task with this approved Phase 1 task. Codex must not replace it again.
+* No raw dataset should appear.
+* Temporary scripts, environments, downloaded archives, spreadsheets, CSV files, or generated outputs must not appear in repository status.
+* `prompt.txt` must remain unchanged.
+* `docs/ARCHITECTURE.md` must remain unchanged.
+* No dependency, notebook, source-code, API, frontend, database, Docker, MLflow, or deployment file should appear.
+
+If Git status contains additional files, stop and explain them before recommending a commit.
 
 # FINAL CODEX RESPONSE
 
-At completion, report:
+Report:
 
-1. current milestone status;
-2. what changed;
-3. why each change was needed;
-4. files created;
-5. files modified;
-6. files intentionally left unchanged;
-7. checks actually run;
-8. exact check results;
-9. decisions recorded;
-10. unresolved issues;
-11. known limitations;
-12. what the user should understand;
-13. confirmation that Phase 1 did not begin;
-14. confirmation that no Git commit or push was performed;
-15. recommended commit message.
+1. milestone status;
+2. dataset selected or investigation outcome;
+3. why;
+4. candidates considered;
+5. authoritative sources and licence;
+6. target and observation unit;
+7. important computed audit results;
+8. leakage findings;
+9. feature-role conclusions;
+10. split recommendation;
+11. fairness feasibility;
+12. counterfactual feasibility;
+13. files created;
+14. files modified;
+15. files intentionally unchanged;
+16. commands and checks actually run;
+17. exact results;
+18. unresolved issues;
+19. limitations;
+20. what the user should understand;
+21. confirmation that architecture and modelling did not begin;
+22. confirmation that Codex did not commit or push;
+23. actual final `git status --short`;
+24. recommended commit message.
 
-Recommended commit-message format:
+If Phase 1 completes successfully, recommend:
 
-`docs: repair Phase 0 planning governance`
+`docs: select and audit Aletheia dataset`
+
+If no dataset can defensibly be selected, recommend:
+
+`docs: investigate Aletheia dataset candidates`
 
 Do not claim external supervisor approval.
 
 # STOP RULE
 
-Stop immediately after completing and verifying this Phase 0 documentation and governance repair.
+Stop after completing and verifying Phase 1.
 
-Do not:
+Do not begin:
 
-- begin Phase 1;
-- select or inspect datasets;
-- design architecture;
-- install dependencies;
-- implement code;
-- replace `docs/CURRENT_TASK.md` with another milestone;
-- commit or push changes.
+* architecture;
+* technology selection;
+* preprocessing implementation;
+* model training;
+* explainability implementation;
+* counterfactual generation;
+* fairness measurement;
+* API or frontend development;
+* experiment tracking;
+* deployment;
+* or another milestone.
 
-The user will inspect the working tree, perform the commit and push, and return the resulting repository state for independent external supervisor review.
+Do not modify `docs/CURRENT_TASK.md` again.
+
+Do not commit or push.
+
+The user will inspect Git status, commit and push the completed attempt, and return it for independent external supervisor review.

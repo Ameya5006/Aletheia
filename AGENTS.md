@@ -52,6 +52,16 @@ The report must describe the project in language that a CSE student can understa
 •	resume preparation,
 •	project presentations.
 The report should remain technically accurate but should not read like raw developer logs.
+
+The report must eventually serve as a concise, evidence-backed engineering,
+learning, interview, viva, and project-defence guide. For each meaningful
+implemented component or method, where applicable, record its purpose and
+location, data/request flow, callers and dependencies, selected approach and
+alternatives, trade-offs and assumptions, failure modes and meaningful bugs,
+relevant tests and files to inspect, concepts, limitations, and concise
+interview/viva explanations with likely follow-up questions. Never describe
+planned work as implemented or invent evidence to make the guide appear
+complete.
 ________________________________________
 5. Required PROJECT_REPORT.md Structure
 Maintain the following sections.
