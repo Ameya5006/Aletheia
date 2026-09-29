@@ -12,12 +12,14 @@ CURRENT_TASK.md. Codex does not advance merely because a milestone appears here.
 - South German Credit: approved only as suitable for an academic Research MVP;
   no model, calibration, fairness, stability, production, or modern-lending
   claim is approved.
-- Phase 2 architecture/technology/roadmap: completed by Codex and **pending
-  external supervisor review**.
-- Every implementation and delivery milestone: future and blocked.
+- Phase 2 architecture/technology/roadmap: externally supervisor-approved at
+  commit `52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.
+- Phase 3 reproducible data foundation: completed by Codex and pending external
+  supervisor review.
+- Phase 4 and every later implementation/delivery milestone: blocked.
 
-prompt.txt remains the permanent vision. The proposed architecture does not
-authorize implementation, dependencies, dataset download, modelling, XAI, or
+prompt.txt remains the permanent vision. Phase 3 authorization covered only the
+data foundation and does not authorize preprocessing, modelling, XAI, or
 application work.
 
 ## Gate Rules
@@ -64,7 +66,8 @@ DATASET_AUDIT.md. Approval is limited to academic dataset suitability.
 
 ### Phase 2 — System Architecture, Technology Selection, and Roadmap
 
-**Status:** completed by Codex; proposed pending external supervisor review.
+**Status:** externally supervisor-approved at commit
+`52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.
 
 **Goal:** define an evidence-producing research architecture based on Phase 1
 without implementing it.
@@ -98,10 +101,11 @@ API/UI/database/MLflow/container/deployment, and the next executable task.
 - final diff/status/scope/consistency checks pass with no implementation
   artifacts.
 
-## Proposed Post-Architecture Roadmap
+## Post-Architecture Roadmap
 
-All milestones below are **blocked**. Dependencies describe logical order, not
-permission.
+Phase 3 is implemented under the current task and pending external supervisor
+review. Every later milestone remains **blocked**. Dependencies describe
+logical order, not permission.
 
 ~~~mermaid
 flowchart LR
@@ -124,6 +128,8 @@ flowchart LR
 
 **Dependency:** Phase 2 external approval and a replacement current task.
 
+**Status:** completed by Codex; pending external supervisor review.
+
 **Bounded goal:** create the smallest tested package/configuration needed to
 reacquire, verify, load, validate, map and split the approved dataset.
 
@@ -137,11 +143,12 @@ split membership; unit/data tests; ignored local raw/generated paths.
 counterfactuals, fairness/stability, artifact model serialization, API/UI and
 infrastructure.
 
-**Completion evidence:** clean-environment acquisition or documented offline
-fixture approach; expected checksum/schema/shape/target tests; mismatch and
-unknown-category failures; forbidden-role tests; same-seed split identity, full
-coverage, no overlap and class support; exact commands/results; updated report
-and handoff.
+**Completion evidence:** the fixed UCI archive and raw hashes were verified;
+schema/shape/target/role/key/split contracts pass the authoritative flow; 48
+offline tests and one separately enabled live integration test pass; Ruff,
+formatting, pip checks, and a second clean Python 3.12 environment pass. Exact
+commands/results and limitations are recorded in PROJECT_REPORT.md and
+SUPERVISOR_HANDOFF.md. External review, not this record, decides acceptance.
 
 ### Phase 4 — Leakage-Safe Baseline Pipeline
 
@@ -329,6 +336,6 @@ application.
 
 ## Advisory Next Step
 
-External supervisor review of Phase 2 only. If approved, the supervisor may
-replace CURRENT_TASK.md with a bounded Phase 3 data-foundation task. This file
-does not create or authorize that task.
+External supervisor review of Phase 3 only. If approved, the supervisor may
+replace CURRENT_TASK.md with a bounded Phase 4 leakage-safe baseline task. This
+roadmap does not authorize Phase 4.

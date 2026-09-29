@@ -1,0 +1,25 @@
+# Python environments and caches
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Packaging output
+build/
+dist/
+*.egg-info/
+
+# Local data and generated evidence
+*.zip
+data/raw/
+data/processed/
+artifacts/
+reports/generated/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.local.toml

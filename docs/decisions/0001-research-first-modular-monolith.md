@@ -2,15 +2,19 @@
 
 ## Status
 
-Proposed pending external supervisor review.
+Accepted and externally supervisor-approved at commit
+`52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.
+
+Phase 3 implements only the approved data-foundation slice. Later ML, audit,
+artifact, and delivery components remain unimplemented and blocked.
 
 ## Context
 
 Aletheia must produce reproducible evidence about model performance,
 explanations, constrained counterfactuals, stability, and conditional subgroup
 behaviour. Phase 1 established a small, fixed tabular dataset with strict target,
-feature-role, split, fairness, and recourse limitations. No software or
-deployment architecture exists yet.
+feature-role, split, fairness, and recourse limitations. At the time of this
+decision, no software or deployment architecture existed.
 
 The immediate problem is to keep ML validity and experiment evidence independent
 from future HTTP, UI, database, and deployment choices while retaining an
@@ -121,8 +125,8 @@ Costs and constraints:
 
 ## Deferred Decisions
 
-Exact dependency versions and lock format; model serialization; final feature
-policy; split seed/folds; metrics/threshold; model set; SHAP adoption;
+Model serialization; categorical/ordinal encoding and CV folds;
+metrics/threshold; model set; SHAP adoption;
 counterfactual algorithm/library; stability protocol; fairness authorization;
 API/frontend/database/MLflow/container/deployment technologies; and
 authentication/RBAC.

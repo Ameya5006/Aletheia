@@ -228,15 +228,17 @@ project interpretations unless the row explicitly states a source definition.
 | `alter` / age | Quantitative years; 19–75, 53 values | Application | Audit-only candidate | None evident | Immutable; never recourse |
 | `weitkred` / other instalment plans | Nominal 1–3; 139/47/814 | Existing at application | Prediction candidate | Cutoff for concurrent plan must be fixed | Non-actionable historical/current obligation |
 | `wohn` / housing | Nominal 1–3; 179/714/107 | Application | Prediction candidate | Socioeconomic proxy risk | Non-actionable for immediate recourse |
-| `bishkred` / number of credits at bank | Ordered 1–4; 633/333/28/6 | Includes current credit | Unresolved prediction candidate | Definition includes current contract; availability/coding moment must be fixed | Non-actionable historical count |
+| `bishkred` / number of credits at bank | Ordered 1–4; 633/333/28/6 | Includes current credit | Excluded in Phase 3 | Definition includes current contract and no authoritative cutoff establishes safe availability; exclusion is default-deny, not proof of target leakage | Non-actionable historical count |
 | `beruf` / job category | Ordinal 1–4; 22/200/630/148 | Application | Prediction candidate | Coarse source scoring embeds historical judgement | Non-actionable for immediate recourse |
 | `pers` / people financially dependent | Binary 1–2; 155/845 | Application | Prediction candidate | None evident | Non-actionable household circumstance |
 | `telef` / registered landline | Binary 1–2; 596/404 | Application | Excluded candidate | Obsolete 1970s socioeconomic proxy with little modern meaning | Non-actionable; should not drive recourse |
 | `gastarb` / foreign-worker status | Binary 1–2; 37/963 | Application | Audit-only candidate | Sensitive/nationality proxy; highly imbalanced | Immutable; never recourse |
 | `kredit` / contract compliance | Binary; 0 bad:300, 1 good:700 | Known after repayment performance | Target | Direct outcome; never a predictor | Non-actionable target |
 
-“Prediction candidate” is provisional. It does not approve a future feature;
-Phase 1 records semantics and risk only.
+“Prediction candidate” records the Phase 1 proposal. Phase 3 subsequently froze
+15 prediction fields, three audit-only fields, and two exclusions in
+`configs/features.toml`; `bishkred` and `telef` are excluded. This does not
+approve an encoding or model.
 
 ## Leakage, Timing, and Repeated-Entity Review
 
@@ -247,8 +249,9 @@ none. Nevertheless:
   though collection spans three years;
 - there is no customer/account ID, so repeated borrowers cannot be detected or
   kept in one partition;
-- `bishkred` includes the current credit, so the future pipeline must confirm
-  that its value is fixed at the chosen prediction moment;
+- `bishkred` includes the current credit. Phase 3 excludes it because its value
+  cannot be shown to be fixed safely at the chosen prediction moment; this is a
+  conservative default-deny decision, not proof of target leakage;
 - credit-history and other-instalment-plan fields need a strict observation
   cutoff so future/concurrent information is not accidentally included;
 - the sample contains granted credits only, so it cannot directly model the
@@ -263,18 +266,32 @@ none. Nevertheless:
 
 None is a proven target leak in the file, but each is a required future control.
 
-## Recommended Future Split Family
+## Implemented Phase 3 Split and Row Identity
 
-Recommend a **stratified random split**, not yet implemented, because the file
-has a binary 70/30 target but no row dates or entity identifiers needed for
-temporal/group-aware splitting. Use a fixed reproducible seed, isolate one final
-test set before any learned preprocessing or model selection, and perform
-cross-validation only within training data.
+Phase 3 implements a fixed **80/20 stratified random split** using
+`StratifiedShuffleSplit`, seed 42, and derived `adverse_event`. It locks 200 test
+row keys in `configs/splits/south_german_credit_v1.json`; the other 800 keys are
+the training complement. Training contains 240 adverse and 560 non-adverse
+rows, while test contains 60 adverse and 140 non-adverse rows. The canonical
+membership checksum is
+`af26b6036c6958a2dec48362fb1bfb075fca2ad7e482ed48ee7a49d7ec6d994b`.
 
-This choice preserves adverse-class support and prevents test-set tuning, but it
+`src/aletheia/data/load.py` assigns one-based source-position keys
+`sgc-0001` through `sgc-1000` only after the raw SHA-256 is verified. They do
+not depend on the pandas index and remain aligned across prediction, audit,
+target, excluded, metadata, and split views. `src/aletheia/data/split.py`
+defines the canonical JSON checksum, reconstructs training as the complement,
+and rejects dataset/policy/mapping mismatch, changed keys, duplicate or unknown
+keys, changed counts, nondeterministic membership, and checksum drift.
+
+Stratification preserves the 70/30 class support in both partitions, but it
 cannot prevent same-person leakage if undisclosed repeated borrowers exist and
-cannot simulate forward-in-time generalisation. Reconsider the split if an
-authoritative dated or identified version is later found.
+cannot simulate forward-in-time generalisation because the source supplies no
+entity IDs or row dates. The held-out membership must not be used for
+preprocessing, model, metric, or threshold decisions. Configuration lives in
+`configs/dataset.toml` and `configs/features.toml`; offline boundary tests are
+under `tests/data/` and `tests/unit/`, and the explicitly enabled authoritative
+flow is in `tests/integration/test_data_foundation.py`.
 
 ## Fairness Feasibility (No Fairness Analysis Performed)
 

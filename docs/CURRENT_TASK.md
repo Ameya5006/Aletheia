@@ -1,854 +1,955 @@
 # MILESTONE
 
-Phase 2 — System Architecture, Technology Selection, and Implementation Roadmap
+Phase 3 — Reproducible Data Foundation
+
+# SUPERVISOR DECISION
+
+Phase 2 — System Architecture, Technology Selection, and Implementation Roadmap is externally supervisor-approved at commit:
+
+`52be4130c8c4745c9f86f3b26a93497c3beeb2ff`
+
+The approved architectural direction is a research-first Python modular monolith.
+
+This approval covers the proposed architecture and roadmap only. It does not approve any model, preprocessing result, metric, explanation, fairness result, API, UI, database, deployment, or production claim.
 
 # GOAL
 
-Design the proposed system architecture for Aletheia, select and justify only the technologies needed for the upcoming research implementation, and establish a detailed evidence-driven milestone roadmap.
+Implement and verify the smallest reproducible data foundation needed to:
 
-This milestone must define how Aletheia will eventually support:
+1. configure the approved dataset;
+2. reacquire it from the authoritative UCI source;
+3. verify archive and raw-file identity;
+4. load its raw schema without changing meanings;
+5. validate its schema and categorical domains;
+6. preserve and explicitly map the target;
+7. enforce disjoint feature roles;
+8. create stable row keys;
+9. create and lock one deterministic stratified train/test membership;
+10. expose a small data-only command interface;
+11. test all important failure boundaries;
+12. document the implementation as engineering, learning, interview and viva evidence.
 
-* reproducible dataset acquisition and verification;
-* schema and semantic validation;
-* feature-role enforcement;
-* leakage-safe splitting and preprocessing;
-* baseline and comparator training;
-* model evaluation;
-* experiment traceability;
-* global and local explanations;
-* constrained counterfactuals;
-* explanation-stability analysis;
-* conditional fairness analysis;
-* later API and reviewer-interface integration.
+Do not implement preprocessing, model training or any later milestone.
 
-This is a system-design milestone. Do not implement the architecture.
+# REQUIRED STARTING STATE
 
-# WHY THIS MILESTONE EXISTS
+Before editing, verify:
 
-Phase 0 established the research scope.
+1. the current branch is `main`;
+2. `HEAD` is `52be4130c8c4745c9f86f3b26a93497c3beeb2ff`;
+3. the branch is synchronized with `origin/main`;
+4. Phase 2 documentation and ADR exist;
+5. Phase 1 dataset evidence remains present;
+6. no implementation already exists;
+7. `git status --short --untracked-files=all` contains only:
 
-Phase 1 selected and audited South German Credit and established:
+```text
+ M docs/CURRENT_TASK.md
+```
 
-* target semantics;
-* observation unit;
-* feature meanings;
-* leakage risks;
-* audit-only and excluded-feature candidates;
-* split constraints;
-* fairness limitations;
-* counterfactual limitations;
-* reproducibility requirements.
+`docs/CURRENT_TASK.md` is modified because the user replaced the Phase 2 task with this externally approved Phase 3 task.
 
-Architecture can now be based on actual dataset evidence instead of assumptions.
+Do not modify `docs/CURRENT_TASK.md` again.
 
-The system design must keep research validity independent from frontend, API, database, and deployment concerns.
+If the starting status contains any additional modified, staged or untracked path, stop and explain it before making changes.
 
-# CURRENT STATE AND PREREQUISITES
+# FILES TO READ COMPLETELY
 
-At the start of this task:
-
-* Phase 0 and its repair are externally supervisor-approved.
-* Phase 1 is externally supervisor-approved.
-* South German Credit is the selected dataset.
-* No raw dataset is tracked.
-* No project architecture has been approved.
-* No dependencies, source code, notebooks, tests, models, experiments, API, database, frontend, or deployment files exist.
-* `docs/ARCHITECTURE.md` still contains only an unapproved placeholder.
-* `docs/CURRENT_TASK.md` is the sole current authorization.
-* Codex must not commit or push.
-
-If repository evidence materially contradicts this state, stop and report it before editing.
-
-# FILES TO READ FIRST
-
-Read completely:
+Read:
 
 * `AGENTS.md`
 * `prompt.txt`
 * `docs/CURRENT_TASK.md`
-* `docs/DATASET_AUDIT.md`
+* `docs/SUPERVISOR_HANDOFF.md`
 * `docs/PROJECT_REPORT.md`
 * `docs/ARCHITECTURE.md`
 * `docs/EXECUTION_PLAN.md`
-* `docs/SUPERVISOR_HANDOFF.md`
+* `docs/DATASET_AUDIT.md`
+* `docs/decisions/0001-research-first-modular-monolith.md`
 
 Also inspect:
 
-* current Git status;
+* Git status;
 * recent Git history;
-* repository tree;
-* Phase 1 commit and diff;
-* all existing documentation constraints.
+* the Phase 2 commit and diff;
+* the complete repository tree;
+* all repository instructions.
 
 Treat repository evidence as authoritative.
 
-# BEFORE CHANGING FILES
+# BEFORE EDITING
 
-Provide a concise working update explaining:
+Provide a concise working update containing:
 
-1. the verified repository state;
-2. the architectural problems that must now be solved;
-3. the proposed decision process;
-4. architecture alternatives to evaluate;
-5. technologies that require selection now;
-6. technologies that should remain deferred;
-7. expected files to change;
-8. major ML, XAI, reproducibility, coupling, and overengineering risks;
-9. acceptance criteria.
+1. verified starting commit and Git status;
+2. Phase 2 approval being recorded;
+3. proposed Phase 3 modules;
+4. dependency and environment approach;
+5. acquisition and checksum strategy;
+6. schema and target controls;
+7. feature-role policy;
+8. row-key and split strategy;
+9. test strategy;
+10. expected changed and new files;
+11. principal risks and stop conditions.
 
-Do not begin editing if Phase 1 evidence is missing or contradictory.
+Do not begin editing until the repository state is verified.
 
-# IN SCOPE
+# FIXED DATASET IDENTITY
 
-## 1. Record the Phase 1 approval
+Use only:
 
-Update the relevant status sections so they truthfully record:
+* Dataset: South German Credit
+* UCI dataset record: `https://archive.ics.uci.edu/dataset/573/south+german+credit`
+* DOI: `https://doi.org/10.24432/C5QG88`
+* Official archive: `https://archive.ics.uci.edu/static/public/573/south+german+credit+update.zip`
+* Expected archive size: `13,130` bytes
+* Expected archive SHA-256: `0b40d40eb7321693d559e247a556f88a6cc8df8489c3cb2ae084db7592584551`
+* Required raw archive member: `SouthGermanCredit.asc`
+* Expected raw size: `47,940` bytes
+* Expected raw SHA-256: `5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f`
+* Expected shape: 1,000 rows × 21 raw columns
+* Licence: CC BY 4.0
 
-* Phase 1 is externally supervisor-approved;
-* South German Credit is approved for the Research MVP;
-* approval is limited to dataset suitability for an academic research prototype;
-* approval does not establish model performance, fairness, stability, calibration, production suitability, or modern-lending validity.
+Do not silently accept an updated archive, alternative mirror, renamed dataset, different checksum, or different raw member.
 
-Update the status line in `docs/DATASET_AUDIT.md` without rewriting its evidence.
+A mismatch must stop processing.
 
-## 2. Architecture principles
+Do not commit the archive or extracted raw dataset.
 
-Evaluate and document the principles that should govern Aletheia:
+# FIXED RAW COLUMN ORDER
 
-* research-first design;
-* modular monolith;
-* separation of ML research logic from HTTP/UI concerns;
-* explicit dependency direction;
-* small understandable modules;
-* testable data and model boundaries;
-* reproducible artifacts;
-* configuration separate from execution logic;
-* no hidden notebook-only core logic;
-* no premature database or distributed infrastructure;
-* platform components added only after research evidence exists.
+The raw header must be exactly:
 
-A modular monolith is the expected default. Choose something else only if repository evidence provides a compelling reason.
+1. `laufkont`
+2. `laufzeit`
+3. `moral`
+4. `verw`
+5. `hoehe`
+6. `sparkont`
+7. `beszeit`
+8. `rate`
+9. `famges`
+10. `buerge`
+11. `wohnzeit`
+12. `verm`
+13. `alter`
+14. `weitkred`
+15. `wohn`
+16. `bishkred`
+17. `beruf`
+18. `pers`
+19. `telef`
+20. `gastarb`
+21. `kredit`
 
-Do not introduce artificial Clean Architecture layers, interfaces, repositories, or dependency-injection frameworks merely for appearance.
+All raw values must parse as integers. Do not silently coerce malformed, missing, floating-point or unknown values.
 
-## 3. System context and delivery stages
+Preserve the source column names in the raw layer. Human-readable names may exist in configuration or documentation, but must not replace raw names silently.
 
-Document the system at three levels:
+# TARGET CONTRACT
 
-### Research MVP
+Preserve raw `kredit`.
 
-The evidence-producing core that:
+The authoritative mapping is:
 
-* verifies and loads the selected dataset;
-* applies approved feature policy;
-* creates reproducible split membership;
-* fits training-only preprocessing;
-* trains approved model candidates;
-* evaluates them;
-* generates audit evidence;
-* records experiment metadata and artifacts.
+* raw `kredit = 0`: bad/non-compliant credit;
+* raw `kredit = 1`: good/compliant credit.
 
-### Semester application
+Derive the analytical positive/adverse target explicitly:
 
-A later thin delivery layer that may:
+```text
+adverse_event = 1 when kredit == 0
+adverse_event = 0 when kredit == 1
+```
 
-* expose approved model artifacts through an API;
-* provide a reviewer-facing interface;
-* display experiment, prediction, explanation, and counterfactual evidence;
-* record minimal audit events.
+Do not overwrite `kredit`.
 
-It must reuse the research core and must not duplicate preprocessing or model logic.
+Do not encode `1` as the adverse event merely because it is the raw numeric value.
 
-### Enterprise extensions
+Tests must verify:
 
-Keep production infrastructure, microservices, Kubernetes, RBAC, workflow engines, monitoring platforms, and cloud architecture deferred.
+* the complete mapping truth table;
+* exactly 300 adverse and 700 non-adverse rows;
+* target exclusion from prediction features;
+* refusal of any raw target outside `{0, 1}`.
 
-## 4. Component responsibilities
+Keep the known documentation discrepancy about target coding visible in the project documentation.
 
-Define proposed component boundaries for:
+# FEATURE-ROLE CONTRACT
 
-* dataset acquisition and integrity verification;
-* raw-data loading;
-* schema validation;
-* target mapping;
-* feature-role policy;
-* split management;
-* preprocessing;
-* model definitions;
-* training orchestration;
-* cross-validation and bounded tuning;
-* final held-out evaluation;
-* experiment metadata;
-* artifact storage;
-* global explanations;
-* local explanations;
-* counterfactual generation and constraint validation;
-* explanation-stability analysis;
-* conditional fairness evaluation;
-* reporting or presentation adapters;
-* future API;
-* future reviewer interface.
+Implement one versioned, machine-readable feature policy.
 
-For each component document:
+## Prediction features
 
-* responsibility;
-* inputs;
-* outputs;
-* dependencies;
-* components that call it;
-* prohibited responsibilities;
-* important failure modes;
-* tests that will eventually verify it.
+Exactly:
 
-Avoid creating a separate service or abstraction where a small module or function would be sufficient.
+* `laufkont`
+* `laufzeit`
+* `moral`
+* `verw`
+* `hoehe`
+* `sparkont`
+* `beszeit`
+* `rate`
+* `buerge`
+* `wohnzeit`
+* `verm`
+* `weitkred`
+* `wohn`
+* `beruf`
+* `pers`
 
-## 5. Dependency direction
+## Audit-only features
 
-Define and diagram the allowed dependency direction.
+Exactly:
 
-At minimum:
+* `famges`
+* `alter`
+* `gastarb`
 
-* domain/data contracts must not depend on API or UI code;
-* ML research logic must not depend on FastAPI, React, databases, or deployment systems;
-* future API and UI layers may call stable application/research interfaces;
-* external libraries should be wrapped only where doing so provides real testability or compatibility value;
-* experiment-report generation should consume recorded results rather than rerun training implicitly;
-* the UI must never implement preprocessing or model logic.
+They must remain aligned by row key but must never enter the prediction matrix.
 
-Explain how this prevents coupling and training/inference inconsistency.
+## Excluded features
 
-## 6. Dataset-specific invariants
+Exactly:
 
-The architecture must encode these Phase 1 constraints:
+* `telef`
+* `bishkred`
 
-* raw `kredit=0` means bad/non-compliant;
-* raw `kredit=1` means good/compliant;
-* the future adverse-event target should be derived explicitly;
-* the raw target must remain traceable;
-* age, personal-status/sex, and foreign-worker status are audit-only candidates;
-* telephone is excluded;
-* `bishkred` is unresolved and must not silently become a model input;
-* categorical integer codes must not automatically be treated as continuous;
-* no raw 30% adverse-class frequency may be presented as population prevalence;
-* the amount transformation prevents literal currency interpretation;
-* no temporal or group split is possible with the current source;
-* a fixed stratified split is currently recommended;
-* all learned transformations must fit on training data only.
+Resolve `bishkred` conservatively by excluding it because authoritative evidence does not establish a safe observation cutoff for a value defined as including the current credit.
 
-Specify where these invariants will eventually be validated and tested.
+Record that this is a default-deny leakage decision, not proof that `bishkred` is target leakage.
 
-## 7. Training data flow
+`telef` remains excluded because it is an obsolete socioeconomic proxy with weak modern meaning.
 
-Design and diagram the future training flow:
+## Target
 
-Official source
-→ download and checksum verification
-→ raw immutable file
-→ schema and semantic validation
-→ explicit target mapping
-→ feature-role enforcement
-→ reproducible split assignment
-→ training-only preprocessing
-→ cross-validation and bounded model selection
-→ final model fit on approved training data
-→ one held-out evaluation
-→ XAI and audit analysis
-→ versioned experiment artifacts
-→ human-readable report.
+* `kredit`
+* derived `adverse_event`
 
-Explain:
+## Metadata
 
-* where leakage could occur;
-* where each control belongs;
-* which steps learn from data;
-* which steps may see the held-out test set;
-* how split membership remains reproducible;
-* how audit-only attributes remain aligned without entering the model.
+* stable `row_key`
 
-## 8. Future inference data flow
+The role sets must be disjoint and exhaustive.
 
-Design and diagram the future inference flow:
+Unknown fields and fields without an approved role must fail closed.
 
-Validated raw request
-→ schema validation
-→ approved feature policy
-→ fitted preprocessing artifact
-→ fitted model
-→ prediction or score
-→ optional explanation
-→ optional constrained counterfactual
-→ audit record
-→ response.
+# SEMANTIC-TYPE CONTRACT
 
-Clarify that:
+Machine-readable configuration must distinguish:
 
-* inference must use the exact fitted preprocessing artifact;
-* it must not refit preprocessing;
-* audit-only attributes must not be silently passed to the model;
-* explanations must correspond to the exact model and transformed representation;
-* application code must not independently reinterpret raw feature codes.
+* quantitative fields;
+* ordinal or discretized fields;
+* nominal categorical fields represented by integers;
+* audit-only fields;
+* excluded fields;
+* raw target;
+* derived target;
+* metadata.
 
-## 9. Experiment and artifact design
+Do not treat every integer-coded feature as a continuous number.
 
-Define the minimum local artifact contract for the Research MVP.
+Documented categorical domains must be enforced.
 
-Consider:
+Purpose code `7` is documented but unobserved. It must be accepted by the category contract even though the approved file contains no row using it.
 
-* run identifier;
-* dataset identity and SHA-256;
-* target mapping;
+Unknown or undocumented category codes must be rejected.
+
+Clearly distinguish:
+
+* observed minimum/maximum values in this fixed dataset;
+* semantic category domains;
+* any future inference input policy.
+
+Do not incorrectly turn an observed dataset minimum or maximum into a universal real-world rule.
+
+# ROW-KEY POLICY
+
+Implement a transparent deterministic row key bound to the verified source file.
+
+Use one-based source data-row position after the header:
+
+```text
+sgc-0001
+sgc-0002
+...
+sgc-1000
+```
+
+The key is valid only when the approved raw-file SHA-256 matches.
+
+The row key:
+
+* must not be passed to a model;
+* must remain identical across raw, prediction, audit and split views;
+* must be unique and non-null;
+* must not depend on pandas’ mutable index;
+* must not change between repeated loads of the same verified file.
+
+Test the first key, final key, uniqueness, repeatability and alignment.
+
+# SPLIT CONTRACT
+
+Create and lock one deterministic stratified split:
+
+* method: `StratifiedShuffleSplit`;
+* test fraction: `0.20`;
+* random seed: `42`;
+* stratification target: `adverse_event`;
+* expected training rows: `800`;
+* expected test rows: `200`;
+* expected training class counts: 240 adverse, 560 non-adverse;
+* expected test class counts: 60 adverse, 140 non-adverse.
+
+Use the split only to create membership. Do not preprocess or train anything.
+
+Store a compact versioned split contract at:
+
+`configs/splits/south_german_credit_v1.json`
+
+It must contain at least:
+
+* contract/schema version;
+* approved raw-file SHA-256;
 * feature-policy version;
-* split seed and membership identity;
-* preprocessing configuration;
-* fitted preprocessing/model artifact;
-* algorithm and hyperparameters;
-* library versions;
-* validation results;
-* final-test results;
-* explanation configuration;
-* counterfactual constraints;
-* timestamps;
-* limitations.
+* target mapping identifier;
+* splitter name;
+* scikit-learn version used to generate it;
+* test fraction;
+* seed;
+* partition counts;
+* class counts;
+* deterministic test row keys;
+* canonical membership checksum.
 
-Choose a lightweight local artifact approach for the Research MVP unless evidence justifies MLflow or a database immediately.
+Training membership is the complement of the locked test keys.
 
-Explain:
+Do not include feature values or target values for individual rows in the committed split contract.
 
-* directory or manifest concept;
-* immutability expectations;
-* how reports reference a particular run;
-* how later APIs consume approved artifacts;
-* how accidental overwrites or result drift will be prevented.
+Define and test the exact canonical serialization used for the membership checksum.
 
-Do not implement artifact storage.
+A different dataset hash, missing key, duplicate key, overlapping membership, incomplete coverage, class-count mismatch or changed membership checksum must be rejected.
 
-## 10. XAI architecture
+The held-out test membership is now locked. Do not calculate model results or use it for model, preprocessing, metric or threshold decisions.
 
-Design how Aletheia will keep explanation methodology consistent across models.
+# PACKAGE AND ENVIRONMENT
 
-Address:
+Use the approved Python 3.12 direction.
 
-* native versus post-hoc explanations;
-* global versus local explanations;
-* original feature names versus transformed columns;
-* one-hot-encoded feature grouping;
-* training-only background/reference data;
-* held-out case selection;
-* explanation configuration and reproducibility;
-* exact model/preprocessor association;
-* limitations under correlated features;
-* distinction between association and causality.
+Create a minimal `src`-layout Python package.
 
-Do not select SHAP merely because it is popular. Compare appropriate alternatives and state what should be selected now, deferred, or evaluated experimentally.
+Use only dependencies needed in this phase:
 
-## 11. Counterfactual architecture
+Runtime:
 
-Design the future counterfactual boundary.
+* pandas;
+* scikit-learn.
 
-It must separate:
+Development:
 
-* immutable features;
-* audit-only features;
-* non-actionable historical features;
-* mutable features;
-* constrained mutable features;
-* dependent feature rules;
-* categorical validity;
-* permitted directions and ranges;
-* model-class change;
-* plausibility validation;
-* cost/distance calculation;
-* failure to find a valid candidate.
+* pytest;
+* Ruff.
 
-Account for:
+Use standard-library functionality for:
 
-* transformed credit amount;
-* dependence between amount, duration, and instalment-rate band;
-* prohibited changes to purpose merely to game a result;
-* guarantor practicality;
-* difference between immediate and long-term change;
-* model recourse versus real-world guarantees.
+* HTTP download where practical;
+* SHA-256;
+* ZIP handling;
+* paths;
+* JSON;
+* TOML reading;
+* dataclasses or similarly simple contracts;
+* command-line parsing.
 
-Compare a small custom constrained approach with a library such as DiCE, but do not finalize a dependency without compatibility and methodological justification.
+Do not add Requests merely for one download unless a demonstrated standard-library failure makes it necessary.
 
-## 12. Explanation-stability architecture
+Do not add:
 
-Design the later stability experiment without implementing it.
+* Matplotlib;
+* SHAP;
+* DiCE;
+* joblib as a direct persistence dependency;
+* MLflow;
+* DVC;
+* notebook packages;
+* FastAPI;
+* Flask;
+* Django;
+* Streamlit;
+* React/Node tooling;
+* database drivers;
+* Docker tooling;
+* deployment dependencies;
+* authentication packages;
+* model serialization packages.
 
-Specify the future boundary for:
+Create:
 
-* held-out case selection;
-* valid perturbation generation;
-* immutable-feature protection;
-* prediction-boundary crossings;
-* background/reference data;
-* top-k overlap;
-* rank correlation;
-* normalized attribution change;
-* random seeds;
-* repeated runs;
-* artifact recording;
-* limitations.
+* `pyproject.toml`
+* `requirements.lock.txt`
 
-Do not invent thresholds or claim stability has been measured.
+`pyproject.toml` must include:
 
-## 13. Conditional fairness architecture
+* package metadata;
+* Python requirement compatible with the approved Python 3.12 series;
+* minimal runtime dependencies;
+* a development extra containing pytest and Ruff;
+* pytest configuration where appropriate;
+* Ruff configuration where appropriate;
+* the selected build backend.
 
-Fairness must be an optional audit path, disabled unless evidence supports it.
+Generate `requirements.lock.txt` from the actually tested clean environment with exact versions.
 
-Design how the system would:
+The lock file must not contain:
 
-* keep audit-only attributes outside prediction inputs;
-* preserve row alignment;
-* compute subgroup counts before metrics;
-* enforce minimum-support warnings or refusal;
-* report selection and error-rate measurements;
-* represent uncertainty;
-* avoid binary “fair/unfair” conclusions;
-* record limitations and subgroup definitions.
+* editable local project entries;
+* `file://` references;
+* absolute local paths;
+* unrelated globally installed packages.
 
-For South German Credit, record that no fairness experiment is currently authorized because the available group structure is weak.
+Verify that a second clean Python 3.12 environment can install the lock, install Aletheia without resolving additional dependencies, and run the offline tests.
 
-## 14. Technology decisions
+Record the exact Python, pip and package versions actually tested.
 
-Create a technology decision matrix covering:
+# ACQUISITION REQUIREMENTS
 
-* core language and supported Python version;
-* tabular data handling;
-* classical ML;
-* configuration;
+Implement controlled acquisition that:
+
+1. downloads to a temporary staging file;
+2. handles network failure without presenting partial content as valid;
+3. verifies archive byte size and SHA-256 before extraction;
+4. opens the ZIP using Python’s ZIP support, including its BZIP2 member;
+5. reads or extracts only the exact approved archive member;
+6. prevents path traversal or arbitrary member extraction;
+7. verifies raw byte size and SHA-256;
+8. publishes the verified raw file only after all checks pass;
+9. does not overwrite an existing valid raw file unnecessarily;
+10. refuses an existing invalid raw file instead of silently replacing it;
+11. cleans or clearly isolates failed staging files;
+12. produces useful errors without dumping raw records.
+
+The normal local destination may be:
+
+`data/raw/SouthGermanCredit.asc`
+
+The archive and raw-data paths must be ignored by Git.
+
+# LOADING AND VALIDATION
+
+Implement small, understandable functions for:
+
+* configuration loading;
+* file hashing;
+* verified acquisition;
+* raw loading;
 * schema validation;
-* serialization;
-* testing;
-* static analysis and formatting;
-* plotting/report generation;
-* XAI candidates;
-* counterfactual candidates;
-* experiment metadata;
-* future API;
-* future frontend;
-* future persistence;
-* containerization.
-
-For each decision document:
-
-* problem;
-* realistic alternatives;
-* selected, provisional, or deferred status;
-* why;
-* trade-offs;
-* Windows and Python 3.12 compatibility;
-* 8 GB laptop implications;
-* licence considerations where material;
-* when to reconsider.
-
-Prefer the smallest defensible dependency set.
-
-Do not install anything or create dependency files.
-
-Do not finalize FastAPI, React/Next, PostgreSQL, MLflow, Docker, SHAP, or DiCE unless the decision is genuinely required now and supported by evidence. Later delivery technologies may remain provisional.
-
-Avoid XGBoost or deep-learning dependencies unless they answer a distinct research question that scikit-learn alternatives cannot.
-
-## 15. Planned repository structure
-
-Propose, but do not create, an understandable future repository structure.
-
-It should identify likely locations for:
-
-* source package;
-* configuration;
-* dataset manifest or acquisition logic;
-* tests;
-* experiment outputs;
-* model artifacts;
-* reports;
-* documentation;
-* optional notebooks;
-* future API;
-* future frontend.
-
-Explain which directories are needed for the next implementation milestone and which remain future-only.
-
-Core logic must not live only in notebooks.
-
-## 16. Testing strategy
-
-Define future tests for:
-
-* dataset checksum;
-* exact schema;
 * target mapping;
-* forbidden feature roles;
-* categorical handling;
-* split reproducibility;
-* absence of train/test overlap;
-* preprocessing fit boundaries;
-* transformed feature consistency;
-* model interface;
-* metric correctness;
-* artifact/model compatibility;
-* explanation/model association;
-* counterfactual constraint enforcement;
-* fairness support guards;
-* API validation later;
-* end-to-end research flow later.
+* feature-role view construction;
+* split generation;
+* split-contract loading and verification.
 
-Distinguish unit, integration, ML/data, and end-to-end tests.
+Validation must check at least:
 
-Do not target meaningless 100% coverage.
+* verified raw-file identity;
+* exact header and column order;
+* exactly 1,000 data rows;
+* exactly 21 raw columns;
+* integer tokens only;
+* no missing values;
+* target domain;
+* categorical domains;
+* expected target counts;
+* zero duplicate complete rows;
+* zero duplicate predictor-only rows;
+* stable row-key creation;
+* feature-role disjointness and exhaustiveness.
 
-## 17. Error handling and observability
+Do not silently repair schema drift.
 
-Define appropriate future handling for:
+Errors must identify the failing rule and safe context such as column, row key or invalid value.
 
-* checksum mismatch;
-* schema drift;
+# DATA-ONLY COMMAND INTERFACE
+
+Provide a minimal data-only command interface through:
+
+`python -m aletheia.data`
+
+Support bounded commands equivalent to:
+
+```powershell
+python -m aletheia.data acquire --destination data/raw
+python -m aletheia.data validate --raw-file data/raw/SouthGermanCredit.asc
+python -m aletheia.data split --raw-file data/raw/SouthGermanCredit.asc --contract configs/splits/south_german_credit_v1.json --verify
+```
+
+The exact option parsing may remain small.
+
+The command must not:
+
+* train a model;
+* preprocess learned features;
+* evaluate metrics;
+* start an API;
+* create a UI;
+* write a model artifact;
+* perform XAI, fairness, stability or counterfactual work.
+
+# EXPECTED SOURCE FILES
+
+Create exactly:
+
+* `src/aletheia/__init__.py`
+* `src/aletheia/config.py`
+* `src/aletheia/contracts.py`
+* `src/aletheia/data/__init__.py`
+* `src/aletheia/data/__main__.py`
+* `src/aletheia/data/acquire.py`
+* `src/aletheia/data/load.py`
+* `src/aletheia/data/validate.py`
+* `src/aletheia/data/target.py`
+* `src/aletheia/data/roles.py`
+* `src/aletheia/data/split.py`
+
+Prefer functions and small immutable value objects.
+
+Do not create empty architectural layers, repositories, services, dependency-injection containers, abstract base classes or interfaces without a real need.
+
+If an additional source file is genuinely necessary, stop before creating it and explain why the approved file boundary is insufficient.
+
+# EXPECTED TEST FILES
+
+Create exactly:
+
+* `tests/conftest.py`
+* `tests/unit/test_config.py`
+* `tests/unit/test_target.py`
+* `tests/unit/test_roles.py`
+* `tests/unit/test_split.py`
+* `tests/data/test_acquire.py`
+* `tests/data/test_load_validate.py`
+* `tests/integration/test_data_foundation.py`
+
+Use clearly synthetic values and temporary directories for offline tests.
+
+Do not commit copied rows from the raw dataset as test fixtures.
+
+The ordinary test suite must not require internet access.
+
+Mark the authoritative end-to-end download test as `live_data` and require explicit authorization/environment configuration before it uses the network.
+
+Tests must cover at least:
+
+## Acquisition
+
+* valid archive and raw hashes;
+* archive checksum mismatch;
+* raw checksum mismatch;
+* missing approved member;
+* unexpected or unsafe archive member handling;
+* failed or partial download cleanup;
+* existing invalid destination refusal.
+
+## Loader and schema
+
+* valid synthetic contract fixture;
+* wrong header;
+* wrong column order;
+* malformed row;
+* non-integer token;
+* missing value;
+* incorrect row count;
 * undocumented category;
-* missing or malformed values;
-* forbidden feature entering prediction;
-* unresolved feature policy;
-* invalid target mapping;
-* failed model loading;
-* incompatible preprocessing artifact;
-* unsupported explanation method;
-* no valid counterfactual;
-* insufficient fairness support;
-* corrupt or incomplete experiment artifacts.
+* documented but unobserved purpose code `7`;
+* invalid target;
+* duplicate detection.
 
-Choose simple structured logging and clear errors. Do not introduce a monitoring platform.
+## Target and roles
 
-## 18. Security and privacy boundaries
+* complete target truth table;
+* actual 300/700 target arithmetic in the live-data test;
+* prediction/audit/excluded/target/metadata disjointness;
+* exhaustive raw-feature coverage;
+* audit-only fields absent from model input;
+* `telef` and `bishkred` absent from model input;
+* target and row key absent from model input;
+* unknown fields fail closed.
 
-Document only architecture-relevant constraints:
+## Row identity and split
 
-* no credentials in the repository;
-* no unnecessary sensitive logging;
-* no claim that public historical data makes the system production-safe;
-* safe model-artifact loading;
-* input validation;
-* future API authorization deferred until an application milestone;
-* no real-person lending decisions.
+* exact first and last row keys;
+* unique keys;
+* repeatable keys;
+* aligned prediction and audit views;
+* same-seed membership equality;
+* locked membership checksum;
+* exact 800/200 partition sizes;
+* exact class counts;
+* no overlap;
+* complete coverage;
+* changed dataset-hash refusal;
+* missing/duplicate/unknown test-key refusal;
+* different generated membership detected rather than silently accepted.
 
-Do not design authentication or RBAC now.
+## Integration
 
-## 19. Detailed milestone roadmap
+One explicitly enabled live-data test must perform:
 
-Update `docs/EXECUTION_PLAN.md` with the proposed post-architecture milestone sequence.
+official acquisition → archive verification → raw verification → load → schema validation → target mapping → role enforcement → row-key alignment → locked split verification.
 
-The roadmap must:
+# GITIGNORE
 
-* remain research-first;
-* separate data foundation, baseline modelling, comparator evaluation, XAI, counterfactuals, stability, conditional fairness, research synthesis, and later application work;
-* identify dependencies between milestones;
-* give each milestone a bounded goal;
-* state key in-scope and out-of-scope work;
-* define measurable completion evidence;
-* require external review before progression;
-* avoid authorizing any milestone merely because it appears in the roadmap.
+Update `.gitignore` to exclude at least:
 
-The next implementation milestone should be small and should establish the reproducible data foundation before model training.
+* `.venv/`
+* Python bytecode and `__pycache__/`
+* `.pytest_cache/`
+* `.ruff_cache/`
+* build/distribution metadata;
+* `*.egg-info/`
+* downloaded archives;
+* `data/raw/`
+* `data/processed/`
+* generated artifacts and reports;
+* local environment/configuration files that may contain secrets.
 
-Do not create its executable `CURRENT_TASK.md`.
+Do not ignore committed configuration, source code, tests or documentation.
 
-## 20. Architecture decision record
+After acquisition and testing, verify that no raw data, archive, environment, cache, build output or generated report appears in Git status.
 
-Create one ADR:
+# DOCUMENTATION UPDATES
 
-`docs/decisions/0001-research-first-modular-monolith.md`
+## Architecture and ADR
 
-It must record:
+Update only their approval/implementation status where necessary:
 
-* context;
-* decision;
-* alternatives;
-* reasons;
-* trade-offs;
-* consequences;
-* deferred decisions;
-* when to reconsider.
+* mark Phase 2 architecture externally supervisor-approved;
+* change ADR 0001 from proposed to accepted/approved;
+* record Phase 3 implementation truthfully;
+* do not redesign the approved architecture unless implementation evidence exposes a genuine problem.
 
-Do not create multiple ADRs for minor decisions.
+If a genuine architectural contradiction appears, stop and report it instead of silently changing the architecture.
 
-# ARCHITECTURE DOCUMENT REQUIREMENTS
+## DATASET_AUDIT.md
 
-Rewrite `docs/ARCHITECTURE.md` as the proposed Phase 2 architecture.
+Preserve all Phase 1 evidence.
 
-It must include:
+Add or update only what is now established by implementation:
 
-* status and approval boundary;
-* architecture principles;
-* system context;
-* delivery stages;
-* component responsibilities;
-* dependency direction;
-* training flow;
-* future inference flow;
-* dataset-specific invariants;
-* experiment/artifact design;
-* XAI design;
-* counterfactual design;
-* stability design;
-* conditional fairness design;
-* technology decisions;
-* planned repository structure;
-* testing strategy;
-* error handling;
-* security/privacy boundaries;
-* deferred decisions;
-* architecture risks and limitations.
+* `bishkred` was conservatively excluded;
+* the fixed split policy is 80/20 stratified with seed 42;
+* stable row-key policy;
+* implementation/config/test references;
+* limitations of this split.
 
-Use compact Mermaid diagrams where they materially clarify component relationships or data flow. Do not add decorative diagrams.
+Do not rewrite computed Phase 1 evidence or imply that a model exists.
 
-The document must say “proposed pending external supervisor review,” not “approved.”
+## EXECUTION_PLAN.md
 
-# PROJECT_REPORT REQUIREMENTS
+Record:
 
-Update `docs/PROJECT_REPORT.md` as a concise study and defence guide for Phase 2.
+* Phase 2 externally supervisor-approved;
+* Phase 3 completed by Codex and pending external supervisor review only if all acceptance checks pass;
+* later phases remain blocked.
 
-Document:
+Do not authorize Phase 4.
 
-* why architecture followed dataset audit;
-* the selected architectural style;
-* research-core versus delivery-layer separation;
-* major components and their responsibilities;
-* dependency direction;
-* training and inference flows;
-* dataset-specific invariants;
-* experiment artifact strategy;
-* important XAI/counterfactual/fairness boundaries;
-* selected versus deferred technologies;
-* alternatives and trade-offs;
-* failure modes;
-* planned tests;
-* files the user should inspect;
-* interview/viva questions and concise answers.
+## PROJECT_REPORT.md
 
-Do not copy the entire architecture document into the report.
+Update it incrementally as Aletheia’s evidence-backed engineering, learning, interview, viva and project-defence guide.
 
-Do not describe planned components as implemented.
+For Phase 3, explain concisely but technically:
 
-# EXECUTION PLAN REQUIREMENTS
+* what the data foundation does;
+* why it was implemented before preprocessing and modelling;
+* authoritative acquisition and checksum flow;
+* configuration files and their roles;
+* important modules/functions and where to inspect them;
+* callers and dependencies;
+* raw schema validation;
+* target mapping and why label orientation matters;
+* prediction versus audit-only versus excluded fields;
+* why `bishkred` was excluded;
+* stable row identity;
+* deterministic stratified splitting;
+* why stratification is appropriate here;
+* why the split cannot establish temporal or entity generalisation;
+* how the locked test membership prevents accidental split drift;
+* failure modes and their error handling;
+* tests that verify each boundary;
+* dependency and clean-environment decisions;
+* any real problems encountered and how they were fixed;
+* important concepts learned;
+* concise interview/viva explanations and likely follow-up questions;
+* limitations.
 
-Update `docs/EXECUTION_PLAN.md` to:
+Do not turn the report into a raw command log or repeat entire source files.
 
-* record Phase 1 as externally supervisor-approved;
-* record Phase 2 as completed by Codex and pending external review only if all criteria are met;
-* include the bounded post-architecture milestone roadmap;
-* keep every implementation milestone blocked;
-* require a future replacement `CURRENT_TASK.md` before implementation.
+Do not invent bugs, metrics, experiments or lessons that did not occur.
 
-# DATASET AUDIT REQUIREMENT
+## SUPERVISOR_HANDOFF.md
 
-Update only the status/approval wording in `docs/DATASET_AUDIT.md`.
+Replace the previous Phase 2 handoff with an evidence-based Phase 3 handoff containing:
 
-Do not rewrite or expand the completed Phase 1 evidence unless a genuine factual error is discovered. If an error is discovered, stop and explain it before changing the audit.
+1. milestone and status;
+2. base and resulting commit state;
+3. Phase 2 approval recorded;
+4. implementation summary;
+5. dataset identity;
+6. exact environment and dependencies;
+7. configuration decisions;
+8. acquisition and checksum results;
+9. schema and target results;
+10. feature-role result;
+11. `bishkred` decision;
+12. row-key design;
+13. split design and exact counts;
+14. source files created;
+15. tests created;
+16. documentation modified;
+17. commands actually run;
+18. exact test/lint/format results;
+19. live-data verification result;
+20. clean-environment recreation result;
+21. meaningful problems encountered;
+22. unresolved issues;
+23. limitations;
+24. confirmation that preprocessing and modelling did not begin;
+25. confirmation that XAI, fairness, counterfactual, API, UI and deployment work did not begin;
+26. confirmation that Codex did not commit or push;
+27. actual final `git status --short --untracked-files=all`;
+28. recommended commit message;
+29. recommended Phase 4 direction as advisory only.
 
-# SUPERVISOR HANDOFF REQUIREMENTS
+Do not claim external supervisor approval for Phase 3.
 
-Rewrite `docs/SUPERVISOR_HANDOFF.md` for Phase 2.
+# REQUIRED VERIFICATION
 
-Include:
+Run and record the exact results of:
 
-* milestone and status;
-* verified starting state;
-* architecture summary;
-* key component boundaries;
-* training and inference flow;
-* dataset invariants;
-* selected and deferred technologies;
-* artifact strategy;
-* XAI/counterfactual/stability/fairness boundaries;
-* roadmap summary;
-* ADR created;
-* exact files changed;
-* checks actually run and exact results;
-* unresolved decisions;
-* risks and limitations;
-* confirmation that no implementation or dependencies were introduced;
-* evidence the supervisor should inspect;
-* next action limited to external review.
+```powershell
+git diff --check
+git status --short --untracked-files=all
+git diff --stat
+```
+
+Using the clean project environment, run:
+
+```powershell
+python --version
+python -m pip --version
+python -m pip check
+python -m ruff check .
+python -m ruff format --check .
+python -m pytest -m "not live_data"
+```
+
+Run the data commands against the authoritative dataset:
+
+```powershell
+python -m aletheia.data acquire --destination data/raw
+python -m aletheia.data validate --raw-file data/raw/SouthGermanCredit.asc
+python -m aletheia.data split --raw-file data/raw/SouthGermanCredit.asc --contract configs/splits/south_german_credit_v1.json --verify
+```
+
+Run the explicitly authorized live-data integration test using the environment switch chosen by the implementation.
+
+Then verify in a second clean Python 3.12 environment that:
+
+1. `requirements.lock.txt` installs successfully;
+2. the project installs without resolving unrecorded dependencies;
+3. `pip check` passes;
+4. Ruff passes;
+5. offline tests pass.
+
+Do not report a command as passed unless it actually ran successfully.
+
+A skipped live-data test does not satisfy the live acquisition acceptance criterion.
+
+# ACCEPTANCE CRITERIA
+
+Phase 3 passes only if:
+
+1. authoritative acquisition succeeds;
+2. both approved SHA-256 values match;
+3. partial or mismatched downloads fail closed;
+4. the exact raw schema is enforced;
+5. categorical domains are explicit;
+6. integer category codes remain categorical/ordinal according to policy;
+7. raw `kredit` is preserved;
+8. `adverse_event` orientation is correct;
+9. target counts are exactly 300/700;
+10. feature roles are disjoint and exhaustive;
+11. audit-only, excluded, target and metadata fields cannot enter prediction features;
+12. `bishkred` is excluded;
+13. row keys are stable, unique and aligned;
+14. split membership is deterministic and locked;
+15. split counts and class counts are exact;
+16. train and test membership are complete and non-overlapping;
+17. the committed split contract contains no raw feature or per-row target values;
+18. ordinary tests work without internet;
+19. the live-data integration test passes;
+20. a second clean environment reproduces the tested setup;
+21. Ruff, formatting, pytest and `pip check` pass;
+22. no raw data, downloaded archive, environment, cache or generated output is tracked;
+23. documentation matches the actual implementation;
+24. no preprocessing, model, XAI, fairness, counterfactual, API, UI, database or deployment work exists;
+25. Codex does not commit or push.
+
+If any acceptance criterion fails, report Phase 3 as incomplete and do not recommend a commit as successful work.
 
 # OUT OF SCOPE
 
-Do not:
+Do not implement:
 
-* download or commit dataset files;
-* perform further EDA unless verifying a suspected Phase 1 factual error;
-* create source-code directories or package files;
-* create Python modules;
-* create notebooks;
-* create tests;
-* install dependencies;
-* create `pyproject.toml`, requirements files, lock files, or environment files;
-* create split files;
-* preprocess data;
-* train models;
-* generate metrics;
-* implement explanations or counterfactuals;
-* perform fairness or stability experiments;
-* create an API, database, frontend, Docker configuration, CI/CD, deployment, or cloud infrastructure;
-* create more than one ADR;
-* modify `prompt.txt`;
-* replace `docs/CURRENT_TASK.md` with a later task;
-* commit, push, merge, mutate branches, or rewrite Git history;
-* begin the next implementation milestone.
+* missing-value imputation;
+* encoding;
+* scaling;
+* feature engineering;
+* feature selection;
+* class weighting or resampling;
+* model definitions;
+* Logistic Regression;
+* Decision Trees;
+* ensemble models;
+* cross-validation;
+* model metrics;
+* threshold selection;
+* model serialization;
+* experiment-run storage;
+* SHAP;
+* permutation importance;
+* local explanations;
+* counterfactual generation;
+* stability analysis;
+* fairness metrics;
+* notebooks;
+* API;
+* frontend or Stitch-generated UI;
+* database;
+* MLflow or DVC;
+* Docker;
+* deployment;
+* authentication;
+* monitoring.
 
-# ANTI-OVERENGINEERING RULES
-
-* Prefer a modular monolith.
-* Keep the research core independent from delivery layers.
-* Do not create microservices.
-* Do not introduce Kubernetes, CQRS, event sourcing, service meshes, workflow engines, or distributed queues.
-* Do not create generic repository frameworks.
-* Do not add interfaces for components that have only one simple implementation unless a real boundary requires one.
-* Do not force every SOLID principle into every module.
-* Do not select infrastructure before it solves an approved problem.
-* Do not create code during a design milestone.
-* Keep the architecture explainable by a CSE student.
-
-# VERIFICATION
-
-At minimum:
-
-1. inspect the complete final diff;
-2. run `git diff --check`;
-3. run `git status --short`;
-4. inspect the final changed-file list;
-5. confirm only authorized files changed;
-6. confirm `prompt.txt` and `AGENTS.md` are unchanged;
-7. confirm no raw data, source code, notebooks, tests, dependency files, models, experiment outputs, API, frontend, database, Docker, CI/CD, or deployment artifacts were introduced;
-8. verify every architecture component has a clear responsibility and dependency direction;
-9. verify training and inference use the same fitted preprocessing contract;
-10. verify target mapping and feature-role constraints appear in the architecture;
-11. verify audit-only features cannot silently enter model inputs;
-12. verify no population-probability claim is made;
-13. verify fairness remains conditional and disabled;
-14. verify future application layers depend on the research core rather than duplicating it;
-15. verify the roadmap does not authorize implementation;
-16. verify `ARCHITECTURE.md`, `EXECUTION_PLAN.md`, `PROJECT_REPORT.md`, `DATASET_AUDIT.md`, the ADR, and the handoff are consistent;
-17. verify Phase 2 is described as pending external supervisor review;
-18. verify Codex performed no Git commit or push.
-
-Report every check actually run and its exact result.
-
-# ACCEPTANCE CRITERIA / DEFINITION OF DONE
-
-Phase 2 is complete by Codex only if:
-
-* [ ] Phase 1 is recorded as supervisor-approved.
-* [ ] `ARCHITECTURE.md` contains a coherent proposed architecture.
-* [ ] Research core and delivery layers are separated.
-* [ ] Component responsibilities and prohibited responsibilities are clear.
-* [ ] Dependency direction is explicit.
-* [ ] Training and inference flows are documented.
-* [ ] Dataset-specific invariants are enforced by design.
-* [ ] Audit-only attributes cannot silently enter prediction features.
-* [ ] Target mapping is explicit and testable.
-* [ ] Oversampling limitations prevent population-probability claims.
-* [ ] Experiment metadata and artifact contracts are defined.
-* [ ] XAI architecture respects preprocessing and model identity.
-* [ ] Counterfactual constraints are represented.
-* [ ] Stability methodology has a future architectural boundary without fabricated results.
-* [ ] Fairness remains optional and guarded by evidence.
-* [ ] Technology decisions distinguish selected, provisional, and deferred choices.
-* [ ] The proposed repository structure is understandable and not created.
-* [ ] Testing, errors, security, and configuration boundaries are documented.
-* [ ] One justified modular-monolith ADR exists.
-* [ ] The execution roadmap has bounded milestones and approval gates.
-* [ ] `PROJECT_REPORT.md` contains concise learning and defence material.
-* [ ] `SUPERVISOR_HANDOFF.md` accurately reports the design milestone.
-* [ ] No implementation, dataset, persistent dependency, or infrastructure artifact was introduced.
-* [ ] No Git commit or push was performed by Codex.
-
-If any mandatory criterion fails, report Phase 2 as incomplete.
+Do not inspect held-out performance.
 
 # EXPECTED GIT STATUS BEFORE USER COMMIT
 
+Use:
+
+```powershell
+git status --short --untracked-files=all
+```
+
 Expected modified files:
 
-* `docs/CURRENT_TASK.md`
-* `docs/DATASET_AUDIT.md`
-* `docs/ARCHITECTURE.md`
-* `docs/EXECUTION_PLAN.md`
-* `docs/PROJECT_REPORT.md`
-* `docs/SUPERVISOR_HANDOFF.md`
+```text
+ M .gitignore
+ M docs/ARCHITECTURE.md
+ M docs/CURRENT_TASK.md
+ M docs/DATASET_AUDIT.md
+ M docs/EXECUTION_PLAN.md
+ M docs/PROJECT_REPORT.md
+ M docs/SUPERVISOR_HANDOFF.md
+ M docs/decisions/0001-research-first-modular-monolith.md
+```
 
-Expected new file:
+Expected new files:
 
-* `docs/decisions/0001-research-first-modular-monolith.md`
+```text
+?? configs/dataset.toml
+?? configs/features.toml
+?? configs/splits/south_german_credit_v1.json
+?? pyproject.toml
+?? requirements.lock.txt
+?? src/aletheia/__init__.py
+?? src/aletheia/config.py
+?? src/aletheia/contracts.py
+?? src/aletheia/data/__init__.py
+?? src/aletheia/data/__main__.py
+?? src/aletheia/data/acquire.py
+?? src/aletheia/data/load.py
+?? src/aletheia/data/roles.py
+?? src/aletheia/data/split.py
+?? src/aletheia/data/target.py
+?? src/aletheia/data/validate.py
+?? tests/conftest.py
+?? tests/data/test_acquire.py
+?? tests/data/test_load_validate.py
+?? tests/integration/test_data_foundation.py
+?? tests/unit/test_config.py
+?? tests/unit/test_roles.py
+?? tests/unit/test_split.py
+?? tests/unit/test_target.py
+```
 
-Explanation:
-
-* `CURRENT_TASK.md` is modified because the user replaced Phase 1 with this approved Phase 2 task.
-* `DATASET_AUDIT.md` should receive only the Phase 1 approval-status update.
-* `ARCHITECTURE.md` is rewritten as the proposed design.
-* No other file should change.
-
-Must remain unchanged:
+Expected intentionally unchanged tracked files include:
 
 * `AGENTS.md`
 * `prompt.txt`
+* `CLAUDE.md`
 * `README.md`
-* `.gitignore`
 
-No source, test, dataset, dependency, model, experiment, API, frontend, database, Docker, CI/CD, or deployment file should appear.
+No raw dataset, ZIP archive, virtual environment, cache, build output, generated artifact, notebook, model, API, frontend, database, container or deployment file may appear.
 
-If Git status includes anything else, stop and explain it before recommending a commit.
+If Git status contains any additional path, stop and explain it before recommending a commit.
+
+Line-ending warnings saying LF will later be replaced by CRLF are not themselves whitespace errors if `git diff --check` exits successfully, but record them accurately.
 
 # FINAL CODEX RESPONSE
 
 Report:
 
 1. milestone status;
-2. architecture summary;
-3. why this architecture was chosen;
-4. alternatives considered;
-5. component boundaries;
-6. dependency direction;
-7. training flow;
-8. inference flow;
-9. dataset invariants;
-10. artifact strategy;
-11. XAI architecture;
-12. counterfactual architecture;
-13. stability architecture;
-14. fairness boundary;
-15. selected technologies;
-16. provisional or deferred technologies;
-17. proposed repository structure;
-18. testing strategy;
-19. roadmap;
-20. ADR created;
-21. files created;
-22. files modified;
-23. files intentionally unchanged;
-24. checks actually run;
-25. exact results;
-26. unresolved decisions;
-27. risks and limitations;
-28. what the user should understand;
-29. confirmation that no implementation began;
-30. confirmation that Codex did not commit or push;
-31. actual final `git status --short`;
-32. recommended commit message.
+2. verified starting state;
+3. implementation summary;
+4. dataset source and identity;
+5. environment and dependency versions;
+6. configuration decisions;
+7. acquisition results;
+8. checksum results;
+9. schema results;
+10. target mapping and counts;
+11. feature-role result;
+12. `bishkred` decision;
+13. row-key result;
+14. split method, seed, sizes and class counts;
+15. split membership checksum;
+16. commands run;
+17. test results;
+18. lint and formatting results;
+19. clean-environment reproduction result;
+20. files created;
+21. files modified;
+22. files intentionally unchanged;
+23. problems encountered and fixes;
+24. unresolved issues;
+25. limitations;
+26. what the user should understand;
+27. confirmation that preprocessing and modelling did not begin;
+28. confirmation that later XAI/application work did not begin;
+29. confirmation that Codex did not commit or push;
+30. actual final `git status --short --untracked-files=all`;
+31. recommended commit message;
+32. advisory Phase 4 direction.
 
-Recommend:
+If Phase 3 completes successfully, recommend exactly:
 
-`docs: design Aletheia system architecture`
+`feat: build reproducible Aletheia data foundation`
 
 Do not claim external supervisor approval.
 
 # STOP RULE
 
-Stop after completing and verifying Phase 2.
+Stop after implementing and verifying Phase 3.
 
-Do not begin the reproducible-data-foundation milestone or any other implementation work.
+Do not begin Phase 4.
 
-Do not create source code, tests, dependencies, datasets, models, experiments, APIs, databases, frontends, containers, CI/CD, or deployment files.
-
-Do not replace `docs/CURRENT_TASK.md` again.
+Do not modify `docs/CURRENT_TASK.md`.
 
 Do not commit or push.
 
-The user will inspect Git status, commit and push the completed attempt, and return it for independent external supervisor review.
+The user will inspect Git status and verification evidence, commit and push the Phase 3 attempt, and return it for independent external supervisor review.

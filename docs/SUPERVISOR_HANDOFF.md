@@ -1,320 +1,326 @@
 # Aletheia — Supervisor Handoff
 
-## Current Milestone and Status
-
-**Phase 2 — System Architecture, Technology Selection, and Implementation
-Roadmap.**
-
-Completed by Codex and **proposed pending external supervisor review**. This is
-a design milestone, not an implemented or approved architecture. Every
-implementation milestone remains blocked.
-
-Phase 1 is externally supervisor-approved. South German Credit is approved only
-as suitable for an academic Research MVP; this does not validate model
-performance, calibration, fairness, explanation stability, production use, or
-modern-lending validity.
-
-## Verified Starting State
-
-- Latest commit: e60d6ef docs: select and audit Aletheia dataset.
-- Starting status: only M docs/CURRENT_TASK.md, reflecting the user-installed
-  Phase 2 task.
-- The Phase 1 commit contains the selected-dataset audit and documentation.
-- ARCHITECTURE.md contained only the unapproved placeholder.
-- Repository inspection found no raw data, source package, dependency file,
-  notebook, test, split, model, experiment, API, database, frontend, container,
-  CI/CD, or deployment artifact.
-
-## Proposed Architecture
-
-Aletheia is designed as a **research-first modular monolith**. One future Python
-package owns dataset contracts, loading/validation, target and feature policy,
-splitting/preprocessing, training/evaluation, XAI/audit methods, and local
-experiment evidence. Small functions are preferred over ceremonial services or
-interfaces.
-
-A future CLI/report adapter composes the research core. A later API and reviewer
-interface may call the same use cases and load explicit validated run artifacts;
-they must not duplicate source-code mappings, preprocessing, inference,
-explanations, or metrics. Microservices and platform infrastructure are
-deferred.
-
-The ADR rejects notebook-only core logic, heavy Clean Architecture ceremony,
-framework-first web development, microservices, and an external experiment
-platform at this stage. The chosen trade-off favors one testable source of ML
-truth and laptop simplicity over built-in distribution, concurrency, and
-artifact querying.
-
-## Key Component and Dependency Boundaries
-
-The proposed architecture defines components for:
-
-- acquisition/integrity, loading, schema validation, explicit target mapping,
-  feature roles, and deterministic split membership;
-- preprocessing, model construction, training orchestration, fold-local
-  cross-validation, final fit, and one held-out evaluation;
-- manifest validation, atomic immutable artifact publication, global/local
-  explanations, counterfactual constraints/search, stability, conditional
-  fairness, and report generation; and
-- future API and UI adapters.
-
-Each component in ARCHITECTURE.md states responsibility, input/output,
-dependencies/caller, prohibited work, failure modes, and planned tests.
-Dependency direction is delivery adapters → research orchestration → data/ML/
-audit/artifact modules → simple contracts. Research code does not depend on
-FastAPI, frontend, database, or deployment code. Reports read completed
-artifacts and cannot start training.
-
-## Training and Inference Flows
-
-Proposed training:
-
-official source → checksum verification → immutable raw reference → schema and
-semantic validation → explicit adverse-target mapping → feature-role
-enforcement → fixed stratified membership → fold-local preprocessing/bounded
-CV → selected final pipeline fit on all training rows → one held-out evaluation
-→ predeclared XAI/audit analyses → validated immutable run → report.
-
-Only fold-training/all-training data fits transformations. The held-out
-partition cannot choose preprocessing, models, thresholds, metrics, or
-explanation settings. Training data supplies explanation background/reference
-data. Audit-only fields remain in a separate aligned row-keyed view.
-
-Proposed inference:
-
-raw request → same schema/policy → exact checksum-verified fitted
-preprocessing/model pipeline → prediction/score → optional exact-run explanation
-and constrained counterfactual → audit event → response.
-
-Inference never refits, reconstructs encodings, or interprets raw German codes
-inside application code. Explanations and counterfactuals identify and invoke
-the exact pipeline used for the prediction.
-
-## Dataset Invariants
-
-The design fails closed on these Phase 1 facts:
-
-- raw kredit 0 = bad/non-compliant and 1 = good/compliant; adverse_event is
-  derived explicitly while raw target stays traceable;
-- target cannot enter predictors;
-- age, personal-status/sex, and foreign-worker status remain audit-only
-  candidates and separate from model inputs;
-- telephone is excluded;
-- bishkred is unresolved/default-deny;
-- categorical integer codes are not automatically continuous;
-- the file's oversampled 30% adverse rate cannot be reported as source-population
-  prevalence or population-calibrated risk;
-- transformed amount cannot be described as literal currency;
-- absent dates/entity IDs permit the current fixed stratified strategy but no
-  temporal/entity-generalisation claim; and
-- all learned transforms fit on training data only.
-
-Schema, target, role, split, preprocessing, report, and counterfactual
-components each own a corresponding refusal/test boundary.
-
-## Experiment and Artifact Strategy
-
-The Research MVP uses planned local artifacts/runs/<run-id> directories and a
-versioned JSON manifest rather than MLflow or a database. The manifest binds
-dataset/source/hash, target and feature policy, split seed/membership,
-preprocessing/feature map, models/configuration, code/environment, validation
-and held-out results, fitted-pipeline hash/compatibility, XAI reference/cases,
-counterfactual/stability/fairness configuration, timestamps, and limitations.
-
-Runs are written to staging, validated/checksummed, atomically published, and
-never overwritten. Reports and later APIs name explicit run IDs and hashes, not
-“latest.” Serialization remains provisional: evaluate skops; use joblib only as
-a trusted, checksummed, exact-environment fallback if approved.
-
-## XAI, Counterfactual, Stability, and Fairness Boundaries
-
-- **XAI:** native coefficients/tree evidence and original-feature permutation
-  importance are the selected foundation. SHAP is provisional pending bounded
-  compatibility/methodology tests; LIME/PDP are deferred. Every explanation
-  records model/pipeline, transformed-to-original feature map, output/class,
-  held-out case, training-only reference, configuration, and limitations.
-- **Counterfactuals:** a transparent custom constrained search is provisional;
-  DiCE is deferred pending compatibility and rule-coverage testing. Search
-  occurs in raw feature space and validates immutable/audit/history/mutable/
-  dependent rules before exact-pipeline scoring. Amount-duration-rate
-  dependencies, purpose prohibition, guarantor practicality, and transformed
-  amount limitations are explicit. No valid candidate is an allowed result.
-- **Stability:** later seeded valid perturbations, repeated runs, top-k overlap,
-  rank correlation and normalized attribution change are planned; boundary
-  crossings are reported separately. No threshold or result exists.
-- **Fairness:** disabled and not authorized for South German Credit. A future
-  path must check source-supported groups and cell counts before metrics,
-  preserve aligned audit-only data, represent uncertainty, and refuse weak
-  support. It cannot infer identities or return a fair/unfair verdict.
-
-## Technology Decisions
-
-Selected for a future authorized research implementation:
-
-- CPython 3.12 on Windows using venv/pip;
-- pandas for labelled tabular data;
-- scikit-learn pipelines, classical models, splitting and metrics;
-- TOML via tomllib for human configuration and JSON for generated manifests;
-- small explicit schema/feature contracts rather than a validation framework;
-- pytest;
-- Ruff;
-- Matplotlib plus JSON/Markdown research reports;
-- native explanation evidence and scikit-learn permutation importance; and
-- immutable local run directories.
-
-Current project compatibility was not tested because installation is out of
-scope. Official metadata checked on 2026-09-09 publishes Python 3.12/Windows
-support for the selected ecosystem, with permissive PSF/BSD/MIT-family licences.
-
-Provisional: exact versions/lock format, model serialization, optional mypy,
-SHAP, and a small custom counterfactual search.
-
-Deferred/unselected: DiCE dependency, FastAPI, React/Next or another frontend,
-SQLite/PostgreSQL, MLflow/DVC, Docker, cloud/deployment, authentication/RBAC,
-microservices, XGBoost and deep learning.
-
-## Planned Structure and Tests
-
-ARCHITECTURE.md proposes—but Phase 2 did not create—configs, one
-src/aletheia package with data/ML/audit/experiment modules, focused unit/data/
-integration/end-to-end tests, ignored run artifacts, optional presentation
-notebooks, and future-only API/web directories. Only configuration, minimal
-data-foundation modules, and their tests are candidates for the next separately
-authorized milestone.
-
-Planned tests cover dataset checksums/schema/target, disjoint/forbidden roles,
-categorical semantics, deterministic disjoint splits, fold-local fitting,
-training/inference transformed-feature consistency, estimator/metric contracts,
-artifact compatibility/atomicity, explainer/run association, counterfactual
-constraints, fairness guards, and later API/end-to-end flows. Phase 2 created no
-tests because it created no implementation.
-
-## Proposed Roadmap
-
-Every item is blocked and requires external review plus a replacement current
-task:
-
-1. reproducible data foundation;
-2. leakage-safe dummy/logistic baseline;
-3. bounded classical comparator evaluation;
-4. global/local explanation evidence;
-5. constrained counterfactual proof of concept;
-6. explanation-stability experiment;
-7. conditional fairness authorization gate;
-8. research synthesis;
-9. later thin API;
-10. later reviewer interface/minimal persistence;
-11. optional evidence-driven enterprise extensions.
-
-The next advisory milestone is deliberately small: acquisition/checksums,
-schema/target/feature roles, deterministic split membership, and tests—no model
-training.
-
-## ADR
-
-Created docs/decisions/0001-research-first-modular-monolith.md with context,
-decision, alternatives, reasons, trade-offs, consequences, deferred decisions,
-and reconsideration conditions.
-
-## Exact Files Changed
-
-User-provided existing change:
-
-- docs/CURRENT_TASK.md — Phase 2 authorization; Codex did not replace it.
-
-Modified by Codex:
-
-- docs/DATASET_AUDIT.md — Phase 1 approval-status wording only;
-- docs/ARCHITECTURE.md — rewritten as the proposed Phase 2 design;
-- docs/EXECUTION_PLAN.md — approved history, Phase 2 gate, and blocked roadmap;
-- docs/PROJECT_REPORT.md — concise Phase 2 learning/defence record;
-- docs/SUPERVISOR_HANDOFF.md — this current handoff.
-
-Created by Codex:
-
-- docs/decisions/0001-research-first-modular-monolith.md.
-
-Intentionally unchanged: AGENTS.md, prompt.txt, README.md, and .gitignore.
-
-## Checks Actually Run
-
-Starting-state inspection:
-
-- git status --short → M docs/CURRENT_TASK.md only.
-- git log -3 --oneline → e60d6ef Phase 1 commit followed by the two Phase 0
-  documentation commits.
-- rg --files and git ls-files inspection → documentation plus .gitignore only;
-  no implementation/artifact files.
-- git show --stat e60d6ef → Phase 1 changed its five required documents and
-  created DATASET_AUDIT.md.
-
-Final design/repository checks:
-
-- git diff --check → exit 0; no whitespace errors (line-ending warnings only).
-- protected-file diff for AGENTS.md, prompt.txt, README.md, and .gitignore →
-  exit 0; unchanged.
-- git status --short → six expected modified-document entries plus the untracked
-  docs/decisions/ directory entry; the untracked-file listing resolves that
-  directory to the single expected ADR.
-- git ls-files --others --exclude-standard → only the ADR.
-- prohibited-artifact extension/path scan → 0.
-- component-contract check → all 21 required component boundaries found; each
-  table defines responsibility/I-O, dependency/caller, prohibition, failure,
-  and planned test.
-- architecture invariant checks → target mapping, role exclusions, training-only
-  fit, exact fitted pipeline, oversampling/population warning, disabled
-  fairness, delivery-to-core direction, and blocked roadmap all found.
-- document-status consistency check → Phase 1 approved; Phase 2 pending external
-  review; no implementation claim across the architecture, plan, report, audit,
-  ADR, and handoff.
-- Markdown fence check → balanced in architecture, execution plan, and ADR.
-- complete final diff inspected; only authorized documentation changed.
-
-No automated implementation tests were applicable or run. No experiment,
-metric, model, fairness result, explanation, counterfactual, or stability result
-was produced.
-
-## Unresolved Decisions
-
-bishkred treatment; final predictor/encoding policy; exact package versions and
-lock format; split seed/folds; primary metric, threshold and error costs; bounded
-model search; serialization; SHAP/background/case/grouping method;
-counterfactual constraints/cost/library; stability cases/perturbations/repeats/
-interpretation; whether fairness can be authorized; and all application,
-persistence, security, container and deployment choices.
-
-## Risks and Limitations
-
-The dataset is small, old, regional, granted-only, oversampled, unidentifiable
-by time/entity, weak for fairness, and has transformed amount/coarse categories.
-Architecture cannot remove those limitations. A filesystem store lacks
-concurrency/query features; post-hoc explanations remain correlation- and
-configuration-sensitive; recourse may be mathematically valid but unrealistic;
-model persistence is version/security-sensitive; and module discipline still
-requires tests. All technology compatibility remains unverified in this project
-until an authorized dependency milestone.
-
-## Architecture and Implementation Status
-
-Architecture changed from an unapproved placeholder to a detailed **proposal
-pending external supervisor review**. No source code, package structure,
-dependency/configuration file, raw/processed data, split, test, model, result,
-run artifact, API, database, frontend, container, CI/CD, or deployment was
-created. Codex did not commit or push.
-
-## Evidence for Supervisor Inspection
-
-1. ARCHITECTURE.md — complete boundaries, flows, invariants, technology matrix,
-   planned tests/errors/security and risks.
-2. decisions/0001-research-first-modular-monolith.md — the major decision and
-   alternatives/trade-offs.
-3. EXECUTION_PLAN.md — Phase 2 completion criteria and blocked gated roadmap.
-4. PROJECT_REPORT.md — concise learning/interview/viva defence.
-5. DATASET_AUDIT.md — only its Phase 1 approval status changed.
-6. The final diff/status and protected/prohibited-artifact checks.
-
-## Suggested Next Action
-
-External supervisor review of Phase 2 only. If approved, the supervisor may
-authorize the bounded reproducible-data-foundation milestone through a
-replacement CURRENT_TASK.md. This handoff and roadmap do not authorize it.
+## 1. Milestone and Status
+
+**Phase 3 — Reproducible Data Foundation.**
+
+Completed by Codex and pending external supervisor review. Phase 3 is not
+externally approved by this document. Phase 4 and every later milestone remain
+blocked.
+
+## 2. Base and Resulting Commit State
+
+- Branch: `main`.
+- Verified base/HEAD/origin before implementation:
+  `52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.
+- Current HEAD and `origin/main` remain that commit.
+- Result: an uncommitted working-tree implementation; Codex made no commit,
+  push, merge, branch, or history mutation.
+- The starting status contained only the supervisor-supplied
+  `M docs/CURRENT_TASK.md`; Codex did not modify that task.
+
+## 3. Phase 2 Approval Recorded
+
+Phase 2's research-first modular-monolith architecture is recorded as externally
+supervisor-approved at commit `52be4130c8c4745c9f86f3b26a93497c3beeb2ff` in
+ARCHITECTURE.md, EXECUTION_PLAN.md, PROJECT_REPORT.md, and ADR 0001.
+
+## 4. Implemented and Verified
+
+The Phase 3 package provides versioned configuration loading, controlled UCI
+acquisition, archive/raw integrity checks, strict raw loading and schema/domain
+validation, explicit adverse-target derivation, fail-closed feature-role views,
+source-bound row keys, deterministic stratified membership, locked membership
+verification, and a data-only `python -m aletheia.data` interface. It contains no
+learned preprocessing, estimator, evaluation, or later application/audit work.
+
+## 5. Dataset Identity
+
+- Dataset: South German Credit, UCI record 573.
+- Record: `https://archive.ics.uci.edu/dataset/573/south+german+credit`.
+- DOI: `https://doi.org/10.24432/C5QG88`.
+- Licence: CC BY 4.0.
+- Fixed archive URL:
+  `https://archive.ics.uci.edu/static/public/573/south+german+credit+update.zip`.
+- Archive: 13,130 bytes; SHA-256
+  `0b40d40eb7321693d559e247a556f88a6cc8df8489c3cb2ae084db7592584551`.
+- Approved member: `SouthGermanCredit.asc`.
+- Raw member: 47,940 bytes; SHA-256
+  `5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f`.
+
+The live acquisition and integration test verified both identities. Raw/archive
+files remain ignored and untracked.
+
+## 6. Environment and Exact Dependencies
+
+Both clean environments used CPython 3.12.10 on Windows. The final project
+environment used pip 26.2.1. `requirements.lock.txt` contains only exact index
+packages, with no editable entry, `file://` reference, absolute path, or global
+environment package:
+
+```text
+cloudpickle 3.1.2; colorama 0.4.6; iniconfig 2.3.0; joblib 1.6.0;
+narwhals 2.26.0; numpy 2.5.3; packaging 26.3; pandas 3.0.5; pip 26.2.1;
+pluggy 1.6.0; Pygments 2.21.0; pytest 9.1.1;
+python-dateutil 2.9.0.post0; Ruff 0.16.6; scikit-learn 1.9.0;
+SciPy 1.18.1; setuptools 84.0.0; six 1.17.0;
+threadpoolctl 3.6.0; tzdata 2026.3
+```
+
+Direct runtime dependencies are pandas and scikit-learn. The development extra
+contains pytest and Ruff. The standard library handles TOML, hashing, JSON,
+paths, ZIP/BZIP2, argument parsing, and primary HTTP/TLS acquisition. Setuptools
+is the build backend. No Requests or later-phase dependency was added.
+
+## 7. Configuration and Validation Decisions
+
+`configs/dataset.toml` fixes source identity, exact raw schema/order, row count,
+target mapping, categorical domains, and observed-only quantitative ranges.
+Purpose code 7 is accepted as documented despite being unobserved. Observed
+ranges are explicitly not a future inference policy.
+
+`configs/features.toml` separates semantic type from operational role. Its
+disjoint exhaustive roles are:
+
+- prediction: 15 approved fields;
+- audit-only: `famges`, `alter`, `gastarb`;
+- excluded: `telef`, `bishkred`;
+- raw/derived target: `kredit`, `adverse_event`;
+- metadata: `row_key`.
+
+Unknown fields, missing role fields, overlap, or role/semantic coverage mismatch
+fail closed. `model_input()` returns only the 15 prediction fields.
+
+## 8. Acquisition and Checksum Result
+
+Acquisition downloads into a temporary `.part` file, verifies archive size/hash
+before opening it, rejects unsafe member paths, reads only the exact approved
+BZIP2 member, verifies raw size/hash, then atomically publishes it. Failures
+clean staging. A valid existing raw file is reused; an invalid one is refused
+rather than overwritten. Unit tests verify hash mismatches, missing/unsafe/safe
+extra members, partial cleanup, and both existing-file paths.
+
+Python's OpenSSL trust path reported an expired certificate for the UCI chain,
+while Windows Schannel validated the same fixed HTTPS URL and returned the
+approved bytes. The implementation retains verified Python TLS as primary and
+uses certificate-validating Windows `Invoke-WebRequest` only after that specific
+verification failure. TLS verification is never disabled.
+
+Final data-command output:
+
+```text
+verified raw dataset: data\raw\SouthGermanCredit.asc (47940 bytes, sha256=5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f)
+validated 1000 rows, 21 raw columns; adverse_event counts={0: 700, 1: 300}; prediction_features=15
+verified split: train=800, test=200, membership_sha256=af26b6036c6958a2dec48362fb1bfb075fca2ad7e482ed48ee7a49d7ec6d994b
+```
+
+## 9. Schema, Target, Roles, Keys, and Split
+
+- Schema: exactly 1,000 data rows and 21 ordered integer raw columns; no nulls,
+  undocumented categories, full-row duplicates, or predictor-only duplicates.
+- Raw target is preserved: `kredit=0` bad/non-compliant and `kredit=1`
+  good/compliant.
+- Derived orientation: `adverse_event=1` for raw 0 and 0 for raw 1.
+- Counts: 300 adverse and 700 non-adverse.
+- `bishkred`: excluded by default because its “includes current credit” meaning
+  lacks a safe authoritative observation cutoff. This is not proof of leakage.
+- Keys: `sgc-0001` through `sgc-1000`, based on one-based post-header source
+  position only after raw-hash verification; unique, repeatable, non-null, and
+  aligned across all views.
+- Split: `StratifiedShuffleSplit`, scikit-learn 1.9.0, test fraction 0.20,
+  seed 42, stratified on `adverse_event`.
+- Training: 800 rows, 240 adverse and 560 non-adverse.
+- Test: 200 rows, 60 adverse and 140 non-adverse.
+- Membership checksum:
+  `af26b6036c6958a2dec48362fb1bfb075fca2ad7e482ed48ee7a49d7ec6d994b`.
+- The committed lock contains aggregate counts and deterministic test keys, but
+  no per-row feature or target values. Training is the complement.
+
+## 10. Files Created
+
+Configuration/package:
+
+- `configs/dataset.toml`, `configs/features.toml`,
+  `configs/splits/south_german_credit_v1.json`;
+- `pyproject.toml`, `requirements.lock.txt`;
+- `src/aletheia/__init__.py`, `config.py`, `contracts.py`;
+- `src/aletheia/data/__init__.py`, `__main__.py`, `acquire.py`, `load.py`,
+  `validate.py`, `target.py`, `roles.py`, `split.py`.
+
+Tests:
+
+- `tests/conftest.py`;
+- `tests/unit/test_config.py`, `test_target.py`, `test_roles.py`,
+  `test_split.py`;
+- `tests/data/test_acquire.py`, `test_load_validate.py`;
+- `tests/integration/test_data_foundation.py`.
+
+## 11. Documentation Modified
+
+- `.gitignore`: environments, caches, build metadata, raw/processed data,
+  archives, generated artifacts/reports, and local secret/config patterns.
+- `docs/ARCHITECTURE.md`: Phase 2 approval and Phase 3 implementation status.
+- `docs/DATASET_AUDIT.md`: `bishkred`, stable keys, fixed split, references,
+  and limitations; Phase 1 computed evidence was preserved.
+- `docs/EXECUTION_PLAN.md`: Phase 2 approved, Phase 3 pending review, later
+  phases blocked.
+- `docs/PROJECT_REPORT.md`: implementation, rationale, modules/flows, tests,
+  problems, concepts, interview/viva material, evidence, and limitations.
+- `docs/decisions/0001-research-first-modular-monolith.md`: accepted status and
+  implemented/deferred boundary.
+- `docs/SUPERVISOR_HANDOFF.md`: replaced with this Phase 3 evidence.
+
+`AGENTS.md`, `prompt.txt`, `CLAUDE.md`, and `README.md` are intentionally
+unchanged. `docs/CURRENT_TASK.md` remains only the user/supervisor-installed
+task change.
+
+## 12. Commands and Exact Verification Results
+
+Meaningful setup/implementation commands included `python -m venv .venv`,
+installation of `.[dev]`, `pip freeze --all --exclude-editable`, the three data
+commands, split-contract creation, Ruff formatting, offline pytest, and the
+explicit live test. Network-dependent installs/acquisition were rerun only after
+the sandbox correctly required authorization.
+
+Final clean project environment:
+
+```text
+python --version                         -> Python 3.12.10
+python -m pip --version                  -> pip 26.2.1 (.venv, Python 3.12)
+python -m pip check                      -> No broken requirements found.
+python -m ruff check .                   -> All checks passed!
+python -m ruff format --check .          -> 29 files already formatted
+python -m pytest -m "not live_data"      -> 48 passed, 1 deselected in 7.63s
+```
+
+Explicit live integration test, using `ALETHEIA_RUN_LIVE_DATA=1` and an ignored
+workspace-local pytest temp directory:
+
+```text
+python -m pytest -p no:cacheprovider --basetemp data/processed/pytest-live -m live_data
+-> 1 passed, 48 deselected in 13.71s
+```
+
+Second clean Python 3.12 environment:
+
+```text
+python -m pip install -r requirements.lock.txt
+-> all 20 exact packages installed successfully
+python -m pip install --no-deps --no-build-isolation .
+-> aletheia-decision-auditor 0.1.0 built and installed successfully
+python -m pip check
+-> No broken requirements found.
+python -m ruff check .
+-> All checks passed!
+python -m ruff format --check .
+-> 29 files already formatted
+python -m pytest -m "not live_data"
+-> 48 passed, 1 deselected in 19.05s
+```
+
+Repository checks after documentation and handoff:
+
+```text
+git diff --check
+-> exit 0; no whitespace errors; LF-to-CRLF working-copy warnings only
+git diff --stat
+-> exit 0; eight tracked files reported (Git omits the authorized untracked
+   source/config/test files from this statistic)
+git status --short --untracked-files=all
+-> exit 0; exact output recorded below
+```
+
+## 13. Problems Encountered and Fixes
+
+1. Sandboxed network access was initially denied. Required package and UCI
+   operations were rerun through the explicit approval path.
+2. Python TLS rejected the UCI certificate chain. A fixed-URL, Windows
+   certificate-validating fallback was added; disabling TLS was rejected.
+3. The first offline run had two failures: a checksum test changed archive size,
+   and target-count validation masked duplicate detection. The test now mutates
+   one byte without changing size, and duplicate validation precedes aggregate
+   target counts. The next offline run passed all 48 selected tests.
+4. The first elevated live-test attempt could not access the user pytest temp
+   directory; the next lacked its parent directory. An ignored
+   `data/processed` base temp and disabled pytest cache isolated the live run;
+   it then passed.
+
+## 14. Limitations and Unresolved Issues
+
+- External supervisor review of Phase 3 is unresolved.
+- The dataset is old, regional, granted-only, intentionally oversamples adverse
+  cases, has transformed amount, and has no dates or entity identifiers.
+- The split preserves class proportions but cannot measure temporal or
+  customer/entity generalisation and cannot rule out undisclosed repeat people.
+- The 30% adverse rate is not source-population prevalence or calibrated risk.
+- Fairness remains unsupported/disabled; no group metric was calculated.
+- Future encoding, learned preprocessing, CV folds, model/metric/threshold
+  choices, persistence, XAI, and application technology remain unimplemented.
+- The Windows TLS fallback depends on built-in Windows PowerShell/Schannel when
+  Python's verified TLS path fails. Other platforms keep the Python path and
+  fail closed on certificate errors.
+
+## 15. Scope Confirmation
+
+No imputation, encoding, scaling, feature engineering/selection, resampling,
+cross-validation, model definition/training/serialization, metric, threshold,
+held-out performance inspection, or experiment-run store was implemented.
+
+No SHAP, permutation importance, local explanation, counterfactual, stability,
+fairness, notebook, API, UI, database, MLflow/DVC, Docker, deployment,
+authentication, or monitoring work began.
+
+Codex did not commit or push.
+
+## 16. Actual Final Git Status
+
+```text
+ M .gitignore
+ M docs/ARCHITECTURE.md
+ M docs/CURRENT_TASK.md
+ M docs/DATASET_AUDIT.md
+ M docs/EXECUTION_PLAN.md
+ M docs/PROJECT_REPORT.md
+ M docs/SUPERVISOR_HANDOFF.md
+ M docs/decisions/0001-research-first-modular-monolith.md
+?? configs/dataset.toml
+?? configs/features.toml
+?? configs/splits/south_german_credit_v1.json
+?? pyproject.toml
+?? requirements.lock.txt
+?? src/aletheia/__init__.py
+?? src/aletheia/config.py
+?? src/aletheia/contracts.py
+?? src/aletheia/data/__init__.py
+?? src/aletheia/data/__main__.py
+?? src/aletheia/data/acquire.py
+?? src/aletheia/data/load.py
+?? src/aletheia/data/roles.py
+?? src/aletheia/data/split.py
+?? src/aletheia/data/target.py
+?? src/aletheia/data/validate.py
+?? tests/conftest.py
+?? tests/data/test_acquire.py
+?? tests/data/test_load_validate.py
+?? tests/integration/test_data_foundation.py
+?? tests/unit/test_config.py
+?? tests/unit/test_roles.py
+?? tests/unit/test_split.py
+?? tests/unit/test_target.py
+```
+
+No raw data, archive, environment, cache, build output, generated report, model,
+notebook, API, frontend, database, container, or deployment path appears.
+
+## 17. Supervisor Evidence and Suggested Next Step
+
+Inspect the two TOML contracts, locked split JSON, `src/aletheia/data/`, the 49
+tests, PROJECT_REPORT.md, and the exact final diff/status. The recommended user
+commit message after inspection is:
+
+`feat: build reproducible Aletheia data foundation`
+
+Advisory only: if Phase 3 is externally approved, a replacement
+CURRENT_TASK.md may define a bounded Phase 4 leakage-safe dummy/logistic
+baseline with training-only/fold-local preprocessing and a predeclared
+evaluation contract. This handoff does not authorize Phase 4.

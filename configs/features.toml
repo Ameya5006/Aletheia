@@ -1,0 +1,31 @@
+[policy]
+version = "1.0"
+
+[roles]
+prediction = [
+  "laufkont", "laufzeit", "moral", "verw", "hoehe", "sparkont", "beszeit",
+  "rate", "buerge", "wohnzeit", "verm", "weitkred", "wohn", "beruf", "pers",
+]
+audit_only = ["famges", "alter", "gastarb"]
+excluded = ["telef", "bishkred"]
+raw_target = ["kredit"]
+derived_target = ["adverse_event"]
+metadata = ["row_key"]
+
+[semantic_types]
+quantitative = ["laufzeit", "hoehe", "alter"]
+ordinal_or_discretized = [
+  "beszeit", "rate", "wohnzeit", "verm", "bishkred", "beruf",
+]
+nominal_categorical_integer = [
+  "laufkont", "moral", "verw", "sparkont", "famges", "buerge", "weitkred",
+  "wohn", "pers", "telef", "gastarb",
+]
+raw_target = ["kredit"]
+derived_target = ["adverse_event"]
+metadata = ["row_key"]
+
+[decisions]
+bishkred = "excluded-default-deny-unverified-observation-cutoff"
+telef = "excluded-obsolete-socioeconomic-proxy"
+

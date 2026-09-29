@@ -1,19 +1,22 @@
-# Aletheia — Proposed System Architecture
+# Aletheia — System Architecture
 
 ## Status and Approval Boundary
 
-**Status: proposed pending external supervisor review.**
+**Status: Phase 2 externally supervisor-approved at commit
+`52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.**
 
-This document is the Phase 2 design, not an implemented system. Phase 1 and the
-choice of South German Credit are externally supervisor-approved only for an
-academic Research MVP. That approval does not establish model performance,
+This document records the approved Phase 2 design. Phase 3 implements only its
+reproducible data-foundation boundary: configuration, verified acquisition,
+strict loading/validation, explicit target mapping, feature-role views, stable
+row keys, and locked split membership. Phase 3 is completed by Codex and pending
+external supervisor review; it does not establish model performance,
 calibration, fairness, explanation stability, modern-lending validity, or
 production suitability.
 
-No source package, dependency file, test, dataset, split, model, experiment,
-API, database, frontend, container, or deployment exists yet. Every
-implementation milestone remains blocked until a replacement CURRENT_TASK.md
-authorizes it.
+No preprocessing, model, experiment result, XAI method, counterfactual,
+fairness/stability analysis, API, database, frontend, container, or deployment
+exists. Later milestones remain blocked until a replacement CURRENT_TASK.md
+authorizes one.
 
 ## Architecture Decision
 
@@ -132,7 +135,9 @@ and prevents training/inference preprocessing drift.
 
 ## Component Responsibilities
 
-Names below are conceptual module boundaries, not files already created.
+Names below remain the approved component boundaries. The first six data
+components now have a small Phase 3 implementation under `src/aletheia/data/`;
+all later components remain design only.
 
 ### Data and Model Components
 
@@ -177,7 +182,7 @@ findings.
 | Target never enters predictors | Feature policy and preprocessing | Fail on any target/predictor overlap |
 | Age, personal-status/sex, foreign-worker are audit-only candidates | Versioned feature policy | Keep aligned by row key; fail if supplied to model matrix |
 | Telephone is excluded | Feature policy | Reject from prediction and recourse sets |
-| bishkred is unresolved | Feature policy | Default deny; training cannot start while role is unresolved |
+| bishkred has an unverified observation cutoff | Feature policy | Exclude by default; do not describe the decision as proof of target leakage |
 | Integer category codes are not continuous magnitudes | Schema/preprocessing contract | Declare each semantic type; encode nominal/ordinal fields deliberately |
 | The 30% adverse rate is an oversampled file rate | Report validation and limitations | Prohibit wording that treats it as source-population prevalence or calibrated population risk |
 | Amount is an unknown monotonic transform | Schema, reports, counterfactual constraints | Do not label as currency or compute literal financial cost |
@@ -185,9 +190,10 @@ findings.
 | Learned transformations fit on training data only | CV/final-fit/inference boundaries | Fit-spy tests; inference exposes transform/predict only |
 | Audit rows remain aligned without becoming features | Feature policy/split/artifact contract | Stable row key and membership checks across prediction/audit views |
 
-Because bishkred remains unresolved, the next data-foundation milestone must
-either obtain defensible timing evidence or keep it excluded. It cannot silently
-become a model input.
+Phase 3 resolved the immediate `bishkred` policy conservatively by excluding it.
+Authoritative evidence does not establish whether its count, defined as
+including the current credit, is safe at the intended prediction cutoff. This
+is a default-deny leakage precaution, not proof that the field leaks the target.
 
 ## Future Training Flow
 
@@ -433,10 +439,12 @@ returns a binary “fair/unfair” verdict.
 
 ## Technology Decision Matrix
 
-No dependency is installed or pinned in Phase 2. “Selected” means the technology
-is justified for a future authorized research milestone; its exact compatible
-version will be locked and tested then. Compatibility evidence was checked on
-2026-09-09.
+Phase 3 verified Python 3.12.10 and pinned its minimal data-foundation
+environment in `requirements.lock.txt`: pandas 3.0.5, scikit-learn 1.9.0,
+pytest 9.1.1, Ruff 0.16.6, their transitive dependencies, pip 26.2.1, and
+setuptools 84.0.0. Entries for later phases remain design selections,
+provisional choices, or deferred technologies. Compatibility evidence was
+checked on 2026-09-09 and the Phase 3 environment was tested on 2026-09-10.
 
 | Problem | Decision/status | Alternatives considered | Reason, trade-offs, compatibility/licence | Reconsider when |
 |---|---|---|---|---|
@@ -482,18 +490,23 @@ versions still require installation and tests in a later authorized milestone.
 
 ## Planned Repository Structure
 
-Nothing in this tree is created by Phase 2:
+Phase 3 created only `pyproject.toml`, the two configuration contracts, the
+locked split JSON, the minimal `src/aletheia` data package, and the listed
+unit/data/integration tests. The ML, audit, experiment, report, notebook, API,
+and web paths below remain unimplemented:
 
 ~~~text
-pyproject.toml                         # future dependency/tool configuration
+pyproject.toml                         # Phase 3 package/dependency/tool configuration
 configs/
-  dataset.toml                         # dataset identity/schema/target policy
-  features.toml                        # role and semantic policy
+  dataset.toml                         # Phase 3 dataset identity/schema/target policy
+  features.toml                        # Phase 3 role and semantic policy
+  splits/
+    south_german_credit_v1.json        # Phase 3 locked test membership
   experiments/                         # later run configurations
 src/aletheia/
-  contracts.py                         # simple typed contract values
-  config.py
-  data/
+  contracts.py                         # Phase 3 simple typed contract values
+  config.py                            # Phase 3 TOML loading/validation
+  data/                                # Phase 3 data-only implementation
     acquire.py
     load.py
     validate.py
@@ -596,8 +609,8 @@ limitations are stored in manifests/reports, not hidden in debug logs.
 
 ## Deferred and Unresolved Decisions
 
-Before modelling: resolve or exclude bishkred; freeze the prediction feature
-set and categorical/ordinal encodings; set split seed/folds; predeclare primary
+Before modelling: retain the approved Phase 3 `bishkred` exclusion and frozen
+prediction role set; choose categorical/ordinal encodings and CV folds; predeclare primary
 metric, threshold rule and error-cost interpretation; approve model candidates
 and bounded search; choose/pin serialization.
 

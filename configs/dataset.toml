@@ -1,0 +1,61 @@
+[contract]
+version = "1.0"
+
+[dataset]
+identifier = "uci-south-german-credit-573"
+name = "South German Credit"
+record_url = "https://archive.ics.uci.edu/dataset/573/south+german+credit"
+doi = "https://doi.org/10.24432/C5QG88"
+licence = "CC BY 4.0"
+
+[archive]
+url = "https://archive.ics.uci.edu/static/public/573/south+german+credit+update.zip"
+size_bytes = 13130
+sha256 = "0b40d40eb7321693d559e247a556f88a6cc8df8489c3cb2ae084db7592584551"
+required_member = "SouthGermanCredit.asc"
+
+[raw]
+filename = "SouthGermanCredit.asc"
+size_bytes = 47940
+sha256 = "5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f"
+row_count = 1000
+columns = [
+  "laufkont", "laufzeit", "moral", "verw", "hoehe", "sparkont", "beszeit",
+  "rate", "famges", "buerge", "wohnzeit", "verm", "alter", "weitkred",
+  "wohn", "bishkred", "beruf", "pers", "telef", "gastarb", "kredit",
+]
+
+[target]
+raw_column = "kredit"
+derived_column = "adverse_event"
+mapping_identifier = "kredit-0-is-adverse-v1"
+allowed_raw_values = [0, 1]
+adverse_raw_value = 0
+expected_raw_counts = { "0" = 300, "1" = 700 }
+
+[categorical_domains]
+laufkont = [1, 2, 3, 4]
+moral = [0, 1, 2, 3, 4]
+verw = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+sparkont = [1, 2, 3, 4, 5]
+beszeit = [1, 2, 3, 4, 5]
+rate = [1, 2, 3, 4]
+famges = [1, 2, 3, 4]
+buerge = [1, 2, 3]
+wohnzeit = [1, 2, 3, 4]
+verm = [1, 2, 3, 4]
+weitkred = [1, 2, 3]
+wohn = [1, 2, 3]
+bishkred = [1, 2, 3, 4]
+beruf = [1, 2, 3, 4]
+pers = [1, 2]
+telef = [1, 2]
+gastarb = [1, 2]
+kredit = [0, 1]
+
+[observed_ranges]
+scope = "approved-file-observation-only-not-an-inference-policy"
+laufzeit = { minimum = 4, maximum = 72 }
+hoehe = { minimum = 250, maximum = 18424 }
+alter = { minimum = 19, maximum = 75 }
+
