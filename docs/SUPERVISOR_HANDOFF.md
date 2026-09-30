@@ -1,326 +1,177 @@
 # Aletheia — Supervisor Handoff
 
-## 1. Milestone and Status
+## 1. Current Milestone and Status
 
-**Phase 3 — Reproducible Data Foundation.**
+**Phase 3 Repair — Architecture State Consistency.**
 
-Completed by Codex and pending external supervisor review. Phase 3 is not
-externally approved by this document. Phase 4 and every later milestone remain
-blocked.
+Completed by Codex and pending external supervisor verification. This handoff
+does not claim external approval. Phase 4 and all later work remain blocked.
 
-## 2. Base and Resulting Commit State
+## 2. Starting Repository State
 
+- Starting commit: `f19f86944d24f6220a04b732968aa1377363eb23`.
 - Branch: `main`.
-- Verified base/HEAD/origin before implementation:
-  `52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.
-- Current HEAD and `origin/main` remain that commit.
-- Result: an uncommitted working-tree implementation; Codex made no commit,
-  push, merge, branch, or history mutation.
-- The starting status contained only the supervisor-supplied
-  `M docs/CURRENT_TASK.md`; Codex did not modify that task.
+- A fresh `git fetch origin` completed with exit code 0 and no output.
+- `HEAD` and `origin/main` both resolved to the starting commit.
+- `git rev-list --left-right --count HEAD...origin/main` returned `0 0`.
+- Latest commit: `f19f869 feat: build reproducible Aletheia data foundation`,
+  authored by Ameya5006 on `2026-09-29T10:21:14+05:30`.
+- Starting `git status --short --untracked-files=all` contained exactly
+  ` M docs/CURRENT_TASK.md`.
 
-## 3. Phase 2 Approval Recorded
+The starting-state gate therefore passed before any edit.
 
-Phase 2's research-first modular-monolith architecture is recorded as externally
-supervisor-approved at commit `52be4130c8c4745c9f86f3b26a93497c3beeb2ff` in
-ARCHITECTURE.md, EXECUTION_PLAN.md, PROJECT_REPORT.md, and ADR 0001.
+## 3. Contradiction Repaired
 
-## 4. Implemented and Verified
+`docs/ARCHITECTURE.md` already described Phase 3's data foundation as
+implemented, but its later planned-structure section still said that the
+configuration, source data-foundation modules, and tests were candidates for
+the “next implementation milestone” and that exact packaging and dependency
+files required the “next task.” The technology matrix also retained the related
+claim that the dependency/lock format awaited setup.
 
-The Phase 3 package provides versioned configuration loading, controlled UCI
-acquisition, archive/raw integrity checks, strict raw loading and schema/domain
-validation, explicit adverse-target derivation, fail-closed feature-role views,
-source-bound row keys, deterministic stratified membership, locked membership
-verification, and a data-only `python -m aletheia.data` interface. It contains no
-learned preprocessing, estimator, evaluation, or later application/audit work.
+The repair now consistently records that Phase 3 implemented the package and
+dependency configuration, dataset/feature contracts, locked split, data
+modules, and Phase 3 tests. It identifies the separately approved leakage-safe
+baseline as the next possible implementation milestone while keeping it blocked
+pending completion and external verification of this repair.
 
-## 5. Dataset Identity
+The corrected schema-validation description now distinguishes the implemented
+schema, categorical-domain, row/key/count, target-count, and duplicate checks
+from descriptive quantitative metadata. Exact approved raw-file identity is
+enforced by byte-size and SHA-256 verification before parsing. Although Phase 3
+loads `observed_ranges` from `configs/dataset.toml`, `validate_raw_data()` does
+not compare quantitative values against those ranges. They describe the
+approved fixed file, and no general future-inference range policy has been
+implemented.
 
-- Dataset: South German Credit, UCI record 573.
-- Record: `https://archive.ics.uci.edu/dataset/573/south+german+credit`.
-- DOI: `https://doi.org/10.24432/C5QG88`.
-- Licence: CC BY 4.0.
-- Fixed archive URL:
-  `https://archive.ics.uci.edu/static/public/573/south+german+credit+update.zip`.
-- Archive: 13,130 bytes; SHA-256
-  `0b40d40eb7321693d559e247a556f88a6cc8df8489c3cb2ae084db7592584551`.
-- Approved member: `SouthGermanCredit.asc`.
-- Raw member: 47,940 bytes; SHA-256
-  `5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f`.
+The approved research-first modular-monolith architecture and every dataset,
+target, feature-role, split, leakage, and held-out-test constraint were
+preserved. No model, preprocessing result, metric, XAI method, fairness result,
+application, or production feature is claimed.
 
-The live acquisition and integration test verified both identities. Raw/archive
-files remain ignored and untracked.
+## 4. Files Inspected
 
-## 6. Environment and Exact Dependencies
+- `AGENTS.md`
+- `docs/CURRENT_TASK.md`
+- `docs/SUPERVISOR_HANDOFF.md`
+- `docs/ARCHITECTURE.md`
+- `docs/EXECUTION_PLAN.md`
+- `docs/PROJECT_REPORT.md`
+- `docs/DATASET_AUDIT.md`
+- `docs/decisions/0001-research-first-modular-monolith.md`
 
-Both clean environments used CPython 3.12.10 on Windows. The final project
-environment used pip 26.2.1. `requirements.lock.txt` contains only exact index
-packages, with no editable entry, `file://` reference, absolute path, or global
-environment package:
+Each file was read completely before the repair began.
 
-```text
-cloudpickle 3.1.2; colorama 0.4.6; iniconfig 2.3.0; joblib 1.6.0;
-narwhals 2.26.0; numpy 2.5.3; packaging 26.3; pandas 3.0.5; pip 26.2.1;
-pluggy 1.6.0; Pygments 2.21.0; pytest 9.1.1;
-python-dateutil 2.9.0.post0; Ruff 0.16.6; scikit-learn 1.9.0;
-SciPy 1.18.1; setuptools 84.0.0; six 1.17.0;
-threadpoolctl 3.6.0; tzdata 2026.3
-```
+## 5. Files Modified
 
-Direct runtime dependencies are pandas and scikit-learn. The development extra
-contains pytest and Ruff. The standard library handles TOML, hashing, JSON,
-paths, ZIP/BZIP2, argument parsing, and primary HTTP/TLS acquisition. Setuptools
-is the build backend. No Requests or later-phase dependency was added.
+- `docs/ARCHITECTURE.md`: corrected stale Phase 3 planning language, clarified
+  the current implementation boundary and observed-range semantics, and kept
+  the next baseline milestone blocked.
+- `docs/SUPERVISOR_HANDOFF.md`: replaced the Phase 3 implementation handoff with
+  this concise repair handoff.
 
-## 7. Configuration and Validation Decisions
+## 6. Files Intentionally Unchanged
 
-`configs/dataset.toml` fixes source identity, exact raw schema/order, row count,
-target mapping, categorical domains, and observed-only quantitative ranges.
-Purpose code 7 is accepted as documented despite being unobserved. Observed
-ranges are explicitly not a future inference policy.
+`docs/CURRENT_TASK.md` remains the user's modified task and was not edited by
+Codex. `AGENTS.md`, `docs/EXECUTION_PLAN.md`, `docs/PROJECT_REPORT.md`,
+`docs/DATASET_AUDIT.md`, the ADR, and every other repository path were left
+unchanged.
 
-`configs/features.toml` separates semantic type from operational role. Its
-disjoint exhaustive roles are:
+Source code, tests, configuration, locked split membership, dependencies, and
+the Phase 3 implementation were not changed. No file was created, deleted,
+staged, committed, or pushed.
 
-- prediction: 15 approved fields;
-- audit-only: `famges`, `alter`, `gastarb`;
-- excluded: `telef`, `bishkred`;
-- raw/derived target: `kredit`, `adverse_event`;
-- metadata: `row_key`.
+## 7. Checks and Exact Results
 
-Unknown fields, missing role fields, overlap, or role/semantic coverage mismatch
-fail closed. `model_input()` returns only the 15 prediction fields.
-
-## 8. Acquisition and Checksum Result
-
-Acquisition downloads into a temporary `.part` file, verifies archive size/hash
-before opening it, rejects unsafe member paths, reads only the exact approved
-BZIP2 member, verifies raw size/hash, then atomically publishes it. Failures
-clean staging. A valid existing raw file is reused; an invalid one is refused
-rather than overwritten. Unit tests verify hash mismatches, missing/unsafe/safe
-extra members, partial cleanup, and both existing-file paths.
-
-Python's OpenSSL trust path reported an expired certificate for the UCI chain,
-while Windows Schannel validated the same fixed HTTPS URL and returned the
-approved bytes. The implementation retains verified Python TLS as primary and
-uses certificate-validating Windows `Invoke-WebRequest` only after that specific
-verification failure. TLS verification is never disabled.
-
-Final data-command output:
-
-```text
-verified raw dataset: data\raw\SouthGermanCredit.asc (47940 bytes, sha256=5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f)
-validated 1000 rows, 21 raw columns; adverse_event counts={0: 700, 1: 300}; prediction_features=15
-verified split: train=800, test=200, membership_sha256=af26b6036c6958a2dec48362fb1bfb075fca2ad7e482ed48ee7a49d7ec6d994b
-```
-
-## 9. Schema, Target, Roles, Keys, and Split
-
-- Schema: exactly 1,000 data rows and 21 ordered integer raw columns; no nulls,
-  undocumented categories, full-row duplicates, or predictor-only duplicates.
-- Raw target is preserved: `kredit=0` bad/non-compliant and `kredit=1`
-  good/compliant.
-- Derived orientation: `adverse_event=1` for raw 0 and 0 for raw 1.
-- Counts: 300 adverse and 700 non-adverse.
-- `bishkred`: excluded by default because its “includes current credit” meaning
-  lacks a safe authoritative observation cutoff. This is not proof of leakage.
-- Keys: `sgc-0001` through `sgc-1000`, based on one-based post-header source
-  position only after raw-hash verification; unique, repeatable, non-null, and
-  aligned across all views.
-- Split: `StratifiedShuffleSplit`, scikit-learn 1.9.0, test fraction 0.20,
-  seed 42, stratified on `adverse_event`.
-- Training: 800 rows, 240 adverse and 560 non-adverse.
-- Test: 200 rows, 60 adverse and 140 non-adverse.
-- Membership checksum:
-  `af26b6036c6958a2dec48362fb1bfb075fca2ad7e482ed48ee7a49d7ec6d994b`.
-- The committed lock contains aggregate counts and deterministic test keys, but
-  no per-row feature or target values. Training is the complement.
-
-## 10. Files Created
-
-Configuration/package:
-
-- `configs/dataset.toml`, `configs/features.toml`,
-  `configs/splits/south_german_credit_v1.json`;
-- `pyproject.toml`, `requirements.lock.txt`;
-- `src/aletheia/__init__.py`, `config.py`, `contracts.py`;
-- `src/aletheia/data/__init__.py`, `__main__.py`, `acquire.py`, `load.py`,
-  `validate.py`, `target.py`, `roles.py`, `split.py`.
-
-Tests:
-
-- `tests/conftest.py`;
-- `tests/unit/test_config.py`, `test_target.py`, `test_roles.py`,
-  `test_split.py`;
-- `tests/data/test_acquire.py`, `test_load_validate.py`;
-- `tests/integration/test_data_foundation.py`.
-
-## 11. Documentation Modified
-
-- `.gitignore`: environments, caches, build metadata, raw/processed data,
-  archives, generated artifacts/reports, and local secret/config patterns.
-- `docs/ARCHITECTURE.md`: Phase 2 approval and Phase 3 implementation status.
-- `docs/DATASET_AUDIT.md`: `bishkred`, stable keys, fixed split, references,
-  and limitations; Phase 1 computed evidence was preserved.
-- `docs/EXECUTION_PLAN.md`: Phase 2 approved, Phase 3 pending review, later
-  phases blocked.
-- `docs/PROJECT_REPORT.md`: implementation, rationale, modules/flows, tests,
-  problems, concepts, interview/viva material, evidence, and limitations.
-- `docs/decisions/0001-research-first-modular-monolith.md`: accepted status and
-  implemented/deferred boundary.
-- `docs/SUPERVISOR_HANDOFF.md`: replaced with this Phase 3 evidence.
-
-`AGENTS.md`, `prompt.txt`, `CLAUDE.md`, and `README.md` are intentionally
-unchanged. `docs/CURRENT_TASK.md` remains only the user/supervisor-installed
-task change.
-
-## 12. Commands and Exact Verification Results
-
-Meaningful setup/implementation commands included `python -m venv .venv`,
-installation of `.[dev]`, `pip freeze --all --exclude-editable`, the three data
-commands, split-contract creation, Ruff formatting, offline pytest, and the
-explicit live test. Network-dependent installs/acquisition were rerun only after
-the sandbox correctly required authorization.
-
-Final clean project environment:
-
-```text
-python --version                         -> Python 3.12.10
-python -m pip --version                  -> pip 26.2.1 (.venv, Python 3.12)
-python -m pip check                      -> No broken requirements found.
-python -m ruff check .                   -> All checks passed!
-python -m ruff format --check .          -> 29 files already formatted
-python -m pytest -m "not live_data"      -> 48 passed, 1 deselected in 7.63s
-```
-
-Explicit live integration test, using `ALETHEIA_RUN_LIVE_DATA=1` and an ignored
-workspace-local pytest temp directory:
-
-```text
-python -m pytest -p no:cacheprovider --basetemp data/processed/pytest-live -m live_data
--> 1 passed, 48 deselected in 13.71s
-```
-
-Second clean Python 3.12 environment:
-
-```text
-python -m pip install -r requirements.lock.txt
--> all 20 exact packages installed successfully
-python -m pip install --no-deps --no-build-isolation .
--> aletheia-decision-auditor 0.1.0 built and installed successfully
-python -m pip check
--> No broken requirements found.
-python -m ruff check .
--> All checks passed!
-python -m ruff format --check .
--> 29 files already formatted
-python -m pytest -m "not live_data"
--> 48 passed, 1 deselected in 19.05s
-```
-
-Repository checks after documentation and handoff:
+Required final checks:
 
 ```text
 git diff --check
--> exit 0; no whitespace errors; LF-to-CRLF working-copy warnings only
-git diff --stat
--> exit 0; eight tracked files reported (Git omits the authorized untracked
-   source/config/test files from this statistic)
+-> exit 0; no whitespace errors; Git warned that LF will be replaced by CRLF
+   the next time it touches each authorized documentation file
+
+git diff -- docs/ARCHITECTURE.md docs/SUPERVISOR_HANDOFF.md
+-> exit 0; diff limited to the two authorized documentation files and showed
+   only the architecture-state repair plus this replacement handoff; Git
+   emitted the same two LF-to-CRLF working-copy warnings
+
 git status --short --untracked-files=all
--> exit 0; exact output recorded below
+-> exit 0; exactly:
+ M docs/ARCHITECTURE.md
+ M docs/CURRENT_TASK.md
+ M docs/SUPERVISOR_HANDOFF.md
 ```
 
-## 13. Problems Encountered and Fixes
+Repository search:
 
-1. Sandboxed network access was initially denied. Required package and UCI
-   operations were rerun through the explicit approval path.
-2. Python TLS rejected the UCI certificate chain. A fixed-URL, Windows
-   certificate-validating fallback was added; disabling TLS was rejected.
-3. The first offline run had two failures: a checksum test changed archive size,
-   and target-count validation masked duplicate detection. The test now mutates
-   one byte without changing size, and duplicate validation precedes aggregate
-   target counts. The next offline run passed all 48 selected tests.
-4. The first elevated live-test attempt could not access the user pytest temp
-   directory; the next lacked its parent directory. An ignored
-   `data/processed` base temp and disabled pytest cache isolated the live run;
-   it then passed.
+```text
+rg -n -i "(configuration|packag|dependenc|data-foundation).*(next implementation milestone|next task)|(next implementation milestone|next task).*(configuration|packag|dependenc|data-foundation)" docs/ARCHITECTURE.md
+-> exit 1; no matches
 
-## 14. Limitations and Unresolved Issues
+rg -n -i "recorded quantitative bounds|fixed-file quantitative-bound drift|observed quantitative-bound checks" docs/ARCHITECTURE.md
+-> exit 1; no matches
+```
 
-- External supervisor review of Phase 3 is unresolved.
-- The dataset is old, regional, granted-only, intentionally oversamples adverse
-  cases, has transformed amount, and has no dates or entity identifiers.
-- The split preserves class proportions but cannot measure temporal or
-  customer/entity generalisation and cannot rule out undisclosed repeat people.
-- The 30% adverse rate is not source-population prevalence or calibrated risk.
-- Fairness remains unsupported/disabled; no group metric was calculated.
-- Future encoding, learned preprocessing, CV folds, model/metric/threshold
-  choices, persistence, XAI, and application technology remain unimplemented.
-- The Windows TLS fallback depends on built-in Windows PowerShell/Schannel when
-  Python's verified TLS path fails. Other platforms keep the Python path and
-  fail closed on certificate errors.
+Code inspection confirmed that `load_dataset_contract()` parses
+`observed_ranges`, `load_raw_data()` calls `verify_file_identity()` before
+parsing, and `validate_raw_data()` contains no quantitative-range comparison.
 
-## 15. Scope Confirmation
+The full test suite was intentionally not rerun because this task changed no
+executable, configuration, dependency, split, or test file.
 
-No imputation, encoding, scaling, feature engineering/selection, resampling,
-cross-validation, model definition/training/serialization, metric, threshold,
-held-out performance inspection, or experiment-run store was implemented.
+## 8. Architecture and Implementation Scope
 
-No SHAP, permutation importance, local explanation, counterfactual, stability,
-fairness, notebook, API, UI, database, MLflow/DVC, Docker, deployment,
-authentication, or monitoring work began.
+No architecture was redesigned. The repair only reconciled the architecture
+document with the already committed Phase 3 repository state. ML, experiment,
+audit, report-generation, API, UI, database, container, and deployment
+components remain unimplemented.
+
+No Phase 4 preprocessing, modelling, experiment tracking, held-out evaluation,
+XAI, counterfactual, fairness, API, UI, database, Docker, MLflow, or deployment
+work began.
+
+## 9. Problems Encountered and Unresolved Issues
+
+**Problem:** The initial repair wording incorrectly conflated exact raw-file
+identity verification with explicit quantitative-range validation.
+
+**Root cause:** `observed_ranges` is loaded into the dataset contract, but the
+earlier documentation treated the presence of that metadata as evidence that
+`validate_raw_data()` enforced it. The implemented identity boundary actually
+uses exact byte size and SHA-256 before parsing.
+
+**Correction and verification:** The architecture and this handoff now label
+the ranges as descriptive metadata, state that no explicit range comparison or
+future-inference range policy exists, and identify the actual size/hash identity
+check. This was verified by inspecting `config.py`, `load.py`, `acquire.py`,
+`validate.py`, and the relevant data/config tests, then by running the
+no-false-claim search recorded above.
+
+External supervisor verification of this correction remains unresolved; until
+then, the leakage-safe baseline milestone remains blocked.
+
+## 10. Final Git State and Git Authority
+
+Actual final `git status --short --untracked-files=all`:
+
+```text
+ M docs/ARCHITECTURE.md
+ M docs/CURRENT_TASK.md
+ M docs/SUPERVISOR_HANDOFF.md
+```
 
 Codex did not commit or push.
 
-## 16. Actual Final Git Status
+Recommended commit message:
 
-```text
- M .gitignore
- M docs/ARCHITECTURE.md
- M docs/CURRENT_TASK.md
- M docs/DATASET_AUDIT.md
- M docs/EXECUTION_PLAN.md
- M docs/PROJECT_REPORT.md
- M docs/SUPERVISOR_HANDOFF.md
- M docs/decisions/0001-research-first-modular-monolith.md
-?? configs/dataset.toml
-?? configs/features.toml
-?? configs/splits/south_german_credit_v1.json
-?? pyproject.toml
-?? requirements.lock.txt
-?? src/aletheia/__init__.py
-?? src/aletheia/config.py
-?? src/aletheia/contracts.py
-?? src/aletheia/data/__init__.py
-?? src/aletheia/data/__main__.py
-?? src/aletheia/data/acquire.py
-?? src/aletheia/data/load.py
-?? src/aletheia/data/roles.py
-?? src/aletheia/data/split.py
-?? src/aletheia/data/target.py
-?? src/aletheia/data/validate.py
-?? tests/conftest.py
-?? tests/data/test_acquire.py
-?? tests/data/test_load_validate.py
-?? tests/integration/test_data_foundation.py
-?? tests/unit/test_config.py
-?? tests/unit/test_roles.py
-?? tests/unit/test_split.py
-?? tests/unit/test_target.py
-```
+`docs: reconcile Phase 3 architecture state`
 
-No raw data, archive, environment, cache, build output, generated report, model,
-notebook, API, frontend, database, container, or deployment path appears.
+## 11. Evidence and Suggested Next Step
 
-## 17. Supervisor Evidence and Suggested Next Step
+The supervisor should inspect the complete diff for `docs/ARCHITECTURE.md` and
+`docs/SUPERVISOR_HANDOFF.md`, the zero-result stale-language search, and the
+exact final Git status above.
 
-Inspect the two TOML contracts, locked split JSON, `src/aletheia/data/`, the 49
-tests, PROJECT_REPORT.md, and the exact final diff/status. The recommended user
-commit message after inspection is:
-
-`feat: build reproducible Aletheia data foundation`
-
-Advisory only: if Phase 3 is externally approved, a replacement
-CURRENT_TASK.md may define a bounded Phase 4 leakage-safe dummy/logistic
-baseline with training-only/fold-local preprocessing and a predeclared
-evaluation contract. This handoff does not authorize Phase 4.
+Suggested only: externally verify this repair. A separate approved task may
+authorize the leakage-safe baseline milestone only after that verification.

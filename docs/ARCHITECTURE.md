@@ -5,18 +5,30 @@
 **Status: Phase 2 externally supervisor-approved at commit
 `52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.**
 
-This document records the approved Phase 2 design. Phase 3 implements only its
-reproducible data-foundation boundary: configuration, verified acquisition,
-strict loading/validation, explicit target mapping, feature-role views, stable
-row keys, and locked split membership. Phase 3 is completed by Codex and pending
-external supervisor review; it does not establish model performance,
-calibration, fairness, explanation stability, modern-lending validity, or
-production suitability.
+This document records the approved Phase 2 design. Phase 3 implemented its
+reproducible data-foundation boundary at commit
+`f19f86944d24f6220a04b732968aa1377363eb23`: package and dependency
+configuration, verified acquisition, strict loading/validation, explicit target
+mapping, feature-role views, stable row keys, locked split membership, and the
+associated tests. The implementation passed technical review; this architecture
+state repair remains pending external supervisor verification. Phase 3 does not
+establish model performance, calibration, fairness, explanation stability,
+modern-lending validity, or production suitability.
 
-No preprocessing, model, experiment result, XAI method, counterfactual,
-fairness/stability analysis, API, database, frontend, container, or deployment
-exists. Later milestones remain blocked until a replacement CURRENT_TASK.md
-authorizes one.
+The raw loader enforces the approved fixed file's exact byte size and SHA-256
+before parsing. Schema validation then enforces exact columns and order, integer
+storage, null/duplicate rules, categorical domains, row/key counts, and target
+counts. The quantitative ranges in `configs/dataset.toml` are descriptive
+metadata observed in the approved fixed file: Phase 3 loads them into the
+dataset contract but does not explicitly compare quantitative values against
+them. No general future-inference range policy has been implemented.
+
+Learned preprocessing and all ML, experiment, audit, report-generation, API,
+UI, database, container, and deployment components remain unimplemented. No
+model, metric, XAI method, counterfactual, or fairness/stability result exists.
+The next possible implementation milestone is the separately approved
+leakage-safe baseline milestone, and it remains blocked pending completion and
+external verification of this repair.
 
 ## Architecture Decision
 
@@ -145,7 +157,7 @@ all later components remain design only.
 |---|---|---|---|---|---|
 | Dataset acquisition/integrity | Fetch the approved URL into a controlled raw location and verify archive/raw SHA-256; manifest → verified file reference | Standard HTTP/file/hash facilities; called by data-foundation use case | Parsing data, silently accepting a new version, or committing raw data | Network failure, checksum mismatch, partial download, unexpected archive member | Known-hash test, mismatch refusal, temporary-file cleanup, exact filename test |
 | Raw-data loader | Read verified SouthGermanCredit.asc without changing meanings; verified file → raw table plus stable source-row key | pandas and dataset contract; called by schema validator | Target remapping, imputation, encoding, or feature selection | delimiter/header drift, malformed row, coercion loss | exact 1,000 × 21 shape, header, integer-token, row-key stability tests |
-| Schema validator | Check columns, order/allowed categories, types, required values, and dataset identity; raw table → validated raw table | dataset contract; called after loading and at inference boundary | Learning statistics or repairing undocumented values silently | missing/extra column, unknown code, null, invalid range | valid fixture and one failure test per contract rule |
+| Schema validator | Check the loaded fixed file's columns, order, categorical domains, integer storage, required values, row/key counts, target counts, and duplicates; raw table → validated raw table | dataset contract; called after the raw loader has enforced exact size and SHA-256; a future inference boundary may reuse only rules approved for inference | Learning statistics, repairing undocumented values silently, treating descriptive observed ranges as enforced bounds, or inventing a general inference-range policy | missing/extra column, unknown code, null, duplicate, row/key/count drift, or target-count drift | valid fixture and one failure test per implemented schema/domain rule |
 | Target mapper | Preserve raw kredit and explicitly derive adverse_event = (kredit == 0); validated table → raw target plus binary analytical target | target contract; called before splitting/evaluation | Reversing labels, choosing threshold, or exposing target to predictors | missing/unknown label, inconsistent mapping, target in feature matrix | mapping truth table, class arithmetic, target-exclusion tests |
 | Feature-role policy | Produce disjoint prediction, audit-only, excluded, target, and unresolved views while retaining row alignment; validated table + policy version → role-tagged views | feature-policy contract; called by split, training, audit | Promoting audit-only/unresolved fields automatically | overlap between roles, missing role, forbidden column in model matrix | set-disjointness, exhaustive-role, forbidden-feature tests |
 | Split manager | Create/load deterministic stratified membership tied to dataset hash, row keys, target and seed; role-tagged rows → train/test membership artifact | standard hashing and scikit-learn splitter; called by training orchestration | Transforming features, inspecting model performance, or temporal claims | nondeterminism, overlap, missing rows, class loss, dataset-hash mismatch | same-seed equality, different-seed identity, full coverage, no-overlap, class-support tests |
@@ -449,7 +461,7 @@ checked on 2026-09-09 and the Phase 3 environment was tested on 2026-09-10.
 | Problem | Decision/status | Alternatives considered | Reason, trade-offs, compatibility/licence | Reconsider when |
 |---|---|---|---|---|
 | Core language/runtime | **Selected:** CPython 3.12 series | 3.11; newer Python; R | Matches the Windows environment and ML ecosystem; PSF licence; 64-bit Windows support. Fix exact patch version in the implementation environment | A required package drops/breaks 3.12 or deployment requires another supported runtime |
-| Environment/install | **Selected:** standard venv + pip for the first research environment | conda, Poetry, uv | Built into/familiar with Python and adequate for a small laptop; exact dependency/lock format awaits authorized setup | Reproducible locking or native binary resolution proves inadequate |
+| Environment/install | **Implemented for Phase 3:** standard venv + pip with exact index packages in `requirements.lock.txt` | conda, Poetry, uv | Built into/familiar with Python and adequate for a small laptop; the Phase 3 lock was verified in two clean Python 3.12 environments | Reproducible locking or native binary resolution proves inadequate |
 | Tabular data | **Selected:** pandas | Python csv + arrays; Polars | Clear labelled schema/categorical handling and strong scikit-learn integration; BSD-3-Clause; current Windows CPython 3.12 wheels. More memory than Polars but trivial for 1,000 rows | Data scale or memory becomes material |
 | Classical ML/preprocessing | **Selected:** scikit-learn Pipeline/ColumnTransformer and estimators | custom algorithms; XGBoost; deep learning | Provides splitters, preprocessing, baselines, ensembles and metrics in one BSD-3-Clause stack; current Windows/Python 3.12 wheels; CPU-suitable for 8 GB | A distinct research question cannot be answered by its model families |
 | Configuration | **Selected:** TOML read with Python tomllib; JSON for machine artifacts | YAML/PyYAML; custom Python config | Standard-library parsing, explicit/versionable text, no runtime code execution; tomllib is read-only, so JSON handles generated manifests | Configuration nesting becomes genuinely awkward |
@@ -542,12 +554,14 @@ docs/
   decisions/
 ~~~
 
-Only configuration, the minimal source package data-foundation modules, and
-their unit/data tests are candidates for the next implementation milestone.
-ML training/audit modules appear only in their separately approved roadmap
-milestones. artifacts, reports, notebooks, API, and web paths are future-only.
-The exact packaging and dependency files require the next task; this design does
-not authorize creating them.
+The package configuration, exact dependency lock, dataset and feature
+contracts, locked split, data-foundation modules, and Phase 3
+unit/data/integration tests shown above are implemented. ML, experiment, audit,
+report-generation, API, UI, database, container, and deployment paths remain
+unimplemented. The next possible implementation milestone is the separately
+approved leakage-safe baseline milestone; it remains blocked pending completion
+and external verification of this repair. This document does not authorize that
+milestone.
 
 ## Testing Strategy
 
