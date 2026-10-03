@@ -1,393 +1,164 @@
+```markdown
 # MILESTONE
 
-Phase 4 — Leakage-Safe Baseline Pipeline
+Phase 4 Repair — Verify the Locked Data Boundary
 
 # SUPERVISOR DECISION
 
-Phase 3 — Reproducible Data Foundation and its architecture-state repair are externally supervisor-approved.
+Phase 4 implementation exists at commit:
 
-Approved commits:
+`1edaedd031c8cdd6a59bf2575bc74f96f74cdc66`
 
-- Phase 3 implementation: `f19f86944d24f6220a04b732968aa1377363eb23`
-- Architecture-state repair: `65f83c668a4f745ffd6dc74a9e21b81cb059712c`
+External supervisor review found two blocking test gaps. Phase 4 is not approved until they are repaired. Phase 5 remains blocked.
 
-Phase 4 may implement only the bounded training-only baseline described below.
-
-# GOAL
-
-Implement and verify a leakage-safe baseline experiment using:
-
-1. the approved 15 prediction features;
-2. fold-local preprocessing;
-3. a trivial dummy reference;
-4. regularized Logistic Regression;
-5. fixed training-only cross-validation;
-6. predeclared metrics and threshold semantics;
-7. a versioned experiment configuration and immutable run manifest.
-
-Do not evaluate the locked 200-row held-out test partition.
-
-# STARTING STATE
+# REQUIRED STARTING STATE
 
 Before editing, verify:
 
-1. branch is `main`;
-2. `HEAD` is `65f83c668a4f745ffd6dc74a9e21b81cb059712c`;
-3. `HEAD` and `origin/main` are synchronized;
-4. the only working-tree change is:
+- branch: `main`
+- HEAD: `1edaedd031c8cdd6a59bf2575bc74f96f74cdc66`
+- local `origin/main`: `1edaedd031c8cdd6a59bf2575bc74f96f74cdc66`
+- working tree contains only the user-owned modification to `docs/CURRENT_TASK.md`
 
-```text
- M docs/CURRENT_TASK.md
-```
+If any other path is modified or untracked, stop and report it.
 
-`docs/CURRENT_TASK.md` is modified because the user installed this approved Phase 4 task. Do not modify it again.
+# GOAL
 
-If any additional path appears, stop without editing and explain it.
+Repair the Phase 4 integration test so it proves that verified split membership controls model evaluation.
 
-# REQUIRED READING
+# BLOCKING FINDING 1 — FALSE SEQUENTIAL HOLDOUT ASSUMPTION
 
-Read completely:
+`tests/integration/test_baseline_pipeline.py` currently invents this held-out partition:
 
-- `AGENTS.md`
-- `CLAUDE.md`
-- `prompt.txt`
-- `docs/CURRENT_TASK.md`
-- `docs/SUPERVISOR_HANDOFF.md`
-- `docs/PROJECT_REPORT.md`
-- `docs/ARCHITECTURE.md`
-- `docs/EXECUTION_PLAN.md`
-- `docs/DATASET_AUDIT.md`
-- all ADRs
-- `pyproject.toml`
-- `requirements.lock.txt`
-- all existing configuration, source and test files
+`sgc-0801` through `sgc-1000`
 
-Inspect the latest two commits and the complete repository tree.
+This is not Aletheia’s approved split. The real locked held-out keys are scattered throughout the 1,000 source rows.
 
-# FIXED DATA AND LEAKAGE BOUNDARY
+Replace this assumption with membership produced and verified through the Phase 3 split-contract functions.
 
-Use the approved Phase 3 contracts without changing their meanings:
+The repaired test must prove that:
 
-- 1,000 verified source rows
-- 800 locked training rows
-- 200 locked held-out rows
-- `adverse_event=1` is the positive/adverse class
-- 15 prediction features only
-- audit-only, excluded, target and metadata fields prohibited from model input
+- the evaluation input contains every verified training key;
+- the evaluation input contains no verified held-out key;
+- exactly 800 rows enter cross-validation;
+- a sequential row-number assumption cannot make the test pass accidentally.
 
-The held-out partition must not influence:
+# BLOCKING FINDING 2 — INCOMPLETE INTEGRATION PATH
 
-- encoding;
-- scaling;
-- preprocessing design;
-- cross-validation;
-- model configuration;
-- metric selection;
-- threshold choice;
-- feature selection;
-- interpretation;
-- documentation conclusions.
+The current integration test starts with prepared prediction features and calls `evaluate_models()` directly.
 
-Do not calculate, display, store or document held-out predictions or metrics.
+Add an offline synthetic integration test that exercises the actual Phase 3-to-Phase 4 orchestration through `run_baseline()`, or through `calculate_baseline()` followed by manifest publication:
 
-Loading and verifying the Phase 3 split contract is allowed. After membership verification, Phase 4 evaluation must use only training-row keys.
+1. raw-data loading;
+2. schema validation;
+3. target mapping;
+4. feature-role enforcement;
+5. split-contract loading and verification;
+6. training-key selection;
+7. training-only cross-validation;
+8. manifest creation;
+9. immutable artifact publication.
 
-# PREPROCESSING CONTRACT
+Use synthetic data and temporary files. Do not require network access or committed raw data.
 
-Use one scikit-learn `ColumnTransformer` inside one `Pipeline`.
+Capture the row keys supplied to evaluation and compare them directly with the verified split membership.
 
-Quantitative prediction features:
+# REQUIRED ASSERTIONS
 
-- `laufzeit`
-- `hoehe`
+The repaired integration test must demonstrate that:
 
-Apply `StandardScaler` to these features.
+- the split contains exactly 800 training keys and 200 held-out keys;
+- the split is based on verified membership rather than row-number ranges;
+- the evaluation keys equal the complete verified training-key set;
+- evaluation keys are disjoint from the verified held-out-key set;
+- exactly 800 rows enter cross-validation;
+- the two models use identical fold membership;
+- repeated calculations remain deterministic;
+- the manifest records training-only cross-validation;
+- `held_out_evaluation_performed` remains `false`;
+- `fitted_model_artifact` remains `null`;
+- no held-out metric or prediction field exists;
+- the published run contains only `manifest.json`;
+- no fitted model file is created;
+- publishing over an existing run remains refused.
 
-Treat all remaining approved prediction fields as categorical for this baseline, including fields documented as ordinal or discretized.
+The test should fail if:
 
-Use `OneHotEncoder` with categories explicitly derived from the approved dataset contract and fail on undocumented categories.
+- any verified held-out key enters evaluation;
+- any verified training key is missing;
+- evaluated row count differs from 800;
+- the manifest contains held-out predictions or metrics;
+- a fitted model artifact is published.
 
-The transformed schema must remain stable even for documented but unobserved purpose code `verw=7`.
+# HELD-OUT RESTRICTIONS
+
+Synthetic row keys and target values may be used only to construct and verify synthetic split membership.
 
 Do not:
 
-- infer category domains from the complete dataset;
-- fit preprocessing before cross-validation;
-- impute values;
-- resample classes;
-- use audit-only fields;
-- treat integer category codes as continuous magnitudes;
-- add target encoding;
-- add feature selection;
-- add polynomial features.
+- calculate held-out predictions;
+- calculate held-out metrics;
+- fit preprocessing on held-out rows;
+- tune any setting using held-out rows;
+- inspect the real held-out partition for model performance;
+- change the approved production split;
+- change the preserved Phase 4 run;
+- change previously recorded Phase 4 metrics.
 
-Produce a deterministic mapping from transformed columns back to original features.
+# AUTHORIZED FILES
 
-# MODEL CONTRACT
+Codex may modify only:
 
-Implement exactly two models:
-
-## Dummy reference
-
-`DummyClassifier(strategy="prior")`
-
-## Interpretable baseline
-
-Regularized Logistic Regression with explicit fixed configuration:
-
-- L2 regularization
-- `C=1.0`
-- `solver="lbfgs"`
-- `class_weight=None`
-- `max_iter=1000`
-
-Do not perform hyperparameter search.
-
-Do not add Decision Tree, Random Forest, Gradient Boosting, XGBoost, neural networks or any other estimator.
-
-Do not fit or serialize a final production model.
-
-# CROSS-VALIDATION CONTRACT
-
-Use only the locked 800-row training partition.
-
-Use:
-
-- `StratifiedKFold`
-- 5 folds
-- `shuffle=True`
-- `random_state=42`
-- identical folds for both models
-
-Every fold must fit its own preprocessing pipeline using only that fold’s training rows.
-
-Record deterministic validation-membership checksums for each fold without committing feature or target values.
-
-# METRICS AND THRESHOLD
-
-Primary comparison metric:
-
-- ROC-AUC
-
-Supporting metrics:
-
-- average precision
-- balanced accuracy
-- adverse-class recall
-- specificity
-- precision
-- F1
-- log loss
-- Brier score
-
-Use `adverse_event=1` consistently as the positive class.
-
-Use probability column corresponding to class `1`.
-
-Use threshold `0.5` only for descriptive cross-validation confusion metrics.
-
-Do not tune the threshold.
-
-Document:
-
-- false negative: an actually adverse case predicted non-adverse;
-- false positive: an actually non-adverse case predicted adverse;
-- both errors matter;
-- no defensible monetary cost ratio exists;
-- threshold `0.5` is not an operational lending recommendation;
-- ROC-AUC does not prove calibration;
-- precision, average precision and probability interpretation are limited by the dataset’s oversampled adverse rate.
-
-# EXPERIMENT CONFIGURATION AND MANIFEST
-
-Create:
-
-- `configs/experiments/baseline_v1.toml`
-
-It must freeze:
-
-- experiment schema/version;
-- dataset identity;
-- feature-policy version;
-- split-contract identity/checksum;
-- target mapping;
-- preprocessing policy;
-- model configurations;
-- CV method/folds/seed;
-- metrics;
-- threshold;
-- positive class.
-
-Implement a small versioned JSON manifest containing at least:
-
-- manifest schema version;
-- experiment identifier;
-- dataset SHA-256;
-- feature-policy version;
-- split membership checksum;
-- training-membership checksum;
-- experiment-configuration checksum;
-- model configuration;
-- preprocessing configuration;
-- CV configuration;
-- fold-membership checksums;
-- per-fold metrics;
-- aggregate mean and standard deviation;
-- transformed feature names and original-feature mapping;
-- Python and relevant package versions;
-- base Git commit;
-- working-tree dirty state and diff checksum;
-- creation time;
-- limitations;
-- explicit confirmation that no held-out metric was calculated.
-
-Generated run directories belong under `artifacts/runs/` and must remain ignored.
-
-Publish a run atomically and refuse overwriting an existing run identifier.
-
-Do not persist a fitted model in Phase 4.
-
-# PROBLEMS AND RECOVERY REPORTING
-
-Update `AGENTS.md` with a concise permanent rule requiring every meaningful milestone to update `docs/PROJECT_REPORT.md` with verified problems encountered and recovery evidence.
-
-For each meaningful problem record:
-
-- problem and symptom;
-- affected milestone/component;
-- impact;
-- root cause;
-- failed or incomplete attempts;
-- final solution;
-- why it worked;
-- verification;
-- prevention or future improvement;
-- relevant code/files;
-- interview/viva explanation.
-
-Include environment, tooling, implementation, ML-methodology and governance problems when they affected progress, correctness or reproducibility.
-
-Do not fabricate problems. If none occurred, say so.
-
-Backfill the important verified Phase 3 problems, including:
-
-- UCI certificate-chain failure and verified Schannel fallback;
-- pytest temporary-directory permission failure;
-- PowerShell syntax initially executed in Command Prompt;
-- stray untracked `git` file detected by the status gate;
-- initial failing test construction/validation ordering;
-- stale architecture wording;
-- confusion between checksum identity and explicit quantitative-range validation.
-
-Keep this material concise and study-oriented.
-
-# FUTURE CODE-GRAPH REQUIREMENT
-
-Update `docs/EXECUTION_PLAN.md` to preserve a future milestone named approximately:
-
-`Developer Code Intelligence and System Traceability`
-
-Place it only after core data, modelling, evaluation/XAI and basic application boundaries are stable.
-
-Record it as proposed and unimplemented.
-
-Its future first version should use:
-
-- Python `ast`;
-- lightweight graph contracts;
-- NetworkX or an equally lightweight internal representation only when authorized;
-- JSON/GraphML export;
-- pytest fixtures;
-- deterministic dependency, reverse-dependency, impact and cycle analysis;
-- optional visualization only after graph correctness.
-
-Record that:
-
-- unresolved static calls must not be presented as certain;
-- code graph and ML lineage graph are separate concepts;
-- no Neo4j, GraphRAG, vector database, cloud infrastructure, microservices or mandatory LLM belongs in the first version;
-- implementation requires its own future approved `CURRENT_TASK.md`.
-
-Do not implement the code graph in Phase 4 and do not add its dependencies.
-
-# EXPECTED IMPLEMENTATION FILES
-
-Authorized modifications:
-
-- `AGENTS.md`
-- `docs/ARCHITECTURE.md`
-- `docs/CURRENT_TASK.md` — user-owned modification only; Codex must not edit
-- `docs/EXECUTION_PLAN.md`
+- `tests/conftest.py`
+- `tests/integration/test_baseline_pipeline.py`
 - `docs/PROJECT_REPORT.md`
 - `docs/SUPERVISOR_HANDOFF.md`
-- `src/aletheia/config.py`
-- `src/aletheia/contracts.py`
-- `tests/conftest.py`
 
-Authorized new files:
+`docs/CURRENT_TASK.md` is user-owned and must remain unchanged by Codex.
 
-- `configs/experiments/baseline_v1.toml`
-- `docs/decisions/0002-training-only-baseline-protocol.md`
-- `src/aletheia/ml/__init__.py`
-- `src/aletheia/ml/preprocess.py`
-- `src/aletheia/ml/models.py`
-- `src/aletheia/ml/evaluate.py`
-- `src/aletheia/ml/baseline.py`
-- `src/aletheia/experiments/__init__.py`
-- `src/aletheia/experiments/manifest.py`
-- `src/aletheia/experiments/artifacts.py`
-- `tests/unit/test_preprocess.py`
-- `tests/unit/test_models.py`
-- `tests/unit/test_evaluate.py`
-- `tests/unit/test_manifest.py`
-- `tests/integration/test_baseline_pipeline.py`
+No ML source, experiment configuration, architecture, dependency, dataset, generated artifact, API, frontend, database or deployment file is authorized.
 
-If another implementation file is genuinely required, stop before creating it and explain why.
+If the repaired test exposes an actual source-code defect, stop and report the evidence before modifying source code.
 
-Do not modify:
+# PROJECT REPORT REQUIREMENTS
 
-- Phase 3 dataset, feature or split contracts;
-- Phase 3 data modules;
-- dependency files;
-- `prompt.txt`;
-- `CLAUDE.md`;
-- `docs/DATASET_AUDIT.md`;
-- ADR 0001.
+Update `docs/PROJECT_REPORT.md` with this verified problem and recovery:
 
-No new dependency is authorized.
+- the original test assumed that the final 200 row numbers formed the held-out partition;
+- the actual stratified split uses scattered row keys;
+- why the original assertion did not prove the real leakage boundary;
+- how verified split membership replaced the row-number assumption;
+- how the repaired integration test exercises the Phase 3-to-Phase 4 path;
+- what could have gone wrong if the false assumption remained;
+- how an interviewer should understand testing for data leakage;
+- which code and test files demonstrate the correction.
 
-# REQUIRED TESTS
+Keep the report concise, technically accurate and useful for interview, viva and project-defence preparation.
 
-Test at least:
+Do not alter or fabricate earlier results, problems, metrics or implementation claims.
 
-- exact preprocessing feature allocation;
-- explicit category domains;
-- stable output columns including `verw=7`;
-- undocumented category refusal;
-- targets, audit-only fields, excluded fields and row keys absent from model input;
-- scaler/encoder fit only within each training fold;
-- exact five-fold membership coverage and disjointness;
-- identical folds for both models;
-- held-out keys absent from CV inputs and metrics;
-- positive-class orientation;
-- known metric fixtures;
-- probability column for class `1`;
-- deterministic repeated results;
-- dummy-model sanity behavior;
-- Logistic Regression constructor configuration;
-- transformed-to-original feature mapping;
-- manifest required fields and cross-reference checks;
-- manifest refusal of held-out metrics;
-- artifact atomic publication and overwrite refusal;
-- integration flow from verified Phase 3 data through training-only baseline manifest.
+# SUPERVISOR HANDOFF REQUIREMENTS
 
-Tests must use synthetic fixtures unless the explicitly executed local baseline requires the verified ignored raw dataset.
+Update `docs/SUPERVISOR_HANDOFF.md` with:
 
-No ordinary test may require network access.
+- repair status;
+- root cause;
+- old invalid assumption;
+- corrected membership approach;
+- integration path exercised;
+- files changed;
+- exact commands and checks run;
+- exact results;
+- confirmation that held-out predictions and metrics were not calculated;
+- confirmation that the preserved Phase 4 metrics were unchanged;
+- confirmation that Phase 5 did not begin;
+- unresolved issues;
+- exact final Git status;
+- recommended commit message.
 
-# REQUIRED EXECUTION AND VERIFICATION
+Do not claim external supervisor approval.
 
-Use the existing Python 3.12 environment.
+# REQUIRED VERIFICATION
 
 Run:
 
@@ -396,137 +167,67 @@ python -m pip check
 python -m ruff check .
 python -m ruff format --check .
 python -m pytest -m "not live_data"
+git diff --check
 ```
 
-Use Windows-compatible temporary pytest and cache directories if the repository path has permission problems.
+Use Windows-compatible temporary pytest and cache directories if the repository location causes permission errors.
 
-Run the approved baseline experiment against the verified local dataset.
+Inspect the generated temporary test run and verify that it contains only `manifest.json`.
 
-Run the deterministic calculation twice before publishing and compare the result payloads, excluding explicitly nondeterministic metadata such as creation time and output path.
-
-Verify:
-
-- only 800 training rows were evaluated;
-- both models used identical five-fold membership;
-- no held-out metric exists;
-- no final model artifact exists;
-- generated run artifacts remain ignored;
-- no raw data or generated output appears in Git status.
-
-Record exact commands and results.
-
-# DOCUMENTATION
-
-Update `docs/PROJECT_REPORT.md` as Aletheia’s concise technical learning, interview, viva and project-defence guide.
-
-Explain:
-
-- preprocessing design;
-- why categorical codes were one-hot encoded;
-- fold-local fitting;
-- model configurations;
-- dummy versus logistic purpose;
-- metric meanings;
-- positive-class orientation;
-- threshold limitation;
-- CV results;
-- overfitting evidence that can and cannot be inferred;
-- dataset prevalence/calibration limitations;
-- implementation flow;
-- important functions and files;
-- tests;
-- problems and recovery;
-- limitations;
-- likely interview follow-up questions.
-
-Do not claim held-out, production, fairness, XAI or deployment results.
-
-Update architecture and execution-plan status truthfully.
-
-Replace `docs/SUPERVISOR_HANDOFF.md` with complete Phase 4 evidence.
-
-Do not claim external supervisor approval.
+Confirm that no raw dataset, generated run, cache file or temporary output appears in Git status.
 
 # EXPECTED FINAL GIT STATUS
 
-The final status should contain only:
+The final status may contain only:
 
 ```text
- M AGENTS.md
- M docs/ARCHITECTURE.md
  M docs/CURRENT_TASK.md
- M docs/EXECUTION_PLAN.md
  M docs/PROJECT_REPORT.md
  M docs/SUPERVISOR_HANDOFF.md
- M src/aletheia/config.py
- M src/aletheia/contracts.py
  M tests/conftest.py
-?? configs/experiments/baseline_v1.toml
-?? docs/decisions/0002-training-only-baseline-protocol.md
-?? src/aletheia/experiments/__init__.py
-?? src/aletheia/experiments/artifacts.py
-?? src/aletheia/experiments/manifest.py
-?? src/aletheia/ml/__init__.py
-?? src/aletheia/ml/baseline.py
-?? src/aletheia/ml/evaluate.py
-?? src/aletheia/ml/models.py
-?? src/aletheia/ml/preprocess.py
-?? tests/integration/test_baseline_pipeline.py
-?? tests/unit/test_evaluate.py
-?? tests/unit/test_manifest.py
-?? tests/unit/test_models.py
-?? tests/unit/test_preprocess.py
+ M tests/integration/test_baseline_pipeline.py
 ```
 
-If an additional path appears, stop and explain it before recommending a commit.
+`docs/CURRENT_TASK.md` is the user-owned task replacement and must not be modified again by Codex.
 
-# FINAL RESPONSE
+If any additional file appears, stop and explain it before recommending a commit.
+
+# FINAL CODEX RESPONSE
 
 Report:
 
-1. milestone status;
-2. verified starting state;
-3. preprocessing contract;
-4. baseline models;
-5. CV protocol;
-6. metrics and threshold semantics;
-7. exact CV results;
-8. confirmation that held-out evaluation did not occur;
-9. manifest/run identity;
-10. transformed feature count and mapping;
-11. tests and exact results;
-12. deterministic rerun result;
-13. problems encountered, failed attempts and fixes;
-14. files created;
-15. files modified;
-16. files intentionally unchanged;
-17. documentation changes;
-18. future code-graph placement;
-19. unresolved issues and limitations;
-20. what the user should understand;
-21. confirmation that Phase 5 did not begin;
-22. confirmation that Codex did not commit or push;
-23. actual final `git status --short --untracked-files=all`;
-24. recommended commit message.
+1. repair status;
+2. root cause;
+3. old invalid holdout assumption;
+4. corrected verified-membership approach;
+5. complete integration path exercised;
+6. tests added or changed;
+7. files modified;
+8. commands and checks run;
+9. exact results;
+10. confirmation that all and only verified training keys entered evaluation;
+11. confirmation that held-out predictions and metrics were not calculated;
+12. confirmation that preserved Phase 4 metrics did not change;
+13. documentation updates;
+14. unresolved issues and limitations;
+15. confirmation that Phase 5 did not begin;
+16. confirmation that Codex did not commit or push;
+17. exact final `git status --short --untracked-files=all`;
+18. recommended commit message.
 
-If successful, recommend exactly:
+Recommend:
 
-`feat: establish leakage-safe Aletheia baseline`
+`test: verify Phase 4 locked data boundary`
 
 # STOP RULE
 
-Stop after Phase 4.
+Stop after completing and verifying this Phase 4 repair.
 
-Do not:
+Do not begin Phase 5.
 
-- inspect held-out performance;
-- tune models or thresholds;
-- implement nonlinear comparators;
-- implement XAI;
-- implement counterfactuals;
-- implement stability or fairness analysis;
-- implement code-graph functionality;
-- build an API, UI, database, Docker setup or deployment;
-- commit or push.
+Do not modify `docs/CURRENT_TASK.md`.
 
-The user will inspect Git status, commit and push the completed attempt, and return it for independent external supervisor review.
+Do not commit or push.
+
+The user will inspect the final Git status, commit and push the repair, and return it for independent external supervisor review.
+```

@@ -19,6 +19,66 @@ from aletheia.contracts import (
     DatasetContract,
     FeaturePolicy,
 )
+from aletheia.data.load import load_raw_data
+from aletheia.data.roles import build_feature_views
+from aletheia.data.split import (
+    create_split_contract,
+    generate_membership,
+    load_split_contract,
+    verify_split_contract,
+    write_split_contract,
+)
+from aletheia.data.target import add_adverse_target
+from aletheia.data.validate import validate_raw_data
+from aletheia.ml import baseline
+
+
+@pytest.fixture
+def synthetic_baseline_run(tmp_path: Path, monkeypatch):
+    """Use real loaders and split verification with temporary synthetic identities."""
+    raw = synthetic_raw_bytes(1000)
+    dataset = contract_for_raw(raw)
+    policy = load_feature_policy(dataset=dataset)
+    raw_path = tmp_path / dataset.raw_filename
+    raw_path.write_bytes(raw)
+    loaded = load_raw_data(raw_path, dataset)
+    validate_raw_data(loaded, dataset, policy)
+    views = build_feature_views(add_adverse_target(loaded, dataset), policy, dataset)
+    row_keys = views.metadata["row_key"]
+    target = views.target[dataset.derived_target]
+    contract = create_split_contract(
+        generate_membership(row_keys, target),
+        row_keys,
+        target,
+        dataset_sha256=dataset.raw_sha256,
+        feature_policy_version=policy.version,
+        target_mapping_identifier=dataset.target_mapping_identifier,
+    )
+    split_path = tmp_path / "synthetic_split.json"
+    write_split_contract(contract, split_path)
+    membership = verify_split_contract(
+        load_split_contract(split_path),
+        row_keys,
+        target,
+        dataset_sha256=dataset.raw_sha256,
+        feature_policy_version=policy.version,
+        target_mapping_identifier=dataset.target_mapping_identifier,
+    )
+    # Replace identities only; the real experiment loader validates the fixed protocol.
+    config_text = Path("configs/experiments/baseline_v1.toml").read_text(
+        encoding="utf-8"
+    )
+    original = load_baseline_experiment_config()
+    config_text = (
+        config_text.replace(original.dataset_sha256, dataset.raw_sha256)
+        .replace(original.split_contract_path, split_path.as_posix())
+        .replace(original.split_membership_checksum, contract["membership_checksum"])
+    )
+    config_path = tmp_path / "synthetic_baseline.toml"
+    config_path.write_text(config_text, encoding="utf-8")
+    # Only the dataset identity provider is substituted, never data/split/ML logic.
+    monkeypatch.setattr(baseline, "load_dataset_contract", lambda: dataset)
+    return raw_path, config_path, dataset, policy, membership, views
 
 
 def synthetic_raw_bytes(row_count: int = 10) -> bytes:

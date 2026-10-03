@@ -55,10 +55,11 @@ before the dataset is understood.
 complete platform ambition, not permission to implement every feature now.
 `docs/CURRENT_TASK.md` authorizes exactly one bounded task and cannot override
 the project's safety, ML-validity, evidence, or governance rules. The current
-authorization is Phase 4's training-only baseline. It permits fold-local
-preprocessing and two fixed baseline estimators, but no held-out evaluation,
-final fitted model, nonlinear comparator, XAI, fairness, stability, or
-application work. Every later milestone remains blocked pending external review
+authorization is Phase 4's locked-data-boundary test repair. It permits changes
+only to the two authorized test files, this report, and the supervisor handoff.
+No source, configuration, production split, preserved run, or earlier metrics
+may change. Held-out evaluation, final fitting, nonlinear comparators, XAI,
+fairness, stability, and application work remain blocked pending external review
 and a replacement task.
 
 ## Functional Requirements
@@ -497,6 +498,31 @@ documentation edits. It is preserved as historical evidence rather than changed
 to pretend it describes the later documentation state. Base HEAD remains
 `65f83c668a4f745ffd6dc74a9e21b81cb059712c`.
 
+### Phase 4 Repair Verification (2026-10-03)
+
+The repaired offline integration test now calls `run_baseline()` with 1,000
+synthetic raw rows and temporary dataset/configuration/split identities. The
+fixture uses actual Phase 3 loading, schema validation, target mapping, feature
+views, split generation, writing/loading, and verification. Only the dataset
+identity provider is replaced; experiment validation, orchestration, CV,
+manifest construction, and publication execute their real code. Before each of
+the two evaluator calls, a guard requires exactly the complete verified set of
+800 unique training keys, no verified held-out key, and aligned predictor/target
+rows. The synthetic 200-key holdout crosses the old row-800 boundary, making a
+prefix/suffix substitution fail. Both calculations produce identical payloads;
+both models share five fold checksums. Nested manifest checks exclude held-out
+results and prediction fields, retain the false held-out flag and null model
+reference, and require a run containing only `manifest.json`. Republishing the
+same run is refused without changing its manifest.
+
+Verification: pip check and Ruff lint passed; format check reported 43 files
+already formatted. The targeted test passed (1 passed, 10 warnings in 1.50s);
+the complete offline suite passed (66 passed, 1 deselected, 25 warnings in
+5.88s). Warnings are the existing approved L2 deprecation. Temporary publication
+was inspected directly. No production baseline was rerun, held-out performance
+calculated, or preserved metric changed. This repair is pending external review;
+it supplies software-boundary evidence, not new empirical ML evidence.
+
 ## Data Flow
 
 The implemented Phase 3 flow is: official source → temporary download → archive
@@ -642,6 +668,28 @@ losses, deterministic evidence, and atomic immutable publication. The project
 now has a verified training-CV reference, not a final model or held-out result.
 Phase 5 remains unauthorized.
 
+### Phase 4 Repair — Verify the Locked Data Boundary
+
+**Milestone and ordering:** External review blocked Phase 4 on a false holdout
+assumption and an incomplete integration path. Repairing those checks comes
+before any further modelling because passing tests must actually defend the
+approved split. `tests/conftest.py` adds temporary synthetic raw/config/split
+inputs; `tests/integration/test_baseline_pipeline.py` replaces direct prepared-
+feature evaluation with complete `run_baseline()` orchestration and guards.
+
+**Choice and alternatives:** Membership from the Phase 3 verified lock replaces
+invented row ranges. Calling only `evaluate_models()` would leave training-row
+selection untested; using real raw data would make the ordinary test dependent
+on local data availability. Synthetic temporary inputs exercise the complete
+path offline while accepting that they do not establish real model performance.
+No architecture or dependency changes were needed. Reconsider only if a future
+approved dataset/protocol changes the contract or orchestration boundary.
+
+**Concepts and result:** Contract verification, exact set equality, row alignment,
+integration testing, and immutable publication. The test now proves that all and
+only verified training keys reach CV; Phase 4 still awaits supervisor approval
+and Phase 5 remains blocked.
+
 ## Technical Decisions
 
 **Research-first, not platform-first:** Data and ML/XAI evidence precede APIs,
@@ -744,6 +792,39 @@ interpretable reference for a separately approved comparator phase.
 
 ## Important Problems Encountered
 
+### Phase 4 Integration Test Used a False Holdout Boundary
+
+**Problem/symptom:** The original integration test invented `sgc-0801` through
+`sgc-1000` as held-out keys and supplied prepared first-800-row features directly
+to `evaluate_models()`. Its disjointness assertion passed without checking the
+locked membership. The actual stratified lock scatters held-out keys throughout
+the source file. A training-selection regression could therefore include real
+held-out rows, omit training rows, and still pass that test; resulting evidence
+could be contaminated without detection. Review found a test gap, not evidence
+that production evaluation had leaked.
+
+**Root cause/fix:** The test conflated stable source-row numbering with random
+partition membership and bypassed the code responsible for selecting rows.
+Phase 3 split-contract generation/loading/verification now supplies the expected
+membership. `run_baseline()` executes raw loading → schema validation → target
+mapping → role enforcement → locked split verification → training selection →
+real training-only CV → manifest creation → immutable publication. A capture
+guard checks set equality, uniqueness, 800 rows, held-out disjointness, and
+feature/target alignment before allowing evaluation. Both synthetic partitions
+cross row 800. Directly prepared predictors alone were insufficient evidence;
+the real orchestration test passed targeted and full checks noted above.
+
+**Recovery and lesson:** No source defect was exposed and no production artifact
+or metric changed. An initial repair patch was rejected because two operations
+targeted one file; status confirmed no changes, then separate valid updates
+succeeded. A delete-based handoff rewrite failed without changing its file;
+an in-place patch completed the rewrite. A later documentation patch also
+failed on unmatched context and was corrected without changing earlier results.
+Prevent recurrence by testing the selection boundary against verified
+membership rather than plausible-looking IDs. Inspect `data/split.py`,
+`ml/baseline.py`, `tests/conftest.py`, and
+`tests/integration/test_baseline_pipeline.py` to explain the correction.
+
 During Phase 1, Windows `Expand-Archive` could not extract BZIP2 entries, so
 Python's standard `zipfile`
 was used in the temporary audit directory. An initially guessed South German
@@ -821,6 +902,14 @@ configuration; a later approved version must revisit the equivalent API before
 scikit-learn 1.10 rather than silently changing this experiment.
 
 ## Concepts Learned Through This Project
+
+**Contract-based integration testing:** test the real caller-to-component flow
+against a verified contract, rather than preparing inputs that skip the risky
+boundary. The repaired baseline test captures evaluation inputs before CV.
+This matters because a correct evaluator can still receive the wrong rows.
+Be able to explain why source-row identity differs from partition membership,
+why set equality must be paired with uniqueness/count, and why synthetic
+software evidence does not establish real-world model performance.
 
 **Intrinsic vs post-hoc interpretability:** coefficients/rules expose model
 structure directly; feature attribution estimates influence for a fitted model.
@@ -915,6 +1004,15 @@ case. Neither can be declared more costly without a defensible domain cost
 model, which this historical dataset does not provide.
 
 ## Project Defence and Interview Preparation
+
+**How do you test the held-out leakage boundary?** Capture the keys passed by
+the actual orchestrator to evaluation and require exact equality with verified
+training membership, uniqueness, the expected count, and disjointness from
+verified holdout membership before fitting. Row numbers identify records;
+they do not define a random split. Follow-up: why is disjointness alone weak?
+It can miss omitted training rows; exact set equality plus row count detects
+omissions and duplicates. This software test complements fold-local fit tests
+and semantic feature review; it does not prove every kind of leakage is absent.
 
 **Why is this not a prediction dashboard?** It compares performance with
 explanation, constrained recourse, stability, and conditional subgroup evidence;
@@ -1025,6 +1123,12 @@ limitations, and explicit absence of held-out evaluation or a fitted artifact.
 The complete calculation ran twice and had to match before atomic publication.
 
 ## Semester Viva Preparation
+
+**Repair questions:** Basic—does a row key specify its partition? No, the lock
+does. Intermediate—why test the orchestrator? It selects the rows before CV;
+testing the evaluator alone misses that boundary. Difficult—why combine exact
+set equality, uniqueness, and count? Sets detect missing/extra membership but
+discard duplicates, so all three checks are necessary.
 
 **Basic:** Why can accuracy be insufficient? What is leakage? Why is raw
 `kredit=0` mapped to analytical `adverse_event=1`? What does a prior dummy
