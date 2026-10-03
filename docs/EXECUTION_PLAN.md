@@ -14,13 +14,16 @@ CURRENT_TASK.md. Codex does not advance merely because a milestone appears here.
   claim is approved.
 - Phase 2 architecture/technology/roadmap: externally supervisor-approved at
   commit `52be4130c8c4745c9f86f3b26a93497c3beeb2ff`.
-- Phase 3 reproducible data foundation: completed by Codex and pending external
-  supervisor review.
-- Phase 4 and every later implementation/delivery milestone: blocked.
+- Phase 3 reproducible data foundation and architecture-state repair:
+  externally supervisor-approved at commits `f19f86944d24f6220a04b732968aa1377363eb23`
+  and `65f83c668a4f745ffd6dc74a9e21b81cb059712c`.
+- Phase 4 leakage-safe baseline: implemented and verified by Codex; pending
+  external supervisor review.
+- Phase 5 and every later implementation/delivery milestone: blocked.
 
-prompt.txt remains the permanent vision. Phase 3 authorization covered only the
-data foundation and does not authorize preprocessing, modelling, XAI, or
-application work.
+prompt.txt remains the permanent vision. Phase 4 authorization covers only the
+training-only baseline and does not authorize held-out evaluation, nonlinear
+comparators, XAI, or application work.
 
 ## Gate Rules
 
@@ -103,7 +106,7 @@ API/UI/database/MLflow/container/deployment, and the next executable task.
 
 ## Post-Architecture Roadmap
 
-Phase 3 is implemented under the current task and pending external supervisor
+Phase 4 is implemented under the current task and pending external supervisor
 review. Every later milestone remains **blocked**. Dependencies describe
 logical order, not permission.
 
@@ -121,14 +124,16 @@ flowchart LR
     P9 --> P10
     P10 --> P11[Thin API]
     P11 --> P12[Reviewer interface]
-    P12 --> P13[Optional enterprise extensions]
+    P12 --> PCI[Developer code intelligence]
+    PCI --> P13[Optional enterprise extensions]
 ~~~
 
 ### Phase 3 — Reproducible Data Foundation
 
 **Dependency:** Phase 2 external approval and a replacement current task.
 
-**Status:** completed by Codex; pending external supervisor review.
+**Status:** externally supervisor-approved, including the architecture-state
+repair.
 
 **Bounded goal:** create the smallest tested package/configuration needed to
 reacquire, verify, load, validate, map and split the approved dataset.
@@ -154,6 +159,9 @@ SUPERVISOR_HANDOFF.md. External review, not this record, decides acceptance.
 
 **Dependency:** approved Phase 3 data foundation.
 
+**Status:** implemented and verified by Codex; pending external supervisor
+review. No held-out evaluation was performed.
+
 **Bounded goal:** establish a reproducible preprocessing/evaluation contract and
 simple reference performance before nonlinear comparison.
 
@@ -165,10 +173,11 @@ metrics and threshold rule; bounded configuration; first versioned run manifest.
 **Out of scope:** nonlinear winner selection, SHAP, counterfactuals, stability,
 fairness, API/UI and deployment.
 
-**Completion evidence:** train-only/fold-only fit tests; transformed-column
-identity; target orientation and metric fixture tests; reproducible run/config/
-split/environment record; CV results with interpretation; one gated held-out
-evaluation only if the approved task permits it; no test-set tuning.
+**Completion evidence:** train-only/fold-only fit tests; exact 59-column
+transformed identity including `verw=7`; class-1 orientation and metric fixture
+tests; identical deterministic rerun payloads; immutable run/config/split/code/
+environment record; dummy and Logistic Regression CV results with limitations;
+and explicit proof that no held-out metric or fitted model artifact exists.
 
 ### Phase 5 — Bounded Comparator Evaluation
 
@@ -320,6 +329,24 @@ workflow/monitoring/cloud.
 **Completion evidence:** UI values trace to API/run IDs, misleading visual
 guards, no duplicated transformations/metrics, tested primary reviewer flow.
 
+### Future Milestone — Developer Code Intelligence and System Traceability
+
+**Placement:** proposed only after the core data, modelling, evaluation/XAI,
+and basic application boundaries are stable. It is unimplemented and requires
+its own future supervisor-approved `docs/CURRENT_TASK.md`.
+
+**Proposed first version:** use Python `ast`, lightweight graph contracts, and
+NetworkX or an equally lightweight internal representation only if that
+dependency is separately authorized. Export deterministic JSON/GraphML and use
+pytest fixtures to verify dependency, reverse-dependency, impact, and cycle
+analysis. Visualization is optional and follows graph-correctness evidence.
+
+Unresolved static calls must never be presented as certain. The developer code
+graph and the ML lineage graph are separate concepts. Neo4j, GraphRAG, vector
+databases, cloud infrastructure, microservices, and a mandatory LLM do not
+belong in the first version. Phase 4 implements none of this and adds no related
+dependency.
+
 ### Phase 13 — Optional Enterprise Extensions
 
 **Dependency:** completed semester application plus separately evidenced
@@ -336,6 +363,6 @@ application.
 
 ## Advisory Next Step
 
-External supervisor review of Phase 3 only. If approved, the supervisor may
-replace CURRENT_TASK.md with a bounded Phase 4 leakage-safe baseline task. This
-roadmap does not authorize Phase 4.
+External supervisor review of Phase 4 only. If approved, the supervisor may
+replace CURRENT_TASK.md with a bounded comparator task. Phase 5 remains blocked;
+this roadmap does not authorize progression or held-out evaluation.

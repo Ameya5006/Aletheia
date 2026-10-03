@@ -6,10 +6,19 @@ import zipfile
 from dataclasses import replace
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
-from aletheia.config import load_dataset_contract, load_feature_policy
-from aletheia.contracts import DatasetContract, FeaturePolicy
+from aletheia.config import (
+    load_baseline_experiment_config,
+    load_dataset_contract,
+    load_feature_policy,
+)
+from aletheia.contracts import (
+    BaselineExperimentConfig,
+    DatasetContract,
+    FeaturePolicy,
+)
 
 
 def synthetic_raw_bytes(row_count: int = 10) -> bytes:
@@ -97,3 +106,47 @@ def raw_file(tmp_path: Path, raw_bytes: bytes) -> Path:
     path = tmp_path / "fixture.asc"
     path.write_bytes(raw_bytes)
     return path
+
+
+@pytest.fixture
+def baseline_config() -> BaselineExperimentConfig:
+    dataset = load_dataset_contract()
+    policy = load_feature_policy(dataset=dataset)
+    return load_baseline_experiment_config(dataset=dataset, policy=policy)
+
+
+@pytest.fixture
+def baseline_training_data(baseline_config):
+    row_count = 800
+    values: dict[str, list[int]] = {}
+    for offset, feature in enumerate(baseline_config.quantitative_features):
+        values[feature] = [100 + offset + index for index in range(row_count)]
+    for feature in baseline_config.categorical_features:
+        domain = baseline_config.category_domains[feature]
+        values[feature] = [domain[index % len(domain)] for index in range(row_count)]
+    features = pd.DataFrame(values).loc[
+        :,
+        [
+            "laufkont",
+            "laufzeit",
+            "moral",
+            "verw",
+            "hoehe",
+            "sparkont",
+            "beszeit",
+            "rate",
+            "buerge",
+            "wohnzeit",
+            "verm",
+            "weitkred",
+            "wohn",
+            "beruf",
+            "pers",
+        ],
+    ]
+    target = pd.Series([1] * 240 + [0] * 560, name="adverse_event")
+    keys = pd.Series(
+        [f"sgc-{index:04d}" for index in range(1, row_count + 1)],
+        name="row_key",
+    )
+    return features, target, keys

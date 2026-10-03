@@ -10,10 +10,16 @@ reproducible data-foundation boundary at commit
 `f19f86944d24f6220a04b732968aa1377363eb23`: package and dependency
 configuration, verified acquisition, strict loading/validation, explicit target
 mapping, feature-role views, stable row keys, locked split membership, and the
-associated tests. The implementation passed technical review; this architecture
-state repair remains pending external supervisor verification. Phase 3 does not
-establish model performance, calibration, fairness, explanation stability,
-modern-lending validity, or production suitability.
+associated tests. Its architecture-state repair is approved at
+`65f83c668a4f745ffd6dc74a9e21b81cb059712c`.
+
+Phase 4 now implements the bounded training-only baseline: a versioned
+experiment configuration, fold-local `ColumnTransformer`/`Pipeline`, a dummy
+reference, regularized Logistic Regression, fixed five-fold stratified CV,
+predeclared metrics, stable transformed-feature lineage, and atomic immutable
+JSON run manifests. It is implemented and verified by Codex but remains pending
+external supervisor review. No held-out prediction or metric was calculated,
+and no fitted model was persisted.
 
 The raw loader enforces the approved fixed file's exact byte size and SHA-256
 before parsing. Schema validation then enforces exact columns and order, integer
@@ -23,12 +29,12 @@ metadata observed in the approved fixed file: Phase 3 loads them into the
 dataset contract but does not explicitly compare quantitative values against
 them. No general future-inference range policy has been implemented.
 
-Learned preprocessing and all ML, experiment, audit, report-generation, API,
-UI, database, container, and deployment components remain unimplemented. No
-model, metric, XAI method, counterfactual, or fairness/stability result exists.
-The next possible implementation milestone is the separately approved
-leakage-safe baseline milestone, and it remains blocked pending completion and
-external verification of this repair.
+The Phase 4 preprocessing, model-definition, training-CV evaluation, manifest,
+and artifact-publication slices are implemented. Final fitting, held-out
+evaluation, model serialization, nonlinear comparison, XAI, counterfactual,
+fairness/stability, report generation, API, UI, database, container, and
+deployment components remain unimplemented. Phase 5 and later work remain
+blocked pending external review and a replacement current task.
 
 ## Architecture Decision
 
@@ -148,8 +154,10 @@ and prevents training/inference preprocessing drift.
 ## Component Responsibilities
 
 Names below remain the approved component boundaries. The first six data
-components now have a small Phase 3 implementation under `src/aletheia/data/`;
-all later components remain design only.
+components have the Phase 3 implementation under `src/aletheia/data/`. Phase 4
+also implements preprocessing, model definitions, training-only CV/evaluation,
+experiment metadata, and atomic artifact publication. Final fitting, held-out
+evaluation, audit, and delivery components remain design only.
 
 ### Data and Model Components
 
@@ -252,6 +260,30 @@ fields; feature policy denies target/audit/excluded/unresolved roles; split
 membership is fixed before fitting; and orchestration prevents held-out access
 until the run configuration is frozen.
 
+### Implemented Phase 4 Training-Only Flow
+
+Phase 4 stops before final fitting and held-out evaluation. After the complete
+Phase 3 split contract is verified, orchestration selects only the 800 training
+keys. One shared `StratifiedKFold(n_splits=5, shuffle=True,
+random_state=42)` membership is created and recorded as five checksums. For
+each model and fold, a fresh pipeline fits on 640 fold-training rows and scores
+160 validation rows. On a 100-row synthetic fixture, tests spy on both
+`StandardScaler.fit` and `OneHotEncoder.fit` and observe ten 80-row fits,
+demonstrating that the orchestration fits only each fold's training subset.
+
+The `ColumnTransformer` scales only `laufzeit` and `hoehe`. It treats the other
+13 predictors as categorical and supplies explicit contract categories to
+`OneHotEncoder(handle_unknown="error")`. Therefore documented `verw=7`
+receives a column even when absent from a fold, and undocumented categories
+fail. The output is exactly 59 columns: two scaled quantitative columns and 57
+one-hot columns, each mapped deterministically to one original field.
+
+The dummy prior and fixed L2 Logistic Regression use the same folds. Evaluation
+selects the probability column by locating class label `1`, the adverse class,
+rather than assuming column order. Threshold 0.5 affects only descriptive
+balanced accuracy, adverse recall, specificity, precision, and F1. Probability
+ranking/loss metrics use the unthresholded class-1 scores.
+
 ## Future Inference Flow
 
 ~~~mermaid
@@ -306,29 +338,34 @@ artifacts/
       report.md
 ~~~
 
-This is a planned contract; the directories do not exist. A run ID will combine
-a UTC timestamp with a short digest of dataset hash, feature-policy version,
-split identity, run configuration, and code revision. The manifest records:
+The full directory above remains a planned later contract. Phase 4 implements
+only `artifacts/runs/<run-id>/manifest.json`; the directory is ignored and no
+fitted pipeline or held-out result file exists. Its run ID combines a UTC
+timestamp with the training-membership digest. The Phase 4 manifest records:
 
 - manifest schema version and run ID;
-- dataset source, filename, byte size, SHA-256, and row/schema identity;
-- raw and analytical target mappings;
-- feature-policy version and exact role lists;
-- split method, seed, membership checksum, and partition counts;
+- dataset identifier and raw SHA-256;
+- target-mapping identifier and analytical positive class;
+- feature-policy version;
+- split and training membership checksums, configuration path/checksum, and
+  evaluated training-row count;
 - preprocessing configuration and transformed-feature map;
-- algorithms, hyperparameters, random states, and bounded search;
-- Python/library/platform versions and source-control revision/dirty state;
-- validation/CV and final-test results with metric definitions and partitions;
-- fitted-pipeline filename, format, SHA-256, and compatibility information;
-- explanation method, class/output, background/reference identity, seeds, and
-  case keys;
-- counterfactual constraint version, distance configuration, and failures;
-- stability configuration/repeats and conditional-fairness group definitions;
+- the two fixed model configurations and shared CV method/folds/seed;
+- Python, NumPy, pandas, and scikit-learn versions plus source-control
+  revision/dirty state/diff checksum;
+- training-only per-fold/CV results, fold membership checksums, metric names,
+  and explicit scope;
+- an explicit null fitted-model artifact and false held-out-evaluation flag;
 - creation timestamps and known limitations.
 
+Source/schema details and full role lists remain in the versioned Phase 3
+contracts. Explanation, counterfactual, stability, fairness, platform metadata,
+and fitted-artifact references belong to later authorized manifest versions.
+
 Outputs are first written to a staging directory. Publication validates required
-files and hashes, then atomically renames the directory. Existing run IDs are
-never overwritten; failed/incomplete staging is not a valid run. Reports refer
+fields and cross-references, flushes the manifest, then atomically renames the
+directory. Existing run IDs are never overwritten; failed/incomplete staging
+is not a valid run. Reports refer
 to an explicit run ID and artifact hashes, never “latest.” A later API may load
 only an explicitly approved, complete run whose dataset/policy/pipeline hashes
 and library compatibility pass validation.
@@ -338,8 +375,9 @@ arbitrary code and is acceptable only for locally produced, trusted,
 checksum-verified artifacts in an identical recorded environment. skops is a
 safer candidate because it requires review of unknown types, but it adds a
 dependency and still needs compatibility testing. ONNX is deferred because it
-does not naturally preserve every preprocessing/XAI capability. The baseline
-milestone must approve one format before artifacts are persisted.
+does not naturally preserve every preprocessing/XAI capability. A later
+final-fitting milestone must approve one format before fitted models are
+persisted. Phase 4 persists only JSON and needs no model serialization format.
 
 ## XAI Architecture
 
@@ -502,10 +540,10 @@ versions still require installation and tests in a later authorized milestone.
 
 ## Planned Repository Structure
 
-Phase 3 created only `pyproject.toml`, the two configuration contracts, the
-locked split JSON, the minimal `src/aletheia` data package, and the listed
-unit/data/integration tests. The ML, audit, experiment, report, notebook, API,
-and web paths below remain unimplemented:
+Phase 3 created the package/data foundation. Phase 4 added the baseline
+configuration, `ml` preprocessing/model/evaluation/orchestration modules,
+experiment manifest/artifact modules, ADR 0002, and their tests. Audit, report,
+notebook, API, and web paths below remain unimplemented where marked:
 
 ~~~text
 pyproject.toml                         # Phase 3 package/dependency/tool configuration
@@ -514,7 +552,8 @@ configs/
   features.toml                        # Phase 3 role and semantic policy
   splits/
     south_german_credit_v1.json        # Phase 3 locked test membership
-  experiments/                         # later run configurations
+  experiments/
+    baseline_v1.toml                   # Phase 4 frozen experiment configuration
 src/aletheia/
   contracts.py                         # Phase 3 simple typed contract values
   config.py                            # Phase 3 TOML loading/validation
@@ -526,18 +565,18 @@ src/aletheia/
     roles.py
     split.py
   ml/
-    preprocess.py
-    models.py
-    train.py
-    evaluate.py
+    preprocess.py                      # Phase 4 implemented
+    models.py                          # Phase 4 implemented
+    evaluate.py                        # Phase 4 implemented
+    baseline.py                        # Phase 4 implemented orchestration
   audit/
     explain.py
     counterfactual.py
     stability.py
     fairness.py
   experiments/
-    manifest.py
-    artifacts.py
+    manifest.py                        # Phase 4 implemented JSON contract
+    artifacts.py                       # Phase 4 implemented atomic publication
     report.py
   cli.py
 tests/
@@ -554,14 +593,11 @@ docs/
   decisions/
 ~~~
 
-The package configuration, exact dependency lock, dataset and feature
-contracts, locked split, data-foundation modules, and Phase 3
-unit/data/integration tests shown above are implemented. ML, experiment, audit,
-report-generation, API, UI, database, container, and deployment paths remain
-unimplemented. The next possible implementation milestone is the separately
-approved leakage-safe baseline milestone; it remains blocked pending completion
-and external verification of this repair. This document does not authorize that
-milestone.
+The Phase 3 data boundary and Phase 4 training-only baseline paths shown above
+are implemented. Final fitting/serialization, held-out evaluation, nonlinear
+comparators, audit, report-generation, API, UI, database, container, and
+deployment paths remain unimplemented. This document does not authorize the
+next milestone.
 
 ## Testing Strategy
 
@@ -623,10 +659,12 @@ limitations are stored in manifests/reports, not hidden in debug logs.
 
 ## Deferred and Unresolved Decisions
 
-Before modelling: retain the approved Phase 3 `bishkred` exclusion and frozen
-prediction role set; choose categorical/ordinal encodings and CV folds; predeclare primary
-metric, threshold rule and error-cost interpretation; approve model candidates
-and bounded search; choose/pin serialization.
+Phase 4 resolved only the baseline choices: `bishkred` remains excluded; two
+quantitative fields are scaled; 13 categorical/ordinal fields are one-hot
+encoded using explicit domains; five-fold training CV uses seed 42; ROC-AUC is
+primary; and threshold 0.5 is descriptive only. Before comparator/final-model
+work: separately authorize candidates/search, preserve or version these choices,
+and choose/pin serialization. Held-out evaluation remains sealed.
 
 Before XAI: choose held-out cases and analysis partitions; validate SHAP or
 another local method; specify background/reference data, output scale, feature

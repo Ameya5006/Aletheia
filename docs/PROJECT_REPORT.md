@@ -33,12 +33,13 @@ measure selected properties, not legal compliance or universal fairness.
 ## Scope, Users, and Assumptions
 
 **Established scope:** South German Credit is externally supervisor-approved as
-suitable for the academic Research MVP, and the Phase 2 research-first modular
-monolith architecture is externally approved. Phase 3 implements the bounded
-data foundation and is pending external supervisor review. These facts do not
-establish model performance, calibration, fairness, stability, production
-suitability, or modern-lending validity. No model, experiment metric,
-application, or deployment exists. Deep learning is optional, not central.
+suitable for the academic Research MVP, the Phase 2 research-first modular
+monolith is approved, and Phase 3's data foundation and architecture-state
+repair are approved. Phase 4 implements and verifies a bounded training-only
+dummy/Logistic Regression baseline and is pending external supervisor review.
+This establishes cross-validation evidence only. It does not establish held-out
+performance, calibration, fairness, stability, production suitability, or
+modern-lending validity. No application or deployment exists.
 
 **Assumptions requiring validation:** the selected data must have a clear
 target, source/licence, data dictionary, sufficient observations/minority-class
@@ -54,11 +55,11 @@ before the dataset is understood.
 complete platform ambition, not permission to implement every feature now.
 `docs/CURRENT_TASK.md` authorizes exactly one bounded task and cannot override
 the project's safety, ML-validity, evidence, or governance rules. The current
-authorization is Phase 3's data foundation only. Its completion does not
-authorize preprocessing, modelling, XAI, or application work; every later
-milestone remains blocked pending external review and a replacement task. This
-distinction prevents a broad vision from being mistaken for implementation
-permission.
+authorization is Phase 4's training-only baseline. It permits fold-local
+preprocessing and two fixed baseline estimators, but no held-out evaluation,
+final fitted model, nonlinear comparator, XAI, fairness, stability, or
+application work. Every later milestone remains blocked pending external review
+and a replacement task.
 
 ## Functional Requirements
 
@@ -280,7 +281,7 @@ workflows, production monitoring, scheduled retraining, production registry,
 drift/explanation-drift monitoring, real-lender integration, large deep
 learning, and local LLMs.
 
-## Decisions to Finalize Before Modelling and Later Work
+## Decisions Finalized for the Baseline and Deferred Work
 
 Phase 2 selects a research-first modular monolith, Python 3.12, pandas,
 scikit-learn, standard TOML/JSON configuration/artifacts, pytest, Ruff,
@@ -289,13 +290,14 @@ Matplotlib/Markdown reporting, and an immutable local run-store concept. Phase
 scikit-learn 1.9.0, pytest 9.1.1, Ruff 0.16.6, pip 26.2.1, setuptools 84.0.0,
 and the transitive packages in `requirements.lock.txt`.
 
-Before modelling, later approved work must retain the Phase 3 `bishkred`
-exclusion and prediction role set; choose categorical/ordinal encoding and CV
-folds; predeclare the primary metric, threshold rule and error-cost
-interpretation; bound model search; and approve serialization. SHAP and a small
-custom counterfactual search are provisional. DiCE, FastAPI, frontend
-frameworks, MLflow, databases, Docker, deployment, authentication, and enterprise
-infrastructure remain deferred or unselected.
+Phase 4 retains the `bishkred` exclusion and 15-feature prediction role set. It
+freezes two scaled quantitative fields, 13 explicitly one-hot-encoded fields,
+five-fold shuffled stratified training CV with seed 42, ROC-AUC as primary,
+eight supporting metrics, and threshold 0.5 for descriptive confusion metrics
+only. It performs no search and stores no fitted model. Comparator search,
+serialization, held-out evaluation, SHAP, counterfactual search, fairness,
+stability, FastAPI, frontend frameworks, MLflow, databases, Docker, deployment,
+authentication, and enterprise infrastructure remain deferred or unselected.
 
 ## System Architecture
 
@@ -317,19 +319,20 @@ explanations together. Local run directories are staged, checksummed, validated,
 published atomically, and never overwritten; reports consume them without
 implicitly rerunning training.
 
-The proposed components, inputs/outputs/callers/prohibitions, failure modes,
-tests, technology matrix, and diagrams are in docs/ARCHITECTURE.md. The major
-decision and alternatives are recorded in
-docs/decisions/0001-research-first-modular-monolith.md. Those documents remain
-architecture evidence; the Phase 3 data subset described below is implemented.
+The component boundaries, failure modes, tests, technology matrix, and diagrams
+are in `docs/ARCHITECTURE.md`. ADR 0001 records the modular-monolith decision;
+ADR 0002 records the training-only baseline protocol. The Phase 3 data boundary
+and Phase 4 training-only baseline described below are implemented.
 
 Important planned failure boundaries are checksum/schema/category mismatch,
 invalid target or forbidden feature roles, split overlap, preprocessing fitted
 outside training data, incompatible pipeline artifacts, explanation/run
 mismatch, invalid or absent counterfactuals, and insufficient fairness support.
-Phase 3 unit/data/integration tests exercise its refusals plus target mapping
-and deterministic splits. Future tests will cover transformed-feature consistency, metric fixtures,
-atomic artifact publication, exact explainer association, and constraint guards.
+Phase 3 tests exercise its refusals, target mapping, and deterministic splits.
+Phase 4 tests now cover transformed-feature consistency, fold-local fitting,
+metric fixtures, class orientation, shared CV membership, deterministic reruns,
+manifest guards, and atomic publication. Exact explainer association and
+counterfactual constraint guards remain future work.
 
 ## Implemented Phase 3 Data Foundation
 
@@ -403,6 +406,97 @@ through locked split verification. Two clean Python 3.12 environments installed
 the exact lock; the second installed Aletheia with `--no-deps
 --no-build-isolation` before repeating pip, lint, format, and offline checks.
 
+## Implemented Phase 4 Training-Only Baseline
+
+Phase 4 comes after the data foundation because learned transforms and model
+scores are meaningful only after dataset identity, target orientation, feature
+roles, and split membership are fixed. Without fold-local preprocessing, each
+validation fold could influence its own scaling and produce optimistic evidence.
+Without a dummy reference, a learned score would lack a no-signal sanity check.
+
+`configs/experiments/baseline_v1.toml` freezes dataset, policy, split, target,
+preprocessing, model, CV, metric, and threshold choices. `config.py` validates
+those values against the Phase 3 contracts. `ml/preprocess.py` constructs one
+`ColumnTransformer`: `StandardScaler` handles `laufzeit` and `hoehe`, while
+`OneHotEncoder(handle_unknown="error")` handles the other 13 approved fields.
+Integer category codes are labels or coarse ordered bands, not justified
+equal-distance quantities, so one-hot encoding is the conservative baseline.
+Categories come from the approved contract, not observed full-data values; the
+documented but unobserved `verw=7` therefore keeps a stable output column.
+
+The transformed schema contains 59 columns: two scaled values and 57 indicator
+columns. `expected_transformed_schema()` deterministically maps every output
+name back to one of the 15 original predictors. Audit-only fields (`famges`,
+`alter`, `gastarb`), excluded fields (`telef`, `bishkred`), both targets, and
+`row_key` never enter the estimator matrix.
+
+`ml/models.py` exposes exactly two unfitted choices. The dummy uses the training
+fold's class prior and tests whether a learned model extracts signal beyond
+prevalence. Logistic Regression uses L2 regularization, `C=1.0`, `lbfgs`, no
+class weights, and `max_iter=1000`. L2 regularization discourages excessively
+large coefficients; it does not make the model causal or automatically
+calibrated. No hyperparameter or threshold search occurred.
+
+`ml/evaluate.py` builds one shared `StratifiedKFold` assignment with five folds,
+shuffle enabled, and seed 42. Each model/fold receives a fresh pipeline, fitted
+on 640 fold-training rows and evaluated on 160 validation rows. Validation row
+keys are recorded only as SHA-256 membership checksums. Class-1 probabilities
+are selected by finding label `1` in `classes_`, not by assuming a column
+position. `ml/baseline.py` verifies the complete Phase 3 split, selects only its
+800 training keys, calculates the result twice, requires exact deterministic
+payload equality, and only then publishes a manifest.
+
+`experiments/manifest.py` records data/config/split/training/fold identities,
+all fold and aggregate metrics, transformed-feature lineage, environment, Git
+state, limitations, and explicit absence of held-out evaluation/fitted model.
+`experiments/artifacts.py` writes and validates in a staging directory, flushes
+the JSON, then atomically renames it; an existing run ID is refused. The run
+directory is ignored and contains only `manifest.json`.
+
+### Phase 4 Verification Evidence
+
+Recovery preserved the existing configuration, source, tests, ADR, and published
+run. On Python 3.12.10, the final required checks were:
+
+```text
+python -m pip check
+  exit 0: No broken requirements found.
+python -m ruff check .
+  exit 0: All checks passed!
+python -m ruff format --check .
+  exit 0: 43 files already formatted
+python -m pytest -p no:cacheprovider --basetemp data/processed/pytest-phase4-final -m "not live_data"
+  exit 0: 66 passed, 1 deselected, 25 warnings in 6.52s
+python -m aletheia.ml.baseline --raw-file data/raw/SouthGermanCredit.asc
+  exit 0 in the preceding recovery: two identical calculations before publication
+```
+
+All 25 pytest warnings concern the task's explicit L2 parameter deprecation.
+The ordinary integration fixture exercises synthetic predictors through CV and
+manifest publication; the explicitly executed local baseline additionally
+exercises verified Phase 3 loading, validation, roles, and locked membership.
+Tests inspect exact feature allocation/domains, unknown-category refusal,
+`verw=7`, fold-local fitting, fold coverage/disjointness, class orientation,
+known metrics, model settings, deterministic reruns, manifest scope and shared
+folds, and atomic publication/overwrite refusal. Inspect `tests/unit/test_*.py`
+for these boundaries and `tests/integration/test_baseline_pipeline.py` for the
+synthetic CV-to-manifest path.
+
+Two fresh calculations during final recovery matched each other and the
+preserved manifest exactly. A temporary in-memory evaluation guard verified two
+800-row inputs, 15 predictors, and no locked held-out key. Deterministic result
+payload SHA-256:
+`84f5a13a12ee8a7d01df0959659deeab0f609f724869dd8cccf9fd2b8aa0bf1b`.
+The run contains only `manifest.json`; its held-out flag is false and fitted-model
+reference is null. `git check-ignore -v` confirms the raw file and run manifest
+are ignored. `git diff --check` passes; only authorized paths appear in status.
+Exact final replay and review commands are in `SUPERVISOR_HANDOFF.md`.
+
+The manifest's Git diff checksum records its creation state, before subsequent
+documentation edits. It is preserved as historical evidence rather than changed
+to pretend it describes the later documentation state. Base HEAD remains
+`65f83c668a4f745ffd6dc74a9e21b81cb059712c`.
+
 ## Data Flow
 
 The implemented Phase 3 flow is: official source → temporary download → archive
@@ -412,12 +506,15 @@ adverse-target mapping → aligned feature-role views → stable row keys → lo
 stratified membership. Each stage exists to prevent an unverified earlier
 assumption from contaminating all later work.
 
-The unimplemented future training flow continues with: fixed stratified
-membership → fold-local preprocessing and bounded validation → final training
-fit → one held-out evaluation → predeclared XAI/audit analysis → immutable run
-artifacts → human-readable report. Only training folds fit transforms; the
-held-out set cannot choose models or settings. Audit-only columns stay aligned
-by a non-feature row key.
+The implemented Phase 4 training flow continues with: verified fixed membership
+→ select the 800 training keys → create shared five-fold membership → build a
+fresh preprocessing/model pipeline per fold → fit only on that fold's 640
+training rows → score its 160 validation rows → calculate class-1 metrics →
+repeat the complete calculation → compare deterministic payloads → publish an
+immutable manifest. Every stage exists to prevent validation or held-out
+information from entering a learned transform or choice. Final fitting,
+held-out evaluation, XAI/audit analysis, and model serialization remain future
+work requiring separate approval.
 
 The future inference flow is: raw request → the same schema and feature policy →
 the exact frozen preprocessing/model pipeline → score/prediction → optional
@@ -515,9 +612,35 @@ test time/entity generalisation.
 **Concepts and result:** cryptographic identity, fail-closed validation,
 semantic versus storage type, label orientation, audit-only separation,
 deterministic stratification, canonical serialization, dependency locking, and
-offline/live integration testing. The project can now reproduce and verify the
-exact data boundary needed by a future approved baseline; Phase 4 is not
-authorized.
+offline/live integration testing. The project can reproduce and verify the
+exact data boundary consumed by Phase 4.
+
+### Phase 4 — Leakage-Safe Baseline Pipeline
+
+**What was accomplished:** A fixed training-only experiment configuration,
+explicit preprocessing schema, dummy reference, regularized Logistic
+Regression, shared five-fold CV, predeclared metrics, deterministic calculation,
+and immutable manifest publication were implemented and verified. The verified
+local run is `baseline-v1-20261003T044245447896Z-f528b34971`.
+
+**Why this came now:** Phase 3 had already frozen identity, label orientation,
+feature roles, and the 800/200 boundary. Phase 4 could therefore establish a
+simple reference without spending the held-out evidence or adding nonlinear
+models. Without it, later models would have no interpretable or no-signal
+comparison.
+
+**Alternatives and trade-offs:** Fitting preprocessing once before CV was
+rejected as leakage. Inferring categories from observations was rejected because
+the schema would lose documented empty levels. Numeric ordinal treatment was
+rejected because equal spacing is not source-supported. Search, threshold
+tuning, final fitting, and held-out evaluation were deferred. One-hot encoding
+expands 15 fields to 59 columns, but provides stable, explicit semantics.
+
+**Concepts and result:** fold-local fitting, one-hot encoding, feature scaling,
+regularization, stratified cross-validation, ROC-AUC, calibration-sensitive
+losses, deterministic evidence, and atomic immutable publication. The project
+now has a verified training-CV reference, not a final model or held-out result.
+Phase 5 remains unauthorized.
 
 ## Technical Decisions
 
@@ -554,11 +677,70 @@ class counts, and canonical membership checksum. A fresh random split was an
 alternative, but it could permit accidental split shopping or drift. The cost
 is that a later authoritative data revision needs an explicit new contract.
 
+**Training-only baseline protocol:** exactly one prior dummy and one fixed L2
+Logistic Regression use identical five-fold training membership and a fresh
+pipeline per fold. Explicit contract categories keep the schema stable and
+unknown values fail. The accepted trade-offs are a wider 59-column matrix, no
+ordinal-distance assumption, no tuning, and no final fitted artifact. Reconsider
+only through a new approved experiment version; ADR 0002 contains the full
+decision record.
+
 ## ML Experiments
 
-No ML experiments, model metrics, or model results exist. Phase 1 performed a
-structural dataset audit only; its class and subgroup counts are data facts, not
-model-performance metrics.
+### Baseline v1 — Training-Only Cross-Validation
+
+**Objective and identity:** Determine whether fixed Logistic Regression extracts
+signal beyond a class-prior dummy without using the held-out partition. Dataset:
+South German Credit raw SHA-256 `5f363343…562f`; feature policy 1.0; split
+checksum `af26b603…94b`; training checksum `f528b349…53e`; 800 training rows
+(240 adverse, 560 non-adverse); positive class `adverse_event=1`.
+
+**Features and preprocessing:** 15 approved prediction features. `laufzeit` and
+`hoehe` are standardized within each fold. Thirteen categorical/ordinal fields
+are one-hot encoded from explicit approved domains. There is no imputation,
+resampling, target encoding, feature selection, or polynomial expansion.
+
+**Models and validation:** `DummyClassifier(strategy="prior")`; Logistic
+Regression with L2, `C=1.0`, `lbfgs`, `class_weight=None`, and
+`max_iter=1000`. Five-fold `StratifiedKFold`, shuffled with seed 42, supplies
+the same memberships to both models. Threshold 0.5 is descriptive only.
+
+Aggregate values are mean ± population standard deviation across five
+validation folds:
+
+| Metric | Dummy | Logistic Regression | Meaning in this experiment |
+|---|---:|---:|---|
+| ROC-AUC | 0.5000 ± 0.0000 | 0.7718 ± 0.0340 | Ranking of adverse above non-adverse; not calibration |
+| Average precision | 0.3000 ± 0.0000 | 0.6048 ± 0.0653 | Precision-recall ranking, prevalence-sensitive |
+| Balanced accuracy | 0.5000 ± 0.0000 | 0.6676 ± 0.0339 | Mean of adverse recall and specificity at 0.5 |
+| Adverse recall | 0.0000 ± 0.0000 | 0.4708 ± 0.0339 | Fraction of actual adverse cases flagged |
+| Specificity | 1.0000 ± 0.0000 | 0.8643 ± 0.0363 | Fraction of non-adverse cases correctly not flagged |
+| Precision | 0.0000 ± 0.0000 | 0.6034 ± 0.0812 | Adverse predictions that were adverse; prevalence-sensitive |
+| F1 | 0.0000 ± 0.0000 | 0.5282 ± 0.0513 | Harmonic mean of adverse precision and recall at 0.5 |
+| Log loss | 0.6109 ± 0.0000 | 0.5216 ± 0.0419 | Penalizes wrong/confident probabilities; lower is better |
+| Brier score | 0.2100 ± 0.0000 | 0.1715 ± 0.0167 | Mean squared probability error; lower is better |
+
+The dummy assigns the 0.30 fold-training adverse prior, so threshold 0.5 labels
+every validation row non-adverse: recall, precision, and F1 are zero while
+specificity is one. Logistic Regression ranks cases materially better within
+these training folds and improves both probability losses. This is reference
+evidence, not final selection: no nonlinear model was compared and the held-out
+200 rows were not scored.
+
+Fold-to-fold standard deviations show variability, not a confidence interval or
+guarantee. Because training-fold scores were not recorded, this experiment
+cannot quantify a train/validation generalization gap and cannot diagnose
+overfitting conclusively. CV variation and regularization offer limited evidence
+only. The source deliberately oversamples adverse outcomes from its historical
+population, so precision, average precision, Brier/log loss interpretation, and
+raw probability calibration do not transfer directly to population lending.
+
+**Error semantics and conclusion:** A false negative is an actually adverse
+contract predicted non-adverse; a false positive is an actually non-adverse
+contract predicted adverse. Both matter, but no defensible monetary cost ratio
+exists here. Threshold 0.5 was not tuned and is not an operational lending
+recommendation. The result justifies retaining Logistic Regression as the
+interpretable reference for a separately approved comparator phase.
 
 ## Important Problems Encountered
 
@@ -592,6 +774,51 @@ one archive byte without changing size, and duplicate checks run before target
 count arithmetic. The lesson is that a negative test must reach the exact
 boundary it names, and validation order should return the most specific useful
 failure.
+
+Phase 3 also exposed several environment and governance failures. Pytest could
+not create its default temporary directory under the repository on this Windows
+environment; using explicit `--basetemp data/processed/...` and disabling the
+cache kept temporary writes in an approved ignored path. PowerShell syntax was
+initially sent to Command Prompt, producing a syntax failure rather than running
+the intended check; subsequent commands named the correct shell. A stray
+untracked file literally named `git` appeared in the status gate and was removed
+before continuing because it was outside the approved task. These symptoms did
+not change data or results. The prevention lesson is to treat the exact shell,
+temporary-write location, and Git status as reproducibility inputs, not setup
+details.
+
+The Phase 3 handoff initially retained stale architecture wording that described
+implemented paths as future work. A repair reconciled `ARCHITECTURE.md` with the
+committed source. That repair then overclaimed quantitative-range enforcement:
+the configuration loads observed ranges, but validation enforces exact file
+identity through byte size/SHA-256 and does not compare general quantitative
+values with those ranges. Code inspection and targeted text searches verified
+the correction. The interview lesson is that a checksum proves byte identity;
+it is not the same control as an explicit per-field range rule.
+
+No meaningful Phase 4 correctness bug was found in the recovered implementation:
+all offline tests passed before documentation completion and the real training-
+only run reproduced exactly. The recovery did expose tooling and documentation
+problems: simultaneous shell creation failed with `CreateProcessWithLogonW
+failed: 1056`; sequential read-only calls succeeded. Several patches failed
+because PowerShell's default decoding displayed UTF-8 symbols as mojibake, and
+the copied context did not match the file. The failed patches made no changes;
+explicit `Get-Content -Encoding UTF8`, fresh surrounding lines, and smaller
+`apply_patch` edits resolved the mismatch within the sandbox. The user required
+stopping on patch failure, and work resumed only after renewed direction.
+Verification used Git diffs and whitespace checks. The lesson is to separate
+display decoding from actual file corruption and inspect current text before
+patching; do not bypass a failed patch with an unsandboxed write. A later inline
+Python verification command also failed before running with `SyntaxError:
+invalid decimal literal` because Windows PowerShell stripped nested quotes.
+Transporting the code as byte values worked; a readable replay using PowerShell
+`--%` then passed and is recorded in the handoff. This was shell argument
+handling, not a model/data defect; no result was produced by the failed command.
+
+Scikit-learn 1.9 emitted a deprecation warning for
+the explicitly required `penalty="l2"` argument. Phase 4 preserves the approved
+configuration; a later approved version must revisit the equivalent API before
+scikit-learn 1.10 rather than silently changing this experiment.
 
 ## Concepts Learned Through This Project
 
@@ -651,6 +878,41 @@ sorted keys and no optional whitespace, then tests the exact byte string.
 **Stratified holdout:** random partitioning preserves target proportions so both
 partitions retain adverse cases. It improves class support but cannot substitute
 for temporal or entity-aware evaluation.
+
+**Fold-local preprocessing:** each validation fold must behave like unseen data.
+Phase 4 creates a new scaler, encoder, and model for every fold, fitting them on
+640 fold-training rows only. Fitting once on all 800 rows would leak validation
+statistics even without using the held-out test set.
+
+**One-hot encoding with explicit domains:** one indicator represents each
+approved category instead of treating integer codes as equally spaced numbers.
+Phase 4 supplies contract categories, so `verw=7` keeps a column even though the
+approved file does not observe it, and unknown codes fail instead of silently
+changing meaning.
+
+**Regularized Logistic Regression:** the model combines transformed inputs into
+a linear log-odds score; L2 regularization penalizes large coefficients. It is
+an interpretable reference with a stable fixed configuration, not a causal model
+or proof that its probabilities are calibrated.
+
+**Feature scaling:** `StandardScaler` subtracts the fold-training mean and divides
+by its standard deviation for duration and transformed amount. This prevents
+their different numerical scales from distorting the L2 penalty. The fitted
+statistics come only from that fold's training rows; validation uses transform
+without refitting. Be able to explain why scaling categories as numeric values
+would not replace one-hot encoding and why scaling before CV would leak data.
+
+**Cross-validation and metric roles:** five stratified folds reuse training data
+for five separate validation checks while keeping each check out of its own fit.
+ROC-AUC measures ranking across thresholds. Average precision emphasizes adverse
+ranking and is prevalence-sensitive. Recall/specificity/precision/F1 use the
+descriptive 0.5 threshold. Log loss and Brier score assess probability error but
+do not by themselves prove population calibration.
+
+**False negatives and false positives:** here a false negative misses an
+actually adverse case, while a false positive flags an actually non-adverse
+case. Neither can be declared more costly without a defensible domain cost
+model, which this historical dataset does not provide.
 
 ## Project Defence and Interview Preparation
 
@@ -730,30 +992,69 @@ counts, dataset/policy/mapping identity, and canonical SHA-256.
 source lacks dates and entity IDs, so it supports neither a temporal test nor a
 grouped-by-customer test.
 
+**Why one-hot encode the ordinal-looking integer fields?** Their source codes
+represent categories or coarse bands; equal numeric distance is not established.
+One-hot encoding avoids imposing that assumption and explicit domains keep all
+59 transformed columns stable.
+
+**How do you prove preprocessing stayed inside each fold?** Each fold constructs
+a fresh `Pipeline(ColumnTransformer, estimator)`. Tests spy on both
+`StandardScaler.fit` and `OneHotEncoder.fit` and observe ten fits of 80 rows in a
+100-row synthetic test: five folds for each of two models, never a full-data fit.
+The real protocol analogously fits 640 of 800 rows per fold.
+
+**Why compare a dummy with Logistic Regression?** The prior dummy exposes what
+class prevalence alone achieves: ROC-AUC 0.5 and no adverse predictions at the
+0.5 threshold. Logistic Regression tests whether the approved features add
+ranking signal while remaining a simple interpretable baseline.
+
+**Why is ROC-AUC primary, and what does it miss?** It compares ranking over all
+thresholds and is less tied to one 0.5 cutoff. It does not prove probability
+calibration, choose an operational threshold, encode error costs, or remove the
+dataset's prevalence limitation.
+
+**What overfitting conclusion can Phase 4 support?** Only that validation scores
+vary across five fold-local fits. Training scores were not recorded and the
+held-out partition remains sealed, so a train/validation gap and final
+generalization cannot be claimed.
+
+**How is the run reproducible and auditable?** The ignored manifest records
+dataset/config/split/training/fold checksums, model/preprocessing/CV settings,
+per-fold and aggregate metrics, transformed lineage, environment, Git state,
+limitations, and explicit absence of held-out evaluation or a fitted artifact.
+The complete calculation ran twice and had to match before atomic publication.
+
 ## Semester Viva Preparation
 
 **Basic:** Why can accuracy be insufficient? What is leakage? Why is raw
-`kredit=0` mapped to analytical `adverse_event=1`?
+`kredit=0` mapped to analytical `adverse_event=1`? What does a prior dummy
+predict? What do adverse recall, specificity, and precision measure?
 
 **Intermediate:** Why Logistic Regression as a baseline? How do global/local
 explanations differ? Why constrain counterfactuals? Why use stratification and
-lock row membership before preprocessing?
+lock row membership before preprocessing? Why scale only two fields? How does
+fold-local fitting prevent leakage? Why keep a column for unobserved `verw=7`?
 
 **Difficult:** Why can explanations vary near a decision boundary? Why can
 fairness metrics conflict? When is temporal/group-aware splitting necessary?
 How would an immutable run manifest prevent result drift? Why must an explainer
 identify the exact fitted preprocessor as well as the estimator? How does
 canonical serialization make a membership checksum reproducible?
+How does adverse oversampling affect probability interpretation? Why does ROC-AUC
+not prove calibration? Why can CV standard deviation not diagnose overfitting
+or serve as a confidence interval?
 
 ## Resume Evidence
 
 Verified evidence: four official dataset candidates compared; one selected raw
 file verified at 1,000 rows × 21 columns; one externally approved architecture
-and ADR; 15 prediction, three audit-only, and two excluded fields under a
-versioned policy; one locked 800/200 split; 49 tests comprising 48 offline tests
-and one explicitly enabled live-data test; two clean Python 3.12 environments;
-zero model comparisons, model metrics, implemented XAI techniques, application
-tests, or deployments.
+and two ADRs (ADR 0002 pending review); 15 prediction, three audit-only, and two
+excluded fields; one locked 800/200 split; two fixed reference estimators compared
+in five training-only folds; 59 transformed columns; Logistic Regression CV
+ROC-AUC 0.7718 versus dummy 0.5000; 66 offline tests passed and one live-data test
+deselected in the recovery check; two clean environments verified during Phase 3.
+No held-out score, measured inference latency, implemented XAI method,
+application, or deployment is claimed.
 
 ## Limitations
 
@@ -762,18 +1063,25 @@ granted credits, oversamples bad contracts, has no row dates or identifiers,
 and uses an unknown monotonic transformation for amount. Sex cannot be recovered
 cleanly from its combined field, and only 37 rows are foreign workers, so robust
 fairness analysis is not currently justified. Future results remain dataset- and
-method-bound. No model or production validation exists. Phase 3 does not
-validate preprocessing or a model, and its fixed random split cannot measure
-temporal or entity generalisation. A local artifact store has limited concurrency/querying;
+method-bound. Phase 4 validates training CV only; no held-out or production
+validation exists. Its fixed random split cannot measure temporal or entity
+generalisation. No final fitted model is retained. Threshold 0.5 has no validated
+operational cost basis. A local artifact store has limited concurrency/querying;
 cross-model explanations remain method-dependent; and dependency/version
 controls reduce but cannot eliminate reproducibility risk.
 
 ## Future Work
 
-**Useful next step, subject to approval:** external supervisor review of Phase 3
-implementation, tests, locked membership, documentation, and handoff. If
-approved, a replacement current task may authorize a bounded leakage-safe
-baseline milestone. This report does not authorize Phase 4.
+**Useful next step, subject to approval:** external supervisor review of Phase 4
+implementation, training-only manifest, tests, documentation, and handoff. A
+replacement current task is required for any comparator or held-out work.
+This report does not authorize Phase 5.
+
+**Research extensions:** the separately gated global/local XAI, constrained
+counterfactual, stability, and conditional-fairness studies in the roadmap.
+Developer Code Intelligence and System Traceability is proposed and
+unimplemented, placed after core data, modelling, evaluation/XAI, and basic
+application boundaries stabilize; it requires its own approved task.
 
 **Later extensions:** richer fairness/robustness methodology, monitoring,
 deployment workflows, multi-user controls, integrations, and cloud operations.

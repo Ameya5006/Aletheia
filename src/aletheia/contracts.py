@@ -33,6 +33,14 @@ class SplitContractError(DataFoundationError):
     """Split membership is incomplete, changed, or incompatible."""
 
 
+class ExperimentError(DataFoundationError):
+    """An experiment configuration, calculation, or manifest is invalid."""
+
+
+class ArtifactError(ExperimentError):
+    """A run artifact could not be published without mutation or ambiguity."""
+
+
 @dataclass(frozen=True)
 class DatasetContract:
     """Identity and raw semantic rules for one approved dataset version."""
@@ -94,3 +102,36 @@ class FeaturePolicy:
             + self.nominal_categorical_integer
             + self.raw_target
         )
+
+
+@dataclass(frozen=True)
+class BaselineExperimentConfig:
+    """Frozen Phase 4 protocol loaded from the versioned TOML file."""
+
+    schema_version: str
+    identifier: str
+    dataset_identifier: str
+    dataset_sha256: str
+    feature_policy_version: str
+    split_contract_path: str
+    split_membership_checksum: str
+    target_mapping_identifier: str
+    positive_class: int
+    quantitative_features: tuple[str, ...]
+    categorical_features: tuple[str, ...]
+    category_domains: dict[str, tuple[int, ...]]
+    categorical_unknown_policy: str
+    scale_quantitative: bool
+    dummy_strategy: str
+    logistic_penalty: str
+    logistic_c: float
+    logistic_solver: str
+    logistic_class_weight: str | None
+    logistic_max_iter: int
+    cv_method: str
+    cv_folds: int
+    cv_shuffle: bool
+    cv_seed: int
+    metrics: tuple[str, ...]
+    primary_metric: str
+    threshold: float

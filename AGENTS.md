@@ -285,6 +285,15 @@ Examples worth documenting:
 This section is particularly valuable for interviews because engineering interviews often ask:
 "Tell me about a difficult bug you encountered."
 The report should preserve real answers to that question.
+
+For every meaningful milestone, update `docs/PROJECT_REPORT.md` with verified
+problems and recovery evidence. Where applicable, record the problem and
+symptom, affected milestone/component, impact, root cause, failed or incomplete
+attempts, final solution, why it worked, verification, prevention or future
+improvement, relevant files, and a concise interview/viva explanation. Include
+environment, tooling, implementation, ML-methodology, and governance problems
+when they materially affected progress, correctness, or reproducibility. Never
+invent a problem; state explicitly when no meaningful problem occurred.
 ________________________________________
 13. Concept Learning Notes
 Whenever an important concept is introduced, add a concise explanation under:
