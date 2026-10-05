@@ -10,11 +10,13 @@ import json
 import zipfile
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from aletheia.domains.healthcare.foundation import (
     Contracts,
     HealthcareDataError,
+    acquire,
     build_split_lock,
     cohort,
     extract,
@@ -211,3 +213,71 @@ def test_archive_extra_member_refused(sample: tuple[Contracts, Path, Path]) -> N
     altered.dataset["identity"]["archive_sha256"] = hashlib.sha256(payload).hexdigest()
     with pytest.raises(HealthcareDataError, match="two flat official files"):
         extract(altered, archive, destination)
+
+
+def test_cohort_excludes_every_frozen_death_hospice_code() -> None:
+    contracts = load_contracts()
+    excluded = contracts.dataset["cohort"]["excluded_discharge_codes"]
+    assert set(excluded) == {"11", "13", "14", "19", "20", "21"}
+    frame = pd.DataFrame(
+        {
+            "row_key": [f"case-{index}" for index in range(8)],
+            "patient_nbr": [str(index) for index in range(8)],
+            "discharge_disposition_id": [*excluded, "1", "2"],
+            "readmitted_30d": [0, 1, 0, 1, 0, 1, 1, 0],
+        }
+    )
+    synthetic = copy.deepcopy(contracts)
+    synthetic.dataset["cohort"].update(
+        expected_rows=2, expected_positive=1, expected_patients=2
+    )
+    result = cohort(synthetic, frame)
+    assert result["row_key"].tolist() == ["case-6", "case-7"]
+    assert result["discharge_disposition_id"].tolist() == ["1", "2"]
+
+
+def test_existing_split_lock_cannot_be_overwritten(tmp_path: Path) -> None:
+    path = tmp_path / "split.lock.json"
+    write_split_lock({"version": "original"}, path)
+    original = path.read_bytes()
+    with pytest.raises(HealthcareDataError, match="already exists"):
+        write_split_lock({"version": "replacement"}, path)
+    assert path.read_bytes() == original
+
+
+@pytest.mark.parametrize("failure", ["redirect", "byte_identity"])
+def test_acquire_refuses_bad_response_and_cleans_partial(
+    sample: tuple[Contracts, Path, Path],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: str,
+) -> None:
+    contracts, source_archive, _ = sample
+    expected_url = contracts.dataset["identity"]["archive_url"]
+    payload = source_archive.read_bytes()
+    if failure == "byte_identity":
+        payload = bytes([payload[0] ^ 1]) + payload[1:]
+
+    class FakeResponse(io.BytesIO):
+        def geturl(self) -> str:
+            return (
+                expected_url
+                if failure == "byte_identity"
+                else "https://other.example/archive.zip"
+            )
+
+    def fake_urlopen(url: str, timeout: int) -> FakeResponse:
+        assert url == expected_url
+        assert timeout == 60
+        return FakeResponse(payload)
+
+    monkeypatch.setattr(
+        "aletheia.domains.healthcare.foundation.urllib.request.urlopen",
+        fake_urlopen,
+    )
+    destination = tmp_path / "downloaded.zip"
+    partial = destination.with_suffix(".zip.partial")
+    with pytest.raises(HealthcareDataError, match="archive acquisition failed"):
+        acquire(contracts, destination)
+    assert not destination.exists()
+    assert not partial.exists()

@@ -18,7 +18,7 @@ The dataset was selected because the official UCI record and Strack et al. paper
 
 The existing credit code and manifests remain in place; healthcare lives in `src/aletheia/domains/healthcare`. Future shared experiment, XAI and serving use cases should depend on domain contracts. Selected future architecture is MLflow registry, FastAPI, PostgreSQL audit, React/TypeScript, Docker/Compose, GitHub Actions, managed deployment, monitoring, cards and RBAC. DagsHub, DVC, managed host and optional OpenRouter narration remain provisional. RunwayML is rejected. Data/version identities and secrets must be separated; public demonstrations must use synthetic/de-identified examples. Similar-case retrieval will use training cases and a versioned distance metric, not collaborative filtering. A Python/TypeScript import graph with cycle/direction checks is planned for later CI. See [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md) for caller, artifact, alternative, security and failure details.
 
-**Milestone order:** (1) foundation/design now, (2) healthcare models and calibration, (3) explanations/conditional audits, (4) application/MLOps, (5) delivery/monitoring/code graph. This order prevents a polished UI from hiding invalid evidence. Exact software-test evidence and unresolved questions are in the current [SUPERVISOR_HANDOFF.md](SUPERVISOR_HANDOFF.md). No healthcare ML experiment or fairness result exists.
+**Milestone order:** (1) foundation/design committed and externally reviewed, with this minor repair pending; (2) healthcare models and calibration; (3) explanations/conditional audits; (4) application/MLOps; (5) delivery/monitoring/code graph. This order prevents a polished UI from hiding invalid evidence. Only the first milestone exists as implemented work. Exact software-test evidence and unresolved questions are in the current [SUPERVISOR_HANDOFF.md](SUPERVISOR_HANDOFF.md). No healthcare ML experiment or fairness result exists.
 
 ### WIP stash reuse assessment (read-only inventory)
 
@@ -44,21 +44,41 @@ The existing credit code and manifests remain in place; healthcare lives in `src
 
 **Python TLS retrieval failure:** direct `urllib` against the official archive failed with an expired certificate chain on this Windows environment after sandbox network permission was granted. Inspection with Windows `curl.exe -I` succeeded over verified TLS; download via `curl.exe` succeeded, and archive/member hashes were recorded. No TLS verification was disabled. The code's downloader remains fail-closed; a user with the same Python trust-store issue can place a TLS-verified official archive in ignored raw storage and use the normal verifier. Lesson: network reachability and certificate trust are separate failure modes; never bypass identity checks. A first config patch failed because new directories were absent; after creating only authorized directories, the patch succeeded. Initial code lint found long lines, fixed by Ruff formatter. No ML leakage or model failure was observed because no model was trained.
 
+### External review repair after commit 49753d5
+
+The external supervisor passed Macro Milestone 1 with minor fixes. The public
+overview and handoff still carried pre-commit or credit-first wording, and the
+healthcare tests lacked direct assertions for all six death/hospice codes,
+eligible-row preservation, existing-lock overwrite refusal, and cleanup after
+a rejected download. The cause was incomplete review coverage and stale
+documentation, not an observed source failure. Focused synthetic, offline tests
+now exercise these boundaries through `cohort`, `write_split_lock`, and a
+monkeypatched `acquire`; all pass without a source or contract change. The
+current overview and README identify healthcare as flagship and credit as
+secondary, while the detailed credit methods below remain historical evidence.
+The earlier `git diff --check` failure was a trailing blank line in user-owned
+`CURRENT_TASK.md`; the user removed it before committing, and the committed
+check passed. This repair's check also passes. The lesson is to test exclusion
+and cleanup rules directly and to distinguish an unresolved check from a
+resolved pre-commit problem. No model or later milestone was started.
+
 ## Project Overview
 
 Aletheia is an Explainable AI (XAI) decision-auditing project for
-structured classification in high-stakes contexts. Credit/loan risk is the
-reference use case: it makes individual decisions and recourse understandable,
-but does not make this a banking product. Intended users are an ML engineer or
-data scientist comparing experiments and a risk analyst reviewing a prediction;
-an administrator role is a later extension.
+structured classification in high-stakes contexts. Hospital readmission risk
+is the primary flagship demonstration: it tests whether patient-group-safe
+data, later models, and review evidence can support a defensible educational
+audit. South German Credit remains a retained secondary benchmark with its
+approved data foundation and training-only baseline. Intended users are ML
+engineers or data scientists comparing experiments, human reviewers inspecting
+predictions, and future administrators managing access and audit evidence.
 
 This is not a normal prediction dashboard. A dashboard can show a class and
 probability. Aletheia's purpose is to compare predictive models using
 performance *and* auditable evidence: global/local explanations, constrained
 counterfactuals, explanation stability, and, only when valid data exists,
-measured subgroup differences. It will not certify lending decisions, prove
-causality, prove fairness, replace a human reviewer, or claim a new XAI method.
+measured subgroup differences. It will not certify clinical or lending decisions,
+prove causality or fairness, replace a human reviewer, or claim a new XAI method.
 
 ## Problem Statement
 
@@ -76,14 +96,14 @@ measure selected properties, not legal compliance or universal fairness.
 
 ## Scope, Users, and Assumptions
 
-**Established scope:** South German Credit is externally supervisor-approved as
-suitable for the academic Research MVP, the Phase 2 research-first modular
-monolith is approved, and Phase 3's data foundation and architecture-state
-repair are approved. Phase 4 implements and verifies a bounded training-only
-dummy/Logistic Regression baseline and is pending external supervisor review.
-This establishes cross-validation evidence only. It does not establish held-out
-performance, calibration, fairness, stability, production suitability, or
-modern-lending validity. No application or deployment exists.
+**Established scope:** Macro Milestone 1 is committed at `49753d5` and passed
+external review with this minor documentation and test repair requested. Its
+healthcare dataset audit, source-bound foundation, feature roles, patient split,
+and deployable design are the current flagship foundation. Earlier approved
+credit phases provide the secondary benchmark, including a bounded training-only
+dummy/Logistic Regression baseline. Neither domain has a deployed application;
+healthcare has no trained model, and credit's training CV is not held-out or
+production evidence.
 
 **Assumptions requiring validation:** the selected data must have a clear
 target, source/licence, data dictionary, sufficient observations/minority-class
@@ -97,14 +117,13 @@ before the dataset is understood.
 
 `prompt.txt` preserves Aletheia's permanent original vision. It describes the
 complete platform ambition, not permission to implement every feature now.
-`docs/CURRENT_TASK.md` authorizes exactly one bounded task and cannot override
-the project's safety, ML-validity, evidence, or governance rules. The current
-authorization is Phase 4's locked-data-boundary test repair. It permits changes
-only to the two authorized test files, this report, and the supervisor handoff.
-No source, configuration, production split, preserved run, or earlier metrics
-may change. Held-out evaluation, final fitting, nonlinear comparators, XAI,
-fairness, stability, and application work remain blocked pending external review
-and a replacement task.
+`docs/CURRENT_TASK.md` records the completed Macro Milestone 1 authorization;
+it is not an authorization for Macro Milestone 2. The current review repair is
+limited to the README, this report, the supervisor handoff, and focused
+healthcare foundation tests. It leaves the frozen contracts, split, source,
+dependencies, preserved credit work, and earlier metrics unchanged. Held-out
+evaluation, final fitting, comparators, XAI, fairness, stability, and application
+work remain outside this repair.
 
 ## Functional Requirements
 
@@ -145,10 +164,12 @@ are not prerequisites for answering the research question.
 
 ## Research Questions
 
-**Primary:** For a documented tabular credit-risk classification dataset, how do
-selected model families trade predictive performance against interpretability,
-local-explanation stability, and—where valid subgroup data exists—measured
-group disparities needed for a human-auditable workflow?
+**Primary current question:** For the documented healthcare readmission cohort,
+how can later model families trade predictive performance, calibration,
+interpretability, explanation stability, and conditional subgroup evidence in a
+human-auditable workflow? No healthcare model has yet been trained or compared.
+The earlier credit-specific version of this question remains a secondary-domain
+research record for the approved benchmark.
 
 **Secondary:**
 
@@ -162,7 +183,10 @@ group disparities needed for a human-auditable workflow?
 - If a defensible audit attribute exists, what selection-rate, error-rate,
   precision/recall, and calibration differences are measured by subgroup?
 
-These are planning questions, not empirical conclusions.
+These are planning questions, not empirical conclusions. The remaining Phase 1–4
+details below document the approved credit benchmark and its learning history;
+their former credit-first scope and tool-selection language is historical, not
+the current healthcare-first product roadmap.
 
 ## Dataset Requirements
 
@@ -293,6 +317,10 @@ research-first sequencing, minimal dependencies, recorded runs, clear caveats,
 and later privacy-conscious audit design.
 
 ## Scope Boundaries
+
+The following Research MVP and semester-application boundaries describe the
+earlier **credit-first phases**. The current healthcare-first capability and
+tooling boundaries are in the Macro Milestone 1 record above and its ADRs.
 
 **Research MVP:** the minimum evidence-producing ML/XAI prototype: one approved
 documented dataset; leakage-safe reproducible preprocessing and splitting; an
@@ -1194,6 +1222,10 @@ or serve as a confidence interval?
 
 ## Resume Evidence
 
+The figures below are **secondary South German Credit benchmark evidence** from
+earlier phases. The healthcare dataset and split facts are recorded in the
+Macro Milestone 1 section above; no healthcare model metric exists.
+
 Verified evidence: four official dataset candidates compared; one selected raw
 file verified at 1,000 rows × 21 columns; one externally approved architecture
 and two ADRs (ADR 0002 pending review); 15 prediction, three audit-only, and two
@@ -1220,10 +1252,10 @@ controls reduce but cannot eliminate reproducibility risk.
 
 ## Future Work
 
-**Useful next step, subject to approval:** external supervisor review of Phase 4
-implementation, training-only manifest, tests, documentation, and handoff. A
-replacement current task is required for any comparator or held-out work.
-This report does not authorize Phase 5.
+**Useful next step, subject to approval:** complete the external supervisor's
+minor Macro Milestone 1 review repair, then await a separately authorized task.
+The healthcare modelling roadmap is planned only; this report does not authorize
+Macro Milestone 2 or resumption of the stashed credit comparator work.
 
 **Research extensions:** the separately gated global/local XAI, constrained
 counterfactual, stability, and conditional-fairness studies in the roadmap.

@@ -1,6 +1,9 @@
-# Supervisor Handoff — Macro Milestone 1
+# Supervisor Handoff — Macro Milestone 1 review repair
 
-Status: implemented and locally verified; independent external review pending. No later milestone authorized or begun.
+Status: Macro Milestone 1 was committed at `49753d5` and received an external
+**PASS WITH MINOR FIXES** verdict. This narrow documentation and offline-test
+repair is implemented locally; review of the repair is pending. Macro Milestone 2
+has not begun or been authorized.
 
 ## Current result
 Aletheia is healthcare-primary with South German Credit retained as the secondary approved benchmark. The official UCI 296 dataset (DOI 10.24432/C5230J; CC BY 4.0) passed an educational, non-clinical audit. At discharge, raw <30 means positive 30-day readmission; >30 and NO are negative. Death/hospice disposition codes 11, 13, 14, 19, 20, 21 are excluded. The 99,343-row cohort contains 69,990 patients and 11,314 positives. No healthcare model was trained.
@@ -11,21 +14,44 @@ Implemented verified archive/member hashes, two-member controlled extraction, 50
 The credit code and training-only baseline stay in place. Healthcare policy is isolated under src/aletheia/domains/healthcare. Future shared use cases will be extracted only where both domains need them. Patient grouping prevents entity leakage; discharge timing permits encounter summaries, while disposition itself is excluded. SHA-256 group assignment favors isolation and stability over exact stratification. No credit migration. Future selected stack: Python/scikit-learn, MLflow, FastAPI, PostgreSQL, React/TypeScript, Docker/Compose, GitHub Actions, monitoring, cards, RBAC and append-only audit. DagsHub hosting, DVC and managed host are provisional. RunwayML rejected; similar-case retrieval is not collaborative filtering. No future dependency installed.
 
 ## Files and evidence
-Modified: README.md, docs/ARCHITECTURE.md, docs/EXECUTION_PLAN.md, docs/PROJECT_REPORT.md, docs/SUPERVISOR_HANDOFF.md. User-owned docs/CURRENT_TASK.md was already modified and was not edited by Codex.
-Created: configs/datasets/healthcare_uci296_v1.toml; configs/features/healthcare_uci296_v1.toml; configs/splits/healthcare_uci296_v1.toml and .lock.json; docs/PRODUCT_REQUIREMENTS.md, HEALTHCARE_DATASET_AUDIT.md, DEPLOYMENT_ARCHITECTURE.md; ADRs 0003–0005; src/aletheia/domains/__init__.py and healthcare foundation/CLI; tests/healthcare/test_foundation.py.
-Inspect the three contracts and lock, foundation.py functions load_contracts/acquire/extract/load_raw/cohort/feature_views/build_split_lock/verify_split_lock/partition, offline tests, dataset audit, README, and deployment decision. The named WIP stash was inventoried read-only in PROJECT_REPORT.md; no stashed file was restored.
+This repair modifies only README.md, docs/PROJECT_REPORT.md,
+docs/SUPERVISOR_HANDOFF.md, and tests/healthcare/test_foundation.py. It adds
+synthetic tests for all six frozen death/hospice exclusions, eligible-row
+preservation, split-lock overwrite refusal, and redirect/byte-identity
+acquisition cleanup. It does not change healthcare source, contracts, split
+algorithm/lock, dependencies, credit implementation, or docs/CURRENT_TASK.md.
+Inspect the new tests beside foundation.py `cohort`, `write_split_lock`, and
+`acquire`, then the current overview and README status. The committed milestone
+evidence remains in the dataset audit, contracts, lock, ADRs, and report.
 
 ## Executed checks
-Repository .venv Python 3.12.10:
-- python -m pip check: No broken requirements found.
-- python -m ruff check .: All checks passed.
-- python -m ruff format --check .: 54 files already formatted.
-- python -m pytest -m "not live_data" with cache disabled and ignored Windows basetemp: 73 passed, 1 deselected, 25 warnings in 9.25s. Seven new healthcare tests and all 66 pre-existing credit/offline tests passed. The 25 warnings are the pre-existing scikit-learn LogisticRegression penalty deprecation.
-- Healthcare CLI acquire, lock and verify completed against the official archive; verify reported train 79,808 and test 19,535.
-- git diff --check exited 2 and flags only a pre-existing trailing blank line in user-owned docs/CURRENT_TASK.md:746, which Codex is forbidden to edit. The same check excluding that path exited 0 for Codex's tracked modifications. LF-to-CRLF notices are advisory.
-No live-data pytest was run. No held-out prediction, model selection or training was performed.
+Repair checks used repository `.venv` Python 3.12.10 and exited 0:
+- `.\.venv\Scripts\python.exe -m pip check`: No broken requirements found.
+- `.\.venv\Scripts\python.exe -m ruff check .`: All checks passed.
+- `.\.venv\Scripts\python.exe -m ruff format --check .`: 54 files already formatted.
+- `.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp data/processed/pytest-healthcare-review-final tests/healthcare/test_foundation.py`: 11 passed in 0.66s.
+- `.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp data/processed/pytest-healthcare-review-suite -m 'not live_data'`: 77 passed, 1 deselected, 25 warnings in 7.82s. All 66 pre-existing credit/offline tests passed; the 25 warnings are the existing scikit-learn LogisticRegression penalty deprecation.
+- `git diff --check`: passed; LF-to-CRLF notices are advisory.
+- `git show --check --oneline HEAD`: passed at the clean start of this repair.
+
+The committed milestone's healthcare CLI acquire, lock, and verify checks
+reported training 79,808 and held-out 19,535 encounters; they were not rerun
+for this review repair.
+No live-data pytest was run. No held-out prediction, model selection, or training
+was performed in this repair.
 
 ## Problems and limits
+The earlier pre-commit `git diff --check` exited 2 because of a trailing blank
+line in user-owned docs/CURRENT_TASK.md. The user removed that line before
+committing `49753d5`; the final committed `git diff --check` passed. This is a
+**resolved** discrepancy, not an outstanding milestone failure. No source
+defect was exposed by the new refusal tests.
+
 Python urllib failed TLS chain verification on this Windows environment after network permission. Windows curl with verified TLS retrieved the official archive; byte hashes and file content were checked. The CLI's Python downloader fails closed if trust is broken. An initial config patch required creating the authorized directories; Ruff fixed initial long lines. No leakage bug or model failure was observed. Historical 1999–2008 data lack encounter dates and hospital IDs; no external/clinical validation or fairness measurement exists. Discharge-time availability of each selected input needs operational confirmation. Sparse/unknown subgroups limit fairness, and treatment changes cannot be presented as clinically actionable counterfactuals.
 
-Unresolved: external supervisor acceptance; later model protocol, registry host, DVC adoption, cloud host/cost, clinical timestamp verification, data/privacy governance. Suggested next step is supervisor review, then separate authorization for Macro Milestone 2. User performs commit/push. Recommended message: feat: establish Aletheia healthcare foundation.
+Unresolved: review of this minor repair; later model protocol, registry host,
+DVC adoption, cloud host/cost, clinical timestamp verification, and data/privacy
+governance. Suggested next step is supervisor review of this repair, then a
+separate authorization before any Macro Milestone 2 work. The user performs
+commit/push. Recommended repair commit message:
+`docs: finalize healthcare foundation review`.
