@@ -1,0 +1,9 @@
+[split]
+version = "healthcare-group-split-v1"
+dataset_identifier = "uci-diabetes-296-v1"
+feature_policy_version = "healthcare-feature-v1"
+target_mapping_version = "readmitted-lt30-positive-v1"
+method = "patient-sha256-threshold"
+seed = 42
+test_fraction = 0.2
+positive_class = 1

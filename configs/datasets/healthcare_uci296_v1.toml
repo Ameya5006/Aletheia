@@ -1,0 +1,54 @@
+[identity]
+version = "1.0"
+identifier = "uci-diabetes-296-v1"
+uci_id = 296
+doi = "10.24432/C5230J"
+licence = "CC BY 4.0"
+record_url = "https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008"
+archive_url = "https://archive.ics.uci.edu/static/public/296/diabetes+130-us+hospitals+for+years+1999-2008.zip"
+archive_size = 3170254
+archive_sha256 = "f82ac129da2ddd2299391ff6fbae3a6a58b3edcf59ac9d7bd480c00fe453112a"
+raw_member = "diabetic_data.csv"
+raw_size = 19159383
+raw_sha256 = "0689e7ec031237dc63031b938805c48377748761a3b26acab621567afa24df97"
+mapping_member = "IDS_mapping.csv"
+mapping_size = 2547
+mapping_sha256 = "f1bb82b471cb34649352597572c9b1fb00bd27f77b9f5a22a03dc3eb1039749e"
+raw_rows = 101766
+prediction_timestamp = "at discharge, after discharge disposition is known"
+encounter_key = "encounter_id"
+patient_key = "patient_nbr"
+
+[target]
+raw = "readmitted"
+derived = "readmitted_30d"
+mapping_version = "readmitted-lt30-positive-v1"
+positive_raw = "<30"
+negative_raw = [">30", "NO"]
+raw_counts = { "<30" = 11357, ">30" = 35545, "NO" = 54864 }
+
+[cohort]
+excluded_discharge_codes = ["11", "13", "14", "19", "20", "21"]
+expected_rows = 99343
+expected_positive = 11314
+expected_patients = 69990
+
+[schema]
+columns = [
+  "encounter_id", "patient_nbr", "race", "gender", "age", "weight",
+  "admission_type_id", "discharge_disposition_id", "admission_source_id",
+  "time_in_hospital", "payer_code", "medical_specialty",
+  "num_lab_procedures", "num_procedures", "num_medications",
+  "number_outpatient", "number_emergency", "number_inpatient",
+  "diag_1", "diag_2", "diag_3", "number_diagnoses", "max_glu_serum",
+  "A1Cresult", "metformin", "repaglinide", "nateglinide",
+  "chlorpropamide", "glimepiride", "acetohexamide", "glipizide",
+  "glyburide", "tolbutamide", "pioglitazone", "rosiglitazone",
+  "acarbose", "miglitol", "troglitazone", "tolazamide", "examide",
+  "citoglipton", "insulin", "glyburide-metformin",
+  "glipizide-metformin", "glimepiride-pioglitazone",
+  "metformin-rosiglitazone", "metformin-pioglitazone", "change",
+  "diabetesMed", "readmitted",
+]
+missing_token = "?"
+missing_columns = ["race", "weight", "payer_code", "medical_specialty", "diag_1", "diag_2", "diag_3"]

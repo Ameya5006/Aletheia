@@ -1,0 +1,16 @@
+[policy]
+version = "healthcare-feature-v1"
+dataset_identifier = "uci-diabetes-296-v1"
+
+[roles]
+prediction = ["admission_type_id", "admission_source_id", "time_in_hospital", "num_lab_procedures", "num_procedures", "num_medications", "number_outpatient", "number_emergency", "number_inpatient", "number_diagnoses", "max_glu_serum", "A1Cresult", "diabetesMed"]
+audit_only = ["race", "gender", "age"]
+excluded = ["weight", "discharge_disposition_id", "payer_code", "medical_specialty", "diag_1", "diag_2", "diag_3", "metformin", "repaglinide", "nateglinide", "chlorpropamide", "glimepiride", "acetohexamide", "glipizide", "glyburide", "tolbutamide", "pioglitazone", "rosiglitazone", "acarbose", "miglitol", "troglitazone", "tolazamide", "examide", "citoglipton", "insulin", "glyburide-metformin", "glipizide-metformin", "glimepiride-pioglitazone", "metformin-rosiglitazone", "metformin-pioglitazone", "change"]
+raw_target = ["readmitted"]
+derived_target = ["readmitted_30d"]
+metadata = ["encounter_id", "patient_nbr", "row_key"]
+
+[semantic_types]
+quantitative = ["time_in_hospital", "num_lab_procedures", "num_procedures", "num_medications", "number_outpatient", "number_emergency", "number_inpatient", "number_diagnoses"]
+categorical = ["admission_type_id", "admission_source_id", "max_glu_serum", "A1Cresult", "diabetesMed"]
+audit_categorical = ["race", "gender", "age"]

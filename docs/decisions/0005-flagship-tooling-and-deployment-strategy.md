@@ -1,0 +1,5 @@
+# ADR 0005 — Flagship tooling and deployment strategy
+
+Status: selected future architecture; no application/MLOps component installed by this milestone.
+
+Decision: keep Python/scikit-learn modular monolith; plan MLflow registry/tracking (DagsHub hosted provisional, self-host fallback), FastAPI, PostgreSQL, React/TypeScript, Docker/Compose, GitHub Actions, managed public demonstration, monitoring, cards and RBAC/immutable audit. Evaluate DVC against existing source hashes/locks; use deterministic explanation prose by default and optional privacy-safe OpenRouter narration later. Reject RunwayML. Alternatives: notebook-only delivery, microservices, SQLite-only audit, full self-hosting. The selected path supports versioned evidence and reviewer workflow with bounded operational complexity. Trade-offs: hosted costs, secrets, network failure and privacy review; no real patient data can enter the demo. See `DEPLOYMENT_ARCHITECTURE.md` for each tool's caller, data, config, security and failure modes. Reconsider when measured workload, cost or governance changes. No migration occurs in this milestone.

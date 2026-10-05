@@ -1,5 +1,30 @@
 # Aletheia — System Architecture
 
+## Macro Milestone 1 architecture decision (current)
+
+The current product is healthcare-primary and credit-secondary. Sections below this new decision describe the earlier credit-first architecture and preserve its approved implementation history; where scope or tooling differs, this section and [ADR 0003](decisions/0003-healthcare-primary-multi-domain-platform.md), [ADR 0004](decisions/0004-healthcare-target-and-patient-split.md), and [ADR 0005](decisions/0005-flagship-tooling-and-deployment-strategy.md) are current. The detailed future tool connections, alternatives, security and failures are in [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md).
+
+The implemented research core is a Python modular monolith. Credit code remains at `src/aletheia/data`, `ml`, and `experiments`; healthcare contracts and source-bound functions are at `src/aletheia/domains/healthcare`. Existing credit paths are preserved to avoid a risky rename of a verified pipeline. Shared model, XAI and serving use cases are future interfaces, extracted only after both domains need them. Domain target, feature, missingness, split and recourse rules remain separate. This change adds domain configuration and a patient-level boundary; it does not alter the credit database (none exists), credit artifact format or public API (none exists). There is no migration of credit runs. Tests must prove credit regression and healthcare identity/roles/group split independently.
+
+```mermaid
+flowchart LR
+  R[Official UCI archive] --> V[Verified healthcare loader]
+  V --> P[Healthcare target / roles / patient lock]
+  C[Credit source] --> CC[Existing credit foundation and baseline]
+  P --> G[Shared ML / XAI use cases planned]
+  CC --> G
+  G --> F[FastAPI planned]
+  F --> U[React TypeScript planned]
+  F --> DB[PostgreSQL audit planned]
+  G --> M[MLflow registry planned]
+```
+
+Healthcare foundation flow is archive size/SHA-256 check → safe extraction → exact CSV/schema and target-count validation → missing-token normalization → discharge cohort → predictor/audit views → patient SHA-256 group lock. At discharge, the 30-day outcome is unknown. `encounter_id`, `patient_nbr`, race/gender/age and discharge disposition cannot enter predictors. Split lock carries dataset SHA-256, feature/target versions, group membership digest and counts; training CV must group patients. The held-out partition remains closed to modelling. This is an 80/20 patient split, not hospital or temporal validation.
+
+Future delivery is a single FastAPI process using registered fitted pipelines and transactionally append-only audit events, a React/TypeScript client, managed PostgreSQL, MLflow tracking/registry, Docker images and GitHub Actions. DagsHub hosting, DVC and public host are provisional. Future developer-quality CI parses Python/TypeScript imports, emits a dependency graph, detects cycles and forbidden directions, publishes an artifact and links components to code. These are design goals, not implemented components. Public examples must be synthetic/de-identified, with authentication and RBAC before any real-user workflow. No clinical deployment is claimed.
+
+## Earlier credit-first architecture record
+
 ## Status and Approval Boundary
 
 **Status: Phase 2 externally supervisor-approved at commit

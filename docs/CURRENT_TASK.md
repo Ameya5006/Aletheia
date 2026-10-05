@@ -1,162 +1,607 @@
+
+
 ```markdown
 # MILESTONE
 
-Phase 4 Repair — Verify the Locked Data Boundary
+Macro Milestone 1 — Healthcare Realignment, Data Foundation, and Deployable Product Architecture
 
 # SUPERVISOR DECISION
 
-Phase 4 implementation exists at commit:
+The following earlier work is externally supervisor-approved:
 
-`1edaedd031c8cdd6a59bf2575bc74f96f74cdc66`
+- Phase 3 data foundation:
+  `f19f86944d24f6220a04b732968aa1377363eb23`
+- Phase 3 architecture repair:
+  `65f83c668a4f745ffd6dc74a9e21b81cb059712c`
+- Phase 4 baseline:
+  `1edaedd031c8cdd6a59bf2575bc74f96f74cdc66`
+- Phase 4 locked-boundary repair:
+  `46abca7e4e4ff9e07e4cc3e0a6026c20620bd6dc`
 
-External supervisor review found two blocking test gaps. Phase 4 is not approved until they are repaired. Phase 5 remains blocked.
+The previous accelerated credit research-core attempt was interrupted and preserved in:
+
+`stash@{0}: On main: wip: credit research core before healthcare realignment`
+
+Do not apply or pop the stash wholesale.
+
+The stash may be inspected read-only to classify work as:
+
+- generic and reusable;
+- credit-benchmark specific;
+- healthcare incompatible;
+- incomplete and deferred.
+
+Healthcare becomes Aletheia’s primary deployed demonstration. South German Credit remains a supported secondary benchmark.
 
 # REQUIRED STARTING STATE
 
 Before editing, verify:
 
 - branch: `main`
-- HEAD: `1edaedd031c8cdd6a59bf2575bc74f96f74cdc66`
-- local `origin/main`: `1edaedd031c8cdd6a59bf2575bc74f96f74cdc66`
+- HEAD: `46abca7e4e4ff9e07e4cc3e0a6026c20620bd6dc`
+- local `origin/main`: `46abca7e4e4ff9e07e4cc3e0a6026c20620bd6dc`
 - working tree contains only the user-owned modification to `docs/CURRENT_TASK.md`
+- the named WIP stash exists
 
-If any other path is modified or untracked, stop and report it.
+If any additional modified or untracked path exists, stop and report it.
 
-# GOAL
+# PRODUCT DEFINITION
 
-Repair the Phase 4 integration test so it proves that verified split membership controls model evaluation.
+Realign Aletheia as:
 
-# BLOCKING FINDING 1 — FALSE SEQUENTIAL HOLDOUT ASSUMPTION
+> An enterprise-style Explainable AI platform that trains, evaluates, tracks,
+> deploys and audits high-stakes tabular machine-learning models, demonstrated
+> primarily through hospital readmission risk and secondarily through credit
+> risk.
 
-`tests/integration/test_baseline_pipeline.py` currently invents this held-out partition:
+The primary healthcare demonstration should investigate 30-day hospital readmission risk using a defensible public dataset.
 
-`sgc-0801` through `sgc-1000`
+The product must eventually demonstrate:
 
-This is not Aletheia’s approved split. The real locked held-out keys are scattered throughout the 1,000 source rows.
+- reproducible ML;
+- model comparison;
+- calibration;
+- global and local XAI;
+- constrained counterfactuals;
+- explanation stability;
+- conditional fairness analysis;
+- similar-case retrieval;
+- experiment tracking and model registry;
+- FastAPI;
+- React and TypeScript;
+- PostgreSQL audit persistence;
+- Docker;
+- CI/CD;
+- deployment;
+- monitoring;
+- security;
+- complete interview and viva documentation.
 
-Replace this assumption with membership produced and verified through the Phase 3 split-contract functions.
+This milestone implements the healthcare data foundation and designs the complete deployable system. It does not train healthcare models or build the application.
 
-The repaired test must prove that:
+# INTERNAL GATES
 
-- the evaluation input contains every verified training key;
-- the evaluation input contains no verified held-out key;
-- exactly 800 rows enter cross-validation;
-- a sequential row-number assumption cannot make the test pass accidentally.
+Complete the milestone continuously in this order.
 
-# BLOCKING FINDING 2 — INCOMPLETE INTEGRATION PATH
+## Gate A — Repository and Stash Analysis
 
-The current integration test starts with prepared prediction features and calls `evaluate_models()` directly.
+Inspect:
 
-Add an offline synthetic integration test that exercises the actual Phase 3-to-Phase 4 orchestration through `run_baseline()`, or through `calculate_baseline()` followed by manifest publication:
+- `AGENTS.md`;
+- `prompt.txt`;
+- all documentation;
+- all ADRs;
+- all committed configuration;
+- all committed source and tests;
+- recent Git history;
+- the WIP stash using read-only Git inspection.
 
-1. raw-data loading;
-2. schema validation;
-3. target mapping;
-4. feature-role enforcement;
-5. split-contract loading and verification;
-6. training-key selection;
-7. training-only cross-validation;
-8. manifest creation;
-9. immutable artifact publication.
+Do not apply the stash.
 
-Use synthetic data and temporary files. Do not require network access or committed raw data.
+Produce a reuse assessment covering every stashed path:
 
-Capture the row keys supplied to evaluation and compare them directly with the verified split membership.
+- reusable generic logic;
+- credit-specific logic;
+- future healthcare adaptation;
+- work that should be discarded later;
+- work that requires independent verification.
 
-# REQUIRED ASSERTIONS
+Preserve this assessment in project documentation.
 
-The repaired integration test must demonstrate that:
+## Gate B — Product Realignment
 
-- the split contains exactly 800 training keys and 200 held-out keys;
-- the split is based on verified membership rather than row-number ranges;
-- the evaluation keys equal the complete verified training-key set;
-- evaluation keys are disjoint from the verified held-out-key set;
-- exactly 800 rows enter cross-validation;
-- the two models use identical fold membership;
-- repeated calculations remain deterministic;
-- the manifest records training-only cross-validation;
-- `held_out_evaluation_performed` remains `false`;
-- `fitted_model_artifact` remains `null`;
-- no held-out metric or prediction field exists;
-- the published run contains only `manifest.json`;
-- no fitted model file is created;
-- publishing over an existing run remains refused.
+Freeze:
 
-The test should fail if:
+- product vision;
+- primary users;
+- user journeys;
+- healthcare use case;
+- secondary credit benchmark;
+- final capability boundaries;
+- deployment goal;
+- non-clinical disclaimer;
+- revised five-milestone roadmap.
 
-- any verified held-out key enters evaluation;
-- any verified training key is missing;
-- evaluated row count differs from 800;
-- the manifest contains held-out predictions or metrics;
-- a fitted model artifact is published.
+## Gate C — Healthcare Dataset Audit
 
-# HELD-OUT RESTRICTIONS
+Investigate the official UCI Diabetes 130-US Hospitals for Years 1999–2008 dataset as the primary candidate.
 
-Synthetic row keys and target values may be used only to construct and verify synthetic split membership.
+Authoritative identity:
 
-Do not:
+- UCI dataset ID: 296
+- DOI: `10.24432/C5230J`
+- licence: CC BY 4.0
+- intended problem: early readmission within 30 days
+- observation unit: inpatient encounter involving a patient diagnosed with diabetes
 
-- calculate held-out predictions;
-- calculate held-out metrics;
-- fit preprocessing on held-out rows;
-- tune any setting using held-out rows;
-- inspect the real held-out partition for model performance;
-- change the approved production split;
-- change the preserved Phase 4 run;
-- change previously recorded Phase 4 metrics.
+Use official UCI records and the associated paper.
 
-# AUTHORIZED FILES
+Audit before implementation:
 
-Codex may modify only:
+- source and licence;
+- archive and file identities;
+- row and column counts;
+- file structure;
+- data dictionary;
+- missing-value encodings;
+- duplicated encounters;
+- repeated patients;
+- target values and counts;
+- observation unit;
+- prediction timestamp;
+- target availability;
+- patient identifiers;
+- class imbalance;
+- feature cardinality;
+- rare categories;
+- sensitive attributes;
+- post-outcome variables;
+- administrative codes;
+- temporal limitations;
+- subgroup support;
+- memory and runtime feasibility on an 8 GB Windows laptop;
+- fairness feasibility;
+- counterfactual feasibility;
+- similar-case retrieval feasibility;
+- deployment limitations;
+- historical and clinical-validity limitations.
 
-- `tests/conftest.py`
-- `tests/integration/test_baseline_pipeline.py`
-- `docs/PROJECT_REPORT.md`
-- `docs/SUPERVISOR_HANDOFF.md`
+If this dataset cannot support a defensible educational readmission-risk audit, stop after a documented candidate comparison. Do not force its selection.
 
-`docs/CURRENT_TASK.md` is user-owned and must remain unchanged by Codex.
+## Gate D — Freeze Healthcare Contracts
 
-No ML source, experiment configuration, architecture, dependency, dataset, generated artifact, API, frontend, database or deployment file is authorized.
+If the dataset passes the audit, freeze:
 
-If the repaired test exposes an actual source-code defect, stop and report the evidence before modifying source code.
+- dataset identity;
+- target definition;
+- positive class;
+- prediction timestamp;
+- cohort rules;
+- exclusion rules;
+- stable encounter row key;
+- patient grouping key;
+- feature-role policy;
+- semantic types;
+- missing-value policy;
+- split policy;
+- sensitive/audit-only policy;
+- data version;
+- configuration version.
+
+The likely analytical target is:
+
+`readmitted within 30 days = 1`
+
+Do not finalize this mapping without verifying the original target semantics.
+
+Do not treat `>30` readmission as equivalent to `<30` without documenting the binary mapping.
+
+## Gate E — Patient-Level Split
+
+Repeated encounters from one patient must not appear across training and held-out partitions.
+
+Implement a deterministic group-aware split using `patient_nbr` or the verified patient identifier.
+
+Require:
+
+- approximately 80% training and 20% locked held-out data;
+- no patient overlap;
+- no encounter overlap;
+- class support in both partitions;
+- deterministic membership;
+- stable membership checksum;
+- dataset/config/target cross-references;
+- explicit partition and class counts.
+
+Do not optimize the split after inspecting model performance.
+
+Future training CV must also be group-aware.
+
+If exact stratification and group isolation conflict, document the algorithm and accepted class-balance tolerance.
+
+## Gate F — Healthcare Data Foundation
+
+Implement:
+
+- verified acquisition;
+- archive/file hash checking;
+- controlled extraction;
+- strict loading;
+- schema validation;
+- missing-token normalization according to the frozen contract;
+- target mapping;
+- encounter row-key construction;
+- patient-group validation;
+- feature-role views;
+- group-aware locked split;
+- configuration loading;
+- clear project-specific errors;
+- deterministic CLI commands.
+
+Raw healthcare data must remain ignored.
+
+Do not commit:
+
+- downloaded archives;
+- CSV files;
+- extracted raw files;
+- processed tables;
+- temporary audit outputs.
+
+Avoid adding a dataset-client dependency when secure standard-library acquisition is sufficient.
+
+## Gate G — Deployable Architecture
+
+Design the final system around:
+
+- Python and scikit-learn ML core;
+- MLflow experiment tracking and model registry;
+- DagsHub-hosted MLflow or a documented self-hosted alternative;
+- DVC or a justified data-versioning alternative;
+- FastAPI backend;
+- PostgreSQL;
+- React and TypeScript frontend;
+- Docker and Docker Compose;
+- GitHub Actions CI/CD;
+- managed public deployment;
+- monitoring and drift checks;
+- Hugging Face model/dataset cards;
+- optional Hugging Face demonstration;
+- optional OpenRouter explanation narrator;
+- secrets and environment management;
+- authentication and RBAC;
+- immutable audit logging.
+
+For each tool record:
+
+- what it does;
+- why Aletheia needs it;
+- where it sits;
+- what calls it;
+- inputs and outputs;
+- configuration;
+- dependencies;
+- security considerations;
+- failure modes;
+- alternatives;
+- trade-offs;
+- implementation milestone;
+- whether it is implemented, selected, provisional or rejected.
+
+Do not install future application/MLOps dependencies during this milestone.
+
+Explicitly reject RunwayML unless a genuine product requirement emerges.
+
+Do not label similar-case retrieval as collaborative filtering.
+
+Plan collaborative filtering as a separate recommendation-system project if it remains a CV goal.
+
+## Gate H — Verification and Documentation
+
+Run all tests and checks required by this milestone.
+
+Reconcile:
+
+- README;
+- architecture;
+- product requirements;
+- execution plan;
+- dataset audit;
+- ADRs;
+- project report;
+- supervisor handoff.
+
+Stop for external review.
+
+# FEATURE-ROLE REQUIREMENTS
+
+Create a default-deny healthcare feature policy.
+
+Every raw field must receive exactly one role:
+
+- prediction;
+- audit-only;
+- excluded;
+- raw target;
+- derived target;
+- identifier/metadata.
+
+Investigate carefully:
+
+- `encounter_id`;
+- `patient_nbr`;
+- race;
+- gender;
+- age;
+- weight;
+- admission type;
+- discharge disposition;
+- admission source;
+- diagnoses;
+- medication fields;
+- prior inpatient/outpatient/emergency counts;
+- laboratory results;
+- hospital-stay information;
+- readmission target.
+
+Do not automatically use all available columns.
+
+Identifiers must never enter the model.
+
+Sensitive attributes require an explicit prediction-versus-audit decision.
+
+Fields unavailable at the declared prediction timestamp must be excluded.
+
+Fields encoding death, hospice, discharge outcome or target-adjacent information require specific leakage analysis.
+
+# MULTI-DOMAIN ARCHITECTURE
+
+Preserve the working South German Credit benchmark.
+
+Do not rewrite working credit modules merely to rename them.
+
+Introduce a clear domain boundary supporting:
+
+- shared generic contracts and utilities;
+- credit-domain configuration;
+- healthcare-domain configuration;
+- reusable experiment, XAI and serving interfaces;
+- domain-specific target, feature and constraint policies.
+
+Avoid premature generic abstractions. Extract shared logic only where both domains genuinely need it.
+
+# TESTING REQUIREMENTS
+
+Add meaningful offline tests for:
+
+- official identity configuration;
+- checksum mismatch refusal;
+- controlled archive extraction;
+- exact raw schema;
+- column order where applicable;
+- required fields;
+- missing-token handling;
+- target truth table;
+- encounter-key uniqueness;
+- repeated-patient detection;
+- exhaustive/disjoint feature roles;
+- identifiers excluded from model input;
+- sensitive-field policy;
+- leakage-field exclusion;
+- deterministic group split;
+- no patient overlap;
+- no encounter overlap;
+- full membership coverage;
+- class support;
+- checksum stability;
+- split-contract mismatch refusal;
+- configuration validation;
+- synthetic end-to-end healthcare data-foundation flow;
+- preservation of existing credit tests.
+
+Ordinary tests must:
+
+- be synthetic;
+- be offline;
+- avoid network access;
+- avoid requiring the ignored raw dataset.
+
+A separately marked live-data test may verify official acquisition only when explicitly enabled.
+
+# README REQUIREMENTS
+
+Rewrite `README.md` as the accurate public entry point for recruiters, engineers and reviewers.
+
+It must contain:
+
+1. project name and concise flagship description;
+2. healthcare-first vision;
+3. secondary credit benchmark;
+4. problem statement;
+5. intended users;
+6. implemented capabilities;
+7. planned capabilities clearly labelled;
+8. architecture diagram;
+9. end-to-end data flow;
+10. complete technology and tooling table;
+11. repository structure;
+12. healthcare dataset summary;
+13. target and observation unit;
+14. leakage and patient-level split strategy;
+15. ML lifecycle;
+16. XAI roadmap;
+17. MLOps architecture;
+18. backend/frontend/database plan;
+19. CI/CD plan;
+20. deployment plan;
+21. monitoring plan;
+22. security and privacy boundaries;
+23. installation;
+24. configuration;
+25. acquisition commands;
+26. test commands;
+27. current milestone status;
+28. limitations and disclaimer;
+29. licence and dataset attribution;
+30. documentation links.
+
+For every tool, framework or service mentioned, explain:
+
+- what it is;
+- why it was selected;
+- exactly where Aletheia uses or will use it;
+- how it connects to other components;
+- relevant configuration or environment variables;
+- data or artifacts passing through it;
+- alternatives considered;
+- meaningful limitations;
+- implementation status.
+
+Do not list technologies that are neither implemented nor approved.
+
+Clearly distinguish:
+
+- implemented;
+- selected for a future milestone;
+- provisional/under evaluation;
+- rejected.
+
+Do not claim that planned APIs, UI, MLflow, DagsHub, deployment or monitoring already exist.
 
 # PROJECT REPORT REQUIREMENTS
 
-Update `docs/PROJECT_REPORT.md` with this verified problem and recovery:
+Update `docs/PROJECT_REPORT.md` as the complete interview, viva and project-defence guide.
 
-- the original test assumed that the final 200 row numbers formed the held-out partition;
-- the actual stratified split uses scattered row keys;
-- why the original assertion did not prove the real leakage boundary;
-- how verified split membership replaced the row-number assumption;
-- how the repaired integration test exercises the Phase 3-to-Phase 4 path;
-- what could have gone wrong if the false assumption remained;
-- how an interviewer should understand testing for data leakage;
-- which code and test files demonstrate the correction.
+Document:
 
-Keep the report concise, technically accurate and useful for interview, viva and project-defence preparation.
+- why the project drifted toward credit;
+- why healthcare became primary;
+- why existing work was preserved;
+- dataset-selection reasoning;
+- observation unit;
+- target semantics;
+- prediction timestamp;
+- group leakage;
+- patient-level splitting;
+- missing data;
+- feature roles;
+- sensitive attributes;
+- alternatives and trade-offs;
+- architecture;
+- selected tools and their roles;
+- deployment strategy;
+- tests;
+- important files and functions;
+- limitations;
+- interview questions and answers;
+- implementation order.
 
-Do not alter or fabricate earlier results, problems, metrics or implementation claims.
+Record every meaningful problem:
 
-# SUPERVISOR HANDOFF REQUIREMENTS
-
-Update `docs/SUPERVISOR_HANDOFF.md` with:
-
-- repair status;
+- symptom;
 - root cause;
-- old invalid assumption;
-- corrected membership approach;
-- integration path exercised;
-- files changed;
-- exact commands and checks run;
-- exact results;
-- confirmation that held-out predictions and metrics were not calculated;
-- confirmation that the preserved Phase 4 metrics were unchanged;
-- confirmation that Phase 5 did not begin;
-- unresolved issues;
-- exact final Git status;
-- recommended commit message.
+- investigation;
+- failed attempts;
+- correction;
+- verification;
+- lesson;
+- interview explanation.
 
-Do not claim external supervisor approval.
+Do not fabricate implementation, bugs, metrics or results.
+
+# CODE-GRAPH REQUIREMENT
+
+Preserve the user’s requirement for enterprise-style codebase analysis.
+
+Plan a later CI/developer-quality feature that:
+
+- parses Python and TypeScript imports;
+- produces a dependency graph;
+- detects cycles;
+- detects forbidden architectural dependency directions;
+- publishes a CI artifact;
+- links architectural components to code.
+
+Do not implement it during this milestone unless required to verify the new domain architecture.
+
+# REQUIRED DOCUMENTS
+
+Update:
+
+- `README.md`
+- `AGENTS.md` only if governance needs clarification
+- `docs/ARCHITECTURE.md`
+- `docs/CURRENT_TASK.md` is user-owned and must not be modified by Codex
+- `docs/DATASET_AUDIT.md` only to preserve/reference the credit audit
+- `docs/EXECUTION_PLAN.md`
+- `docs/PROJECT_REPORT.md`
+- `docs/SUPERVISOR_HANDOFF.md`
+
+Create:
+
+- `docs/PRODUCT_REQUIREMENTS.md`
+- `docs/HEALTHCARE_DATASET_AUDIT.md`
+- `docs/DEPLOYMENT_ARCHITECTURE.md`
+- `docs/decisions/0003-healthcare-primary-multi-domain-platform.md`
+- `docs/decisions/0004-healthcare-target-and-patient-split.md`
+- `docs/decisions/0005-flagship-tooling-and-deployment-strategy.md`
+
+ADR numbering must be reconciled with committed ADRs. Stashed uncommitted ADR numbers do not reserve permanent identifiers.
+
+# AUTHORIZED CONFIGURATION
+
+Codex may create clearly named versioned healthcare files under:
+
+- `configs/datasets/`
+- `configs/features/`
+- `configs/splits/`
+
+Do not overwrite the working credit configurations.
+
+# AUTHORIZED SOURCE
+
+Codex may modify shared files only when required:
+
+- `src/aletheia/config.py`
+- `src/aletheia/contracts.py`
+
+Codex may create:
+
+- `src/aletheia/domains/__init__.py`
+- modules under `src/aletheia/domains/healthcare/`
+
+Shared generic utilities may be created only when justified by both domains.
+
+Do not restore the stashed comparator/XAI/counterfactual/stability files during this milestone.
+
+# AUTHORIZED TESTS
+
+Codex may modify:
+
+- `tests/conftest.py` only when required without breaking existing tests.
+
+Codex may create:
+
+- healthcare tests under `tests/healthcare/`;
+- one healthcare data-foundation integration test under `tests/integration/`.
+
+Do not delete or weaken existing credit tests.
+
+# DEPENDENCIES
+
+No new runtime or development dependency is authorized unless the healthcare data foundation cannot be implemented safely with the existing environment.
+
+If a new dependency is genuinely required:
+
+1. document why;
+2. compare alternatives;
+3. verify licence and Python 3.12 compatibility;
+4. update `pyproject.toml`;
+5. update `requirements.lock.txt`;
+6. verify a clean installation;
+7. record exact results.
+
+Do not add MLflow, DagsHub, DVC, FastAPI, React, PostgreSQL clients, OpenRouter or deployment dependencies yet.
 
 # REQUIRED VERIFICATION
 
@@ -170,64 +615,125 @@ python -m pytest -m "not live_data"
 git diff --check
 ```
 
-Use Windows-compatible temporary pytest and cache directories if the repository location causes permission errors.
+If a live acquisition test is added, verify its default skipped state.
 
-Inspect the generated temporary test run and verify that it contains only `manifest.json`.
+Run the live test only after explicit network authorization.
 
-Confirm that no raw dataset, generated run, cache file or temporary output appears in Git status.
+Verify:
+
+- existing credit tests remain passing;
+- healthcare synthetic tests pass;
+- no patient crosses partitions;
+- no identifier enters model input;
+- no raw or processed healthcare data appears in Git status;
+- no stashed WIP file was restored;
+- no model was trained;
+- no held-out outcome was inspected for modelling;
+- documentation distinguishes implemented and planned components;
+- README contains no false implementation claim.
 
 # EXPECTED FINAL GIT STATUS
 
 The final status may contain only:
 
 ```text
+ M README.md
+ M docs/ARCHITECTURE.md
  M docs/CURRENT_TASK.md
+ M docs/EXECUTION_PLAN.md
  M docs/PROJECT_REPORT.md
  M docs/SUPERVISOR_HANDOFF.md
+ M src/aletheia/config.py
+ M src/aletheia/contracts.py
  M tests/conftest.py
- M tests/integration/test_baseline_pipeline.py
+?? configs/datasets/
+?? configs/features/
+?? configs/splits/
+?? docs/PRODUCT_REQUIREMENTS.md
+?? docs/HEALTHCARE_DATASET_AUDIT.md
+?? docs/DEPLOYMENT_ARCHITECTURE.md
+?? docs/decisions/0003-healthcare-primary-multi-domain-platform.md
+?? docs/decisions/0004-healthcare-target-and-patient-split.md
+?? docs/decisions/0005-flagship-tooling-and-deployment-strategy.md
+?? src/aletheia/domains/
+?? tests/healthcare/
+?? tests/integration/test_healthcare_data_foundation.py
 ```
 
-`docs/CURRENT_TASK.md` is the user-owned task replacement and must not be modified again by Codex.
+A subset is acceptable where an authorized file was unnecessary.
 
-If any additional file appears, stop and explain it before recommending a commit.
+`AGENTS.md`, `docs/DATASET_AUDIT.md`, dependency files and additional shared utilities may appear only with a specific documented justification.
 
-# FINAL CODEX RESPONSE
+No raw data, archive, CSV, environment, cache, generated artifact, fitted model, notebook, API, frontend, database, Docker or deployment file may appear.
+
+# FINAL RESPONSE
 
 Report:
 
-1. repair status;
-2. root cause;
-3. old invalid holdout assumption;
-4. corrected verified-membership approach;
-5. complete integration path exercised;
-6. tests added or changed;
-7. files modified;
-8. commands and checks run;
-9. exact results;
-10. confirmation that all and only verified training keys entered evaluation;
-11. confirmation that held-out predictions and metrics were not calculated;
-12. confirmation that preserved Phase 4 metrics did not change;
-13. documentation updates;
-14. unresolved issues and limitations;
-15. confirmation that Phase 5 did not begin;
-16. confirmation that Codex did not commit or push;
-17. exact final `git status --short --untracked-files=all`;
-18. recommended commit message.
+1. milestone status;
+2. product realignment outcome;
+3. stash inventory and reuse conclusions;
+4. selected healthcare dataset or investigation outcome;
+5. authoritative source and licence;
+6. target;
+7. observation unit;
+8. prediction timestamp;
+9. cohort and exclusions;
+10. feature roles;
+11. leakage findings;
+12. missing-data findings;
+13. sensitive-attribute decisions;
+14. patient-level split;
+15. exact partition and class counts;
+16. fairness feasibility;
+17. counterfactual feasibility;
+18. similar-case feasibility;
+19. multi-domain architecture;
+20. final tooling decisions;
+21. complete README changes;
+22. healthcare data-foundation implementation;
+23. tests and exact results;
+24. existing credit regression-test results;
+25. files created;
+26. files modified;
+27. files intentionally unchanged;
+28. problems encountered;
+29. failed attempts and recovery;
+30. limitations;
+31. unresolved questions;
+32. what the user should understand;
+33. confirmation that no model was trained;
+34. confirmation that no raw data was committed;
+35. confirmation that no stashed WIP file was restored;
+36. confirmation that later milestones did not begin;
+37. confirmation that Codex did not commit or push;
+38. exact final `git status --short --untracked-files=all`;
+39. recommended commit message.
 
 Recommend:
 
-`test: verify Phase 4 locked data boundary`
+`feat: establish Aletheia healthcare foundation`
 
 # STOP RULE
 
-Stop after completing and verifying this Phase 4 repair.
+Stop after completing and verifying Macro Milestone 1.
 
-Do not begin Phase 5.
+Do not:
 
-Do not modify `docs/CURRENT_TASK.md`.
+- apply or pop the WIP stash;
+- train healthcare models;
+- implement comparator evaluation;
+- implement XAI;
+- implement counterfactuals;
+- implement stability or fairness metrics;
+- add MLflow or DagsHub;
+- build FastAPI;
+- build React;
+- create a database;
+- create Docker or CI/CD files;
+- deploy;
+- modify `docs/CURRENT_TASK.md`;
+- commit or push.
 
-Do not commit or push.
-
-The user will inspect the final Git status, commit and push the repair, and return it for independent external supervisor review.
+The user will inspect the result, commit and push it, and return it for independent external supervisor review.
 ```

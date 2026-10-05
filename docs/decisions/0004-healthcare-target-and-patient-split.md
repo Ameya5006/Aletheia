@@ -1,0 +1,5 @@
+# ADR 0004 — Discharge-time target and patient split
+
+Status: accepted and foundation implemented in Macro Milestone 1.
+
+Decision: target `readmitted_30d = 1` only for raw `<30`; `>30` and `NO` map to 0. Unit is an encounter. Prediction is at discharge. Exclude death/hospice dispositions 11, 13, 14, 19, 20, 21, and exclude disposition from predictors. Retain repeated encounters, assign by `patient_nbr` with seeded SHA-256 threshold, and freeze raw/policy/target/count/membership identities in a lock. Alternatives: first encounter per patient (reduces sample and changes question), encounter random split (group leakage), temporal split (no usable dates), group stratification (balance closer but more complex and target-dependent). Isolation and deterministic independence from labels take priority. Trade-off: 19.66% of encounters held out and class proportions only approximately matched; no temporal/hospital generalization evidence. Future CV groups by patient. Reconsider only with new timestamp/hospital metadata and a new versioned protocol; never tune on the locked holdout.

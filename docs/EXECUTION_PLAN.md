@@ -1,5 +1,21 @@
 # Aletheia — Execution Plan
 
+## Current five-milestone roadmap (Macro Milestone 1 decision)
+
+This sequence supersedes the older credit-first phase sequence recorded below. Earlier approved credit Phases 0–4 remain historical evidence, not authorization to resume stashed Phase 5 work. Only `CURRENT_TASK.md` authorizes current work; every later milestone awaits external supervisor approval.
+
+| Macro milestone | Scope and definition of done | Status |
+|---|---|---|
+| 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Implemented locally, supervisor review pending |
+| 2. Healthcare research | Group-aware training CV, bounded model comparison, calibration and one locked holdout evaluation under a new approved protocol; model/dataset cards and reproducible evidence | Planned, not authorized |
+| 3. Explainable audit | Global/local XAI, constrained counterfactuals, explanation stability, conditional fairness and similar-case retrieval with measured limitations | Planned, not authorized |
+| 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved model serving | Planned, not authorized |
+| 5. Public delivery and operations | CI/CD, managed deployment, drift monitoring, code dependency graph and final defence evidence | Planned, not authorized |
+
+Credit remains a secondary benchmark. The older Phase 5 comparator/XAI/counterfactual/stability roadmap and WIP stash are not active implementation instructions. No future application dependencies are installed in milestone 1. See [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) for users and boundaries and [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md) for tooling.
+
+## Historical credit-first execution record
+
 ## Status and Authority
 
 This research-first roadmap is proposed sequencing, not blanket authorization.

@@ -1,0 +1,24 @@
+{
+  "counts": {
+    "test": {
+      "class_0": 17295,
+      "class_1": 2240,
+      "encounters": 19535,
+      "patients": 13812
+    },
+    "train": {
+      "class_0": 70734,
+      "class_1": 9074,
+      "encounters": 79808,
+      "patients": 56178
+    }
+  },
+  "dataset_identifier": "uci-diabetes-296-v1",
+  "dataset_sha256": "0689e7ec031237dc63031b938805c48377748761a3b26acab621567afa24df97",
+  "feature_policy_version": "healthcare-feature-v1",
+  "membership_sha256": "6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316",
+  "method": "patient-sha256-threshold",
+  "seed": 42,
+  "target_mapping_version": "readmitted-lt30-positive-v1",
+  "version": "healthcare-group-split-v1"
+}
