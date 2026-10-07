@@ -1,6 +1,6 @@
 # Aletheia — Explainable AI Decision Auditor
 
-Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository currently contains the two data foundations and a credit training-only baseline; it does not contain a healthcare model or deployed application.
+Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository contains both data foundations, a credit training-only baseline and a healthcare model experiment with a locked holdout gate. It has no deployed application.
 
 ## Why and for whom
 
@@ -10,11 +10,19 @@ An engineer will verify a pinned dataset and patient split, train with group-awa
 
 ## Current capabilities and roadmap
 
-**Implemented:** official UCI 296 source identity and byte hashes; controlled extraction; strict 50-column loading; `?` normalization in seven documented fields; target/cohort/role validation; a frozen patient-group holdout; offline synthetic healthcare tests. Credit has an approved 1,000-row foundation and training-only Dummy/Logistic Regression baseline with immutable local manifests. No healthcare model has been trained.
+**Implemented:** official UCI 296 source identity and byte hashes; controlled extraction; strict 50-column loading; `?` normalization in seven documented fields; target/cohort/role validation; a frozen patient-group holdout; patient-aware nested CV, bounded candidate comparison, raw/sigmoid calibration comparison, immutable local experiment records and one-time holdout protection. Credit has an approved 1,000-row foundation and training-only Dummy/Logistic Regression baseline with immutable local manifests.
 
-**Selected for later milestones:** healthcare group-CV models, calibration, global/local XAI, constrained counterfactuals, explanation stability, conditional fairness, similar-case retrieval, MLflow registry, FastAPI, PostgreSQL, React/TypeScript, Docker/Compose, GitHub Actions, monitoring, RBAC and cards. **Provisional:** DagsHub-hosted MLflow versus self-hosting, DVC versus source hashes/locks, managed host, optional Hugging Face demo and optional OpenRouter narrator. **Rejected:** RunwayML, which has no role in tabular auditing. Similar-case retrieval is not collaborative filtering; a recommendation project would be separate.
+The completed healthcare experiment selected sigmoid-calibrated Histogram
+Gradient Boosting using training-only patient folds. Its single locked-holdout
+evaluation measured ROC-AUC 0.6395 and average precision 0.2026 on 19,535
+encounters; at descriptive threshold 0.5 it detected 12 of 2,240 positives.
+The full metrics and patient-cluster intervals are in the
+[model card](docs/model_cards/healthcare_readmission_v1.md). These are
+retrospective educational results, not clinical validation.
 
-Five macro milestones are on the roadmap: (1) healthcare foundation and deployable design **committed and externally reviewed**; (2) healthcare modelling/calibration; (3) explanations and audit methods; (4) application and MLOps; (5) public delivery and operations. The supervisor passed Macro Milestone 1 with this minor documentation and test repair pending. Macro Milestone 2 has not begun or been authorized. Definitions of done are in [product requirements](docs/PRODUCT_REQUIREMENTS.md).
+**Selected for later milestones:** global/local XAI, constrained counterfactuals, explanation stability, conditional fairness, similar-case retrieval, MLflow registry, FastAPI, PostgreSQL, React/TypeScript, Docker/Compose, GitHub Actions, monitoring and RBAC. **Provisional:** DagsHub-hosted MLflow versus self-hosting, DVC versus source hashes/locks, managed host, optional Hugging Face demo and optional OpenRouter narrator. **Rejected:** RunwayML, which has no role in tabular auditing. Similar-case retrieval is not collaborative filtering; a recommendation project would be separate.
+
+Five macro milestones are on the roadmap: (1) healthcare foundation and deployable design **committed and externally reviewed**; (2) healthcare modelling/calibration **implemented locally, external review pending**; (3) explanations and audit methods; (4) application and MLOps; (5) public delivery and operations. Definitions of done are in [the execution plan](docs/EXECUTION_PLAN.md).
 
 ## Architecture and data flow
 
@@ -29,13 +37,13 @@ flowchart LR
   CORE --> REG[MLflow planned registry]
 ```
 
-**Implemented healthcare flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock. **Planned training flow:** training partition → group-aware CV with fold-local preprocessing → comparison/calibration → one locked holdout evaluation → experiment record/model registry/card. **Planned prediction flow:** authenticated request → schema/feature validation → registered fitted pipeline → probability and explanation → append-only audit event → response. Delivery code will call the core rather than duplicate preprocessing or policy.
+**Implemented healthcare flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card. **Planned prediction flow:** authenticated request → schema/feature validation → registered fitted pipeline → probability and explanation → append-only audit event → response. Delivery code will call the core rather than duplicate preprocessing or policy.
 
 ## Healthcare dataset and leakage boundary
 
 Source: [UCI Diabetes 130-US Hospitals for Years 1999–2008](https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008), ID 296, DOI [10.24432/C5230J](https://doi.org/10.24432/C5230J), CC BY 4.0; see [Strack et al. 2014](https://doi.org/10.1155/2014/781670). There are 101,766 raw inpatient encounters, 50 columns and 71,518 patient IDs. The target is `readmitted_30d=1` for `<30`; `>30` and `NO` are 0. The prediction time is **discharge**, after disposition is known and before the 30-day outcome is known. Death/hospice dispositions are excluded, leaving 99,343 encounters and 69,990 patients. The encounter key is `uci296-<encounter_id>`; `patient_nbr` is used for grouping. Both identifiers, discharge disposition and sensitive race/gender/age are barred from predictors. The policy currently allows 13 conservative discharge-time fields. Exact source/missingness/field decisions are in the [healthcare audit](docs/HEALTHCARE_DATASET_AUDIT.md).
 
-The SHA-256 patient-group split assigns approximately 80%/20% independent of labels: training 79,808 encounters (70,734 negative, 9,074 positive; 56,178 patients), locked holdout 19,535 (17,295 negative, 2,240 positive; 13,812 patients). No patient or encounter crosses. Future CV must group patients too. The dataset lacks dates/hospital IDs, so this split is not temporal or external validation. Missing race and sparse subgroups constrain future fairness analysis; historical administered treatments and counts are not automatically actionable counterfactuals. Similar-case retrieval may use only authorized training cases with privacy controls and a versioned distance metric.
+The SHA-256 patient-group split assigns approximately 80%/20% independent of labels: training 79,808 encounters (70,734 negative, 9,074 positive; 56,178 patients), locked holdout 19,535 (17,295 negative, 2,240 positive; 13,812 patients). No patient or encounter crosses. Modelling CV also groups patients in five outer and three inner folds. The dataset lacks dates/hospital IDs, so this split is not temporal or external validation. Missing race and sparse subgroups constrain future fairness analysis; historical administered treatments and counts are not automatically actionable counterfactuals. Similar-case retrieval may use only authorized training cases with privacy controls and a versioned distance metric.
 
 ## Technology and connection map
 
@@ -44,6 +52,7 @@ Status is explicit. Configuration and artifacts are detailed in [deployment arch
 | Tool | Status, use and connection | Configuration, limits and alternative |
 |---|---|---|
 | Python 3.12, pandas, scikit-learn | Implemented core/credit baseline and healthcare tables; CLI calls contracts and produces validated frames/lock | `pyproject.toml`, `requirements.lock.txt`, versioned TOML; 8 GB laptop limits. Fold-local fit required. Polars is an unneeded alternative. |
+| Healthcare nested-CV runner and local joblib | Implemented research experiment; frozen selection and checksummed model live under ignored `artifacts/healthcare-model-v1` | `configs/experiments/healthcare_model_v1.toml`; trusted local artifact only, never load user-supplied pickle/joblib. The one-time holdout claim prevents reruns. |
 | Local JSON manifests | Implemented for credit experiment evidence; research runner writes ignored artifacts | `artifacts/runs`; no remote registry/concurrency. MLflow later. |
 | MLflow | Selected for model metrics/artifacts and registry consumed by API | Future `MLFLOW_TRACKING_URI`; secrets and PHI exclusion; service outage blocks promotion. Local manifests are current fallback. |
 | DagsHub-hosted MLflow | Provisional remote MLflow service | Future secret endpoint/credentials, non-sensitive metadata only; cost/retention review. Self-hosted MLflow fallback. |
@@ -62,7 +71,7 @@ Status is explicit. Configuration and artifacts are detailed in [deployment arch
 
 ## Repository map
 
-`src/aletheia/data`, `ml`, `experiments` contain the existing credit pipeline. `src/aletheia/domains/healthcare` contains the new foundation and CLI. `configs/datasets`, `features`, `splits` hold healthcare identities, roles and split lock; existing `configs/dataset.toml`, `features.toml`, `experiments` retain credit. `tests/healthcare` contains offline tests; `docs` records audit, architecture, decisions, report and supervisor evidence. Raw data and run artifacts are ignored.
+`src/aletheia/data`, `ml`, `experiments` contain the existing credit pipeline. `src/aletheia/domains/healthcare` contains the foundation, modelling, evaluation, experiment and CLI. `configs/datasets`, `features`, `splits`, `experiments` hold healthcare identities, roles, split lock and modelling protocol; credit configurations remain. `tests/healthcare` contains offline tests; `docs` records audit, architecture, decisions, model card, report and supervisor evidence. Raw data and run artifacts are ignored.
 
 ## Installation and commands
 
@@ -74,15 +83,16 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip check
 .\.venv\Scripts\python.exe -m aletheia.domains.healthcare acquire
 .\.venv\Scripts\python.exe -m aletheia.domains.healthcare verify
+.\.venv\Scripts\python.exe -m aletheia.domains.healthcare model
 .\.venv\Scripts\python.exe -m ruff check .
 .\.venv\Scripts\python.exe -m ruff format --check .
 .\.venv\Scripts\python.exe -m pytest -m "not live_data"
 ```
 
-The archive and CSV go under ignored `data/raw/healthcare`. `acquire` downloads only the official HTTPS archive, verifies byte identity and extracts two approved members. On a local Python TLS certificate failure, obtain the same official URL through a trusted TLS-capable client into that ignored path, then rerun `acquire`; never bypass checksum validation. `verify` checks the frozen lock and prints partition sizes. `lock` creates a new lock only if absent and is for protocol regeneration under approval; it refuses overwrite. Configuration files are versioned TOML; no credentials are needed now. A later API will use environment-backed secrets; `.env` files stay ignored. The ordinary test suite is synthetic and offline; `live_data` tests are opt-in.
+The archive and CSV go under ignored `data/raw/healthcare`. `acquire` downloads only the official HTTPS archive, verifies byte identity and extracts two approved members. On a local Python TLS certificate failure, obtain the same official URL through a trusted TLS-capable client into that ignored path, then rerun `acquire`; never bypass checksum validation. `verify` checks the frozen lock and prints partition sizes. `lock` creates a new lock only if absent and is for protocol regeneration under approval; it refuses overwrite. `model` is a single-use experiment: it runs training-only evidence twice, freezes selection, then claims and evaluates the holdout once. It refuses an existing run directory; do not delete a completed run to tune against its result. Configuration files are versioned TOML; no credentials are needed now. A later API will use environment-backed secrets; `.env` files stay ignored. The ordinary test suite is synthetic and offline; `live_data` tests are opt-in.
 
 ## Limits, licence and review
 
-The UCI records are historical (1999–2008), omit hospital/date identity, contain missing and rare groups, and have no clinical or external validation. No healthcare predictive performance, fairness, counterfactual feasibility, latency, security posture or deployment has been established. The repo's software licence should be checked in the repository before reuse; dataset reuse follows **CC BY 4.0** with UCI/Strack attribution. This is not medical advice.
+The UCI records are historical (1999–2008), omit hospital/date identity, contain missing and rare groups, and have no clinical or external validation. Healthcare predictive performance has been measured only on the frozen retrospective patient split. Fairness, counterfactual feasibility, latency, security posture and deployment have not been established. The repo's software licence should be checked in the repository before reuse; dataset reuse follows **CC BY 4.0** with UCI/Strack attribution. This is not medical advice.
 
 Read [product requirements](docs/PRODUCT_REQUIREMENTS.md), [dataset audit](docs/HEALTHCARE_DATASET_AUDIT.md), [architecture](docs/ARCHITECTURE.md), [deployment design](docs/DEPLOYMENT_ARCHITECTURE.md), [execution plan](docs/EXECUTION_PLAN.md), [project report](docs/PROJECT_REPORT.md), [credit audit](docs/DATASET_AUDIT.md), [ADRs](docs/decisions), and [supervisor handoff](docs/SUPERVISOR_HANDOFF.md). Macro Milestone 1 is committed at `49753d5` and passed external review with this minor repair pending. No deployment exists; Codex has not committed this repair.

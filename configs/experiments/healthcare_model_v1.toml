@@ -1,0 +1,61 @@
+[experiment]
+version = "healthcare-model-v1"
+seed = 42
+dataset_identifier = "uci-diabetes-296-v1"
+raw_sha256 = "0689e7ec031237dc63031b938805c48377748761a3b26acab621567afa24df97"
+cohort_version = "discharge-alive-v1"
+feature_policy_version = "healthcare-feature-v1"
+target_version = "readmitted-lt30-positive-v1"
+split_version = "healthcare-group-split-v1"
+membership_sha256 = "6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316"
+
+[cv]
+method = "StratifiedGroupKFold"
+outer_folds = 5
+outer_seed = 42
+inner_folds = 3
+inner_seed_offset = 1000
+calibration_folds = 3
+calibration_seed_offset = 2000
+
+[preprocessing]
+numeric = "median imputation, StandardScaler"
+categorical = "constant __MISSING__ imputation, OneHotEncoder(handle_unknown=ignore)"
+unknown_policy = "unseen categories map to all-zero indicators for that field"
+max_dense_bytes = 268435456
+
+[candidates]
+dummy = ["prior"]
+logistic_c = [0.1, 1.0]
+logistic_class_weight = ["none", "balanced"]
+forest_max_depth = [6, 10]
+forest_n_estimators = 50
+forest_min_samples_leaf = 20
+hist_max_leaf_nodes = [15, 31]
+hist_max_iter = 30
+hist_min_samples_leaf = 40
+hist_early_stopping = false
+
+[selection]
+primary = "average_precision"
+secondary = ["roc_auc", "balanced_accuracy", "recall", "specificity", "precision", "f1", "log_loss", "brier_score"]
+ap_equivalence_margin = 0.005
+rule = "Highest outer mean AP unless within margin; then lowest Brier, then highest ROC-AUC, then lowest log loss; stable name tie"
+threshold = 0.5
+
+[calibration]
+methods = ["raw", "sigmoid"]
+method = "OOF patient-group sigmoid on clipped base probabilities; apply to full-train fitted base"
+
+[bootstrap]
+unit = "patient_nbr"
+repetitions = 500
+seed = 4242
+confidence = 0.95
+
+[software]
+python = "3.12"
+scikit_learn = "1.9.0"
+pandas = "3.0.5"
+numpy = "2.5.3"
+scipy = "1.18.1"

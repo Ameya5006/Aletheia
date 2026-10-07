@@ -6,8 +6,8 @@ This sequence supersedes the older credit-first phase sequence recorded below. E
 
 | Macro milestone | Scope and definition of done | Status |
 |---|---|---|
-| 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Implemented locally, supervisor review pending |
-| 2. Healthcare research | Group-aware training CV, bounded model comparison, calibration and one locked holdout evaluation under a new approved protocol; model/dataset cards and reproducible evidence | Planned, not authorized |
+| 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Externally approved at `9073c453` |
+| 2. Healthcare research | Group-aware nested CV, bounded model comparison, sigmoid calibration and one locked holdout evaluation; model card and reproducible manifests | Implemented locally with one guarded holdout evaluation; external review pending |
 | 3. Explainable audit | Global/local XAI, constrained counterfactuals, explanation stability, conditional fairness and similar-case retrieval with measured limitations | Planned, not authorized |
 | 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved model serving | Planned, not authorized |
 | 5. Public delivery and operations | CI/CD, managed deployment, drift monitoring, code dependency graph and final defence evidence | Planned, not authorized |

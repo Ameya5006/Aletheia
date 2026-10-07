@@ -1,5 +1,310 @@
 # Aletheia — Project Report
 
+## Macro Milestone 2 — Patient-safe healthcare modelling (2026-10-06)
+
+**Scope and order.** After the UCI 296 identity, target, 99,343-encounter
+eligible cohort, 13-field feature policy and patient split were frozen in
+Milestone 1, this milestone adds a healthcare research experiment. Source
+validation must come before modelling because a strong score on an invalid
+cohort or a patient-leaking split would be misleading. The older credit-first
+and Milestone 1 text below remains historical; statements there that say
+healthcare modelling is future work describe the state at that earlier time.
+The complete numerical record is stored in ignored immutable local manifests
+and summarized in the model card and supervisor handoff.
+
+**Component path and data flow.** `configs/experiments/healthcare_model_v1.toml`
+freezes identities, grids, seeds, metrics and selection. `foundation.py` verifies
+source bytes and split membership; `modeling.py` constructs only the 13 approved
+predictors, fold-local pipelines, bounded candidates and verified group folds;
+`evaluation.py` computes probability/classification metrics, calibration data
+and patient-cluster intervals; `experiment.py` orchestrates nested CV, repeat,
+selection, final fit, artifact validation and one-time holdout evaluation. The
+CLI `python -m aletheia.domains.healthcare model` calls that orchestration.
+The `tests/healthcare/test_modeling.py` and `test_experiment.py` files exercise
+group isolation, feature refusal, dense-memory refusal, seeded bootstrap,
+immutable records, checksum/version refusal and a previously claimed holdout.
+
+**Predictors and preprocessing.** The eight quantitative inputs are length of
+hospital stay, lab procedure count, procedure count, medication count, prior
+outpatient visits, emergency visits, inpatient visits and diagnosis count.
+They are converted from validated nonnegative source integer strings, median
+imputed and standardized using the fold's training rows. The five categorical
+inputs are admission type code, admission source code, maximum glucose serum
+category, A1C result category and diabetes medication flag. Code values are
+one-hot categories, never continuous magnitudes; a missing categorical value
+uses `__MISSING__`, and an unseen validation category becomes an all-zero block
+for that field. This policy preserves inference but cannot distinguish every
+unseen category from a dropped/missing block without further review. The
+transformed feature names carry `numeric__` or `categorical__` plus source field
+names. Identifiers, target, race, gender, age, disposition and all excluded
+fields are refused by exact predictor-order checking. All learned imputation,
+scaling and encoding is inside a fresh fit per fold. A global prefit transform
+was rejected because validation statistics would leak into training.
+
+**Nested CV and candidates.** Five shuffled `StratifiedGroupKFold` outer folds
+with seed 42 assess candidate protocols; three patient-disjoint inner folds
+with seeds derived from 42 select bounded hyperparameters using average
+precision. Every patient is wholly in one side of each fold, and both classes
+must be present. The prior dummy shows prevalence-only performance. L2
+Logistic Regression tries C=0.1 or 1 and unweighted or balanced classes; it is
+compact and interpretable but linear in transformed features. Random Forest
+tries depth 6 or 10 with 50 trees and leaf size 20, testing nonlinear
+interactions at higher fit cost. Histogram Gradient Boosting tries 15 or 31
+leaves, 30 iterations and leaf size 40, with a fold-local dense representation
+guarded by a 256 MiB byte budget. These are research comparisons, not exhaustive
+tuning. No synthetic resampling, deep learning or feature elimination occurs.
+
+**Metrics, calibration and selection.** Early readmission is about 11% of the
+training encounters, so accuracy can reward nearly always predicting negative.
+Average precision measures how well positives are ranked as a precision-recall
+summary and is prevalence-sensitive. ROC-AUC measures ranking across both
+classes; neither proves probability quality. Brier score is mean squared
+probability error, and log loss penalizes confident wrong probabilities.
+Balanced accuracy averages sensitivity and specificity. Recall, specificity,
+precision and F1 at 0.5 describe one arbitrary threshold; 0.5 is not a
+clinical decision threshold. Per-fold training and validation scores, class
+support, times, warnings and chosen parameters are retained. Sigmoid
+calibration fits a logistic mapping on out-of-fold base probabilities from
+patient-disjoint training folds, then applies it to outer validation. Both raw
+and calibrated outputs are compared on outer folds. Calibration curves, slope
+and intercept are diagnostic descriptions, not proof of transportability.
+The highest mean outer average precision wins unless alternatives lie within
+0.005; among those, lower Brier, higher ROC-AUC, lower log loss and a stable
+name order decide. This guard prevents a tiny ranking gain from automatically
+outweighing probability quality. Final hyperparameters are reselected by
+three-fold CV on all training patients, and the complete protocol is frozen
+before final fit or holdout prediction.
+
+**Holdout governance and uncertainty.** An exclusively created selection JSON
+binds the exact protocol to the config and nested-CV evidence. The final fit
+uses training patients only. A local joblib artifact is bound to a SHA-256,
+software versions and protocol hash; loading a user-supplied or mismatched
+artifact is forbidden because joblib deserialization can execute code.
+`evaluate_once` checks selection, source/policy/target/split identity and the
+artifact manifest, then creates an exclusive claim before generating a single
+held-out probability vector. A claim remains after failure to force review,
+not an automatic retry. The holdout record reports a 0.5 confusion matrix,
+discrimination, calibration and classification metrics. Its 95% bootstrap
+intervals resample patients, keeping all of each selected patient's encounters
+together; encounter-level resampling would understate dependence. These
+intervals describe sampling variability under this cohort, not external or
+clinical uncertainty.
+
+### Verified training and held-out results
+
+The verified training side contains 79,808 encounters from 56,178 patients:
+70,734 negative and 9,074 positive. Both full training-only calculations
+agreed after excluding wall-clock timings. Five outer folds contained disjoint
+validation patients. The table gives the mean of the five outer validation
+folds; AP is average precision, and lower Brier and log loss are better.
+
+| Family | AP mean ± SD | ROC-AUC mean | Raw Brier | Sigmoid Brier | Sigmoid log loss | Training AP mean |
+|---|---:|---:|---:|---:|---:|---:|
+| Prior dummy | 0.113698 ± 0.000040 | 0.500000 | 0.100771 | 0.100771 | 0.354177 | 0.113698 |
+| Logistic Regression | 0.197312 ± 0.009194 | 0.631704 | 0.206511 | 0.097854 | 0.342020 | 0.198916 |
+| Random Forest | 0.196374 ± 0.009054 | 0.633537 | 0.098015 | 0.097783 | 0.341516 | 0.235960 |
+| Histogram Gradient Boosting | 0.199591 ± 0.008761 | 0.635554 | 0.097638 | 0.097624 | 0.340964 | 0.215586 |
+
+Sigmoid is monotonic here, so AP and ROC-AUC are unchanged within each family;
+its benefit is probability quality. Balanced class weighting made some raw
+Logistic Regression probabilities poorly calibrated (Brier 0.206511), while
+group-OOF sigmoid improved Brier to 0.097854. This does not establish that
+calibration will transfer to another hospital or period. The five histogram
+outer AP values were 0.20771, 0.19627, 0.20434, 0.18582 and 0.20381. The
+record retains every inner fold, all required secondary metrics, supports,
+timings, selected parameters, and calibration curves. There were zero captured
+convergence warnings across all candidate fits. Transformed feature counts
+varied between 42 and 43 because vocabularies were learned within folds.
+
+Histogram boosting had the highest outer AP. Logistic Regression and Random
+Forest were inside the predeclared 0.005 AP equivalence margin, so lower Brier
+decided. Histogram plus sigmoid had the lowest eligible Brier (0.097624 versus
+forest 0.097783 and logistic 0.097854). Final three-fold training-only tuning
+selected 15 leaves, 30 iterations and minimum leaf size 40; the 31-leaf option
+had lower inner AP (0.197452 versus 0.199450). The selected protocol is bound
+to training checksum `152b87cc3e0bc2ccaa365d7ea7de192f3f128214203ce38a1b88704a8a576aa4`
+and selection checksum `85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7`.
+The numerically best candidate was also the selected system candidate here;
+the Brier guard still mattered because it evaluated near-tied alternatives.
+
+The single locked holdout contains 19,535 encounters from 13,812 patients,
+including 2,240 positives. Its 500-repetition patient-cluster bootstrap used
+seed 4242. Values below are encounter-level estimates with 95% intervals
+formed by resampling whole patients:
+
+| Metric | Held-out estimate | Patient-cluster 95% interval |
+|---|---:|---:|
+| Average precision | 0.202633 | 0.184091–0.221497 |
+| ROC-AUC | 0.639473 | 0.626640–0.653593 |
+| Balanced accuracy | 0.502418 | 0.500125–0.505621 |
+| Recall | 0.005357 | 0.000452–0.012309 |
+| Specificity | 0.999480 | 0.998931–0.999858 |
+| Precision | 0.571429 | 0.200000–0.693429 |
+| F1 | 0.010615 | 0.000902–0.024124 |
+| Log loss | 0.342237 | 0.331423–0.352035 |
+| Brier score | 0.098255 | 0.094170–0.101733 |
+
+At descriptive threshold 0.5 the confusion matrix is TN 17,286, FP 9,
+FN 2,228, TP 12. Thus the apparently high specificity and 57.1% precision
+coexist with only 0.54% positive recall; this threshold would miss almost
+all early readmissions and has no clinical authorization. Held-out calibration
+intercept was 0.133640 and slope 1.058929. The six nonempty ten-bin curve
+points are stored in `holdout.json`; a near-one slope on this cohort is a
+descriptive diagnostic, not proof of future calibration.
+
+**Overfitting and uncertainty.** Forest's training AP 0.235960 exceeded its
+outer validation AP 0.196374 by 0.039586, the largest gap. Histogram's gap
+was 0.015995 and Logistic Regression's was 0.001604. These are same-fold
+training-versus-unseen-patient comparisons, not a formal significance test.
+The selected histogram's held-out AP 0.202633 and ROC-AUC 0.639473 were near
+its outer means 0.199591 and 0.635554, respectively; holdout Brier 0.098255
+was slightly worse than outer sigmoid mean 0.097624. This one historical
+patient split cannot demonstrate external, temporal, or clinical validity.
+
+**Artifact and one-time evidence.** The fitted local joblib SHA-256 is
+`8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`.
+`nested_cv.json`, `selection.json`, `artifact.json`, `holdout.claim` and
+`holdout.json` are ignored local records; all cross-record hashes and recorded
+software versions matched in the recovery check. The claim preceded the
+held-out prediction, and a subsequent CLI invocation refused the existing
+experiment directory before data loading. This is one held-out evaluation,
+not a retry based on its score.
+
+**Implementation timeline — Macro Milestone 2.** First, the frozen source and
+patient split were reused so models could be compared on a valid population.
+Next, fold-local preprocessing and four bounded candidates established
+training-only comparison; nested group CV was needed before any honest model
+choice. Group-OOF sigmoid and probability diagnostics followed because ranking
+alone does not tell whether reported risks are usable probabilities. The
+deterministic repeat, immutable selection, final fit and checksum-bound local
+artifact then made the protocol reviewable before the one-time holdout. Finally,
+patient-cluster intervals and the model card described uncertainty and limits.
+The result is a reproducible educational comparison, not a deployed system.
+
+**Interview follow-ups.** Why not select the forest with better training AP?
+Its unseen-patient outer AP was lower and its train–validation gap larger.
+Why did sigmoid leave AP unchanged? A strictly monotonic score mapping keeps
+rank order, while changing probability magnitude. Why is threshold 0.5 a poor
+headline? It detected only 12 of 2,240 positive encounters. Why not tune the
+threshold on the holdout? That would turn the independent test into training
+data. How can a completed model still fail before test evaluation? The
+selection serialization guard found a list-order mismatch; verifying the
+saved record and fixing canonical order allowed safe continuation without a
+second training or held-out evaluation.
+
+**Resume evidence for this milestone.** Four healthcare model families and
+eight raw/calibrated protocols were compared on 79,808 training encounters;
+one 19,535-encounter patient-disjoint holdout was evaluated once. Best outer
+mean AP was 0.199591 and held-out AP was 0.202633. The model uses one
+calibration technique, no XAI technique, and no deployed application. The
+offline suite passed 87 tests after the guard addition; final verification
+counts are recorded in the current supervisor handoff. No inference-latency
+claim was measured.
+
+**Decision record.** [ADR 0006](decisions/0006-healthcare-model-selection-protocol.md)
+records the choice over row-level CV, a single split, isotonic calibration,
+oversampling and unconstrained search, along with the trade-offs and conditions
+for reconsideration. The held-out score may not be used to choose another
+model, grid, calibration method, threshold or retry. A new scientifically
+independent test population would be needed for a revised protocol.
+
+**Concepts learned through this milestone.** Group-aware nested CV separates
+hyperparameter search (inner folds) from comparison (outer folds); I should be
+able to explain why a patient, rather than an encounter, is the sampling unit
+for separation, and why outer variance is not a confidence interval. Fold-local
+preprocessing means imputation, scaling and one-hot vocabulary are learned only
+from the fitting subset; I should be able to identify where a global fit would
+leak. Calibration maps scores toward observed frequencies and may improve
+Brier/log loss without improving ranking; I should distinguish ranking from
+probability quality and explain why calibration needs held-back groups.
+Cluster bootstrap repeats patient sampling with replacement; I should be able
+to explain how repeat encounters remain correlated and why the interval does
+not validate another hospital or decade.
+
+**Important problem encountered and recovery.** The first real training-only
+attempt was interrupted before any manifest, model selection or holdout access
+when code review found that `HistGradientBoostingClassifier` defaults to
+automatic internal early stopping on large data. Its hidden validation split
+is row-level and could place a patient's encounters on both sides. This was a
+methodology bug in the candidate constructor, not an observed held-out result.
+The incomplete attempt was stopped; no selection or holdout claim existed.
+`modeling.py` now forces `early_stopping=False`, the versioned grid records it,
+and `test_histogram_never_uses_internal_row_validation` verifies the setting.
+The complete training-only calculation was restarted. Lesson: group-aware
+outer CV alone does not guarantee that an estimator's own internal validation
+respects groups. In an interview, explain why the hidden row split mattered
+even though the locked final holdout was still protected.
+
+**Interrupted-run recovery (2026-10-06).** A later nested-CV attempt was
+manually interrupted after roughly 55 minutes. Inspection found no production
+`artifacts/healthcare-model-v1` directory, training manifest, selection record,
+artifact, or holdout claim; only ignored synthetic test outputs existed. Since
+the runner persists no fold checkpoint before both complete training passes,
+none of that partial computation could be proved complete or reused. The
+recovery restarted the unchanged folds, seeds, grids, calibration and selection
+rules. Review of the resume path also found that `evaluate_once` trusted the
+caller's selection record without independently checking that the saved nested
+CV record contained every family, fold and grid. It now verifies completeness,
+the deterministic evidence hash, and the selection's binding to that evidence
+and config before the holdout claim. A targeted incomplete-record refusal test
+and the full offline suite passed. The key lesson is to distinguish an
+in-memory partial calculation from a published complete experiment, and to
+make the final evaluation guard validate its own prerequisites.
+
+A later review interruption exposed a process mistake: I misread the TOML
+secondary-metrics list and stopped another training-only attempt to add Brier
+score, although Brier was already declared and computed. Inspection of the
+exact line corrected the assumption before any edit to the config; the
+interrupted attempt had published no record or holdout claim and was restarted
+from scratch. This cost computation time but changed no methodology or result.
+The prevention lesson is to inspect the precise configuration text before
+interrupting a long running experiment for a suspected omission.
+
+At the start of this recovery, three simultaneous shell process creations
+failed with `CreateProcessWithLogonW failed: 1056`; the independent commands
+then succeeded sequentially. This was a tooling concurrency problem during
+inspection, not a data or modelling failure, and produced no experiment output.
+Keeping process launches sequential made the audit reproducible.
+
+**Selection-record order mismatch and recovery.** The completed repeat and
+final fit produced `nested_cv.json`, `selection.json`, `artifact.json` and a
+checksummed model, but `evaluate_once` refused before creating `holdout.claim`.
+The symptom was `selection is not bound to complete training evidence`. The
+saved JSON sorts family keys alphabetically, while the in-memory selection
+listed candidates in the frozen config order; the winner and numerical values
+were identical, but list equality failed. The first diagnosis checked each
+binding separately and found only the ordered `selection_evidence` comparison
+false. `select_protocol` now enumerates families in config order regardless of
+JSON key order, and a regression test reverses the input dictionary order.
+Completeness, selection hash, config hash, artifact hash, protocol, software
+versions and absence of a holdout claim were verified before reusing the
+published training and fitted artifact records. Then only the guarded
+`evaluate_once` stage was resumed, creating one claim and one result. This
+recovery changed serialization order handling, not the frozen selection rule
+or metrics. The lesson is that deterministic persistence needs a canonical
+sequence for lists derived from dictionaries, even when JSON keys are sorted.
+
+**Project defence and interview preparation.** Why compare a dummy? It reveals
+what the observed training prevalence alone achieves. Why is average precision
+primary? Positive cases are uncommon, and the task needs useful positive
+ranking, while Brier/log loss guard probability quality. Why not simply use the
+highest AP model? A difference under the prespecified 0.005 margin may be less
+important than a meaningful calibration loss. Why calibrate with OOF scores?
+The calibrator should learn from predictions for patients unseen by the base
+model that generated those scores. What would change for clinical use?
+Contemporary external/temporal validation, clinical threshold and harm analysis,
+workflow timestamp verification, governance, privacy and prospective monitoring.
+The current results are educational research only.
+
+**Semester viva preparation.** Basic: What is the positive class, and why is
+accuracy weak here? Intermediate: How do inner and outer group folds differ?
+Why do unseen category indicators become zero? Why can calibration change Brier
+without changing ROC-AUC? Difficult: What leakage occurs if the calibrator is
+trained on in-sample predictions? Why does a patient bootstrap differ from an
+encounter bootstrap? Why does an immutable claim remain after a failed
+evaluation? How does the selection record stop retrospective model shopping?
+
+
 ## Macro Milestone 1 — Healthcare realignment and evidence (2026-10-05)
 
 **Current interpretation:** Aletheia remains a high-stakes tabular XAI platform, now demonstrated primarily with hospital readmission risk and secondarily with the approved South German Credit benchmark. The original `prompt.txt` named credit first, so the early approved phases built a credit data foundation and training-only baseline. The supervisor then selected healthcare as the flagship. Preserving credit avoids discarding tested methods and supplies a second domain against which later shared interfaces can be judged. Older credit-first wording below is historical; this section, the new ADRs, and the healthcare audit state the current scope. No healthcare model, API, UI, database, registry or deployment exists yet.
@@ -66,9 +371,9 @@ resolved pre-commit problem. No model or later milestone was started.
 
 Aletheia is an Explainable AI (XAI) decision-auditing project for
 structured classification in high-stakes contexts. Hospital readmission risk
-is the primary flagship demonstration: it tests whether patient-group-safe
-data, later models, and review evidence can support a defensible educational
-audit. South German Credit remains a retained secondary benchmark with its
+is the primary flagship demonstration: its patient-group-safe data and
+retrospective model comparison now support a bounded educational audit.
+South German Credit remains a retained secondary benchmark with its
 approved data foundation and training-only baseline. Intended users are ML
 engineers or data scientists comparing experiments, human reviewers inspecting
 predictions, and future administrators managing access and audit evidence.
@@ -96,14 +401,13 @@ measure selected properties, not legal compliance or universal fairness.
 
 ## Scope, Users, and Assumptions
 
-**Established scope:** Macro Milestone 1 is committed at `49753d5` and passed
-external review with this minor documentation and test repair requested. Its
-healthcare dataset audit, source-bound foundation, feature roles, patient split,
-and deployable design are the current flagship foundation. Earlier approved
-credit phases provide the secondary benchmark, including a bounded training-only
-dummy/Logistic Regression baseline. Neither domain has a deployed application;
-healthcare has no trained model, and credit's training CV is not held-out or
-production evidence.
+**Established scope:** Macro Milestone 1 passed external review at `9073c453`.
+Macro Milestone 2 now has a locally verified healthcare model comparison,
+checksummed fitted artifact and one locked-holdout evaluation, pending external
+review. Earlier approved credit phases provide the secondary benchmark,
+including a training-only dummy/Logistic Regression baseline. Neither domain
+has a deployed application; the healthcare result is retrospective educational
+evidence, and credit's training CV is not held-out or production evidence.
 
 **Assumptions requiring validation:** the selected data must have a clear
 target, source/licence, data dictionary, sufficient observations/minority-class
@@ -117,13 +421,11 @@ before the dataset is understood.
 
 `prompt.txt` preserves Aletheia's permanent original vision. It describes the
 complete platform ambition, not permission to implement every feature now.
-`docs/CURRENT_TASK.md` records the completed Macro Milestone 1 authorization;
-it is not an authorization for Macro Milestone 2. The current review repair is
-limited to the README, this report, the supervisor handoff, and focused
-healthcare foundation tests. It leaves the frozen contracts, split, source,
-dependencies, preserved credit work, and earlier metrics unchanged. Held-out
-evaluation, final fitting, comparators, XAI, fairness, stability, and application
-work remain outside this repair.
+`docs/CURRENT_TASK.md` authorizes only Macro Milestone 2. That milestone has
+completed one guarded held-out evaluation and awaits external review. It does
+not authorize a later milestone. The frozen contracts, split, source,
+dependencies, preserved credit work and earlier metrics remain unchanged.
+XAI, fairness, stability and application work remain outside this task.
 
 ## Functional Requirements
 
@@ -807,6 +1109,19 @@ decision record.
 
 ## ML Experiments
 
+### Healthcare model v1 — Nested patient-group CV and locked holdout
+
+The full verified experiment record, including dataset identity, 13 predictor
+meanings, fold-local preprocessing, four bounded model families, grids, five
+outer and three inner patient folds, raw/sigmoid calibration, metrics, result
+interpretation and limitations, is in the Macro Milestone 2 section above.
+The selected protocol was sigmoid-calibrated Histogram Gradient Boosting with
+15 leaves, 30 iterations and minimum leaf size 40. Outer mean AP was 0.199591;
+the one held-out AP was 0.202633. The historical holdout is an independent
+patient split for this one frozen protocol, not clinical validation. The
+machine-readable per-fold and calibration evidence is in the ignored
+`artifacts/healthcare-model-v1` records, not copied into this document.
+
 ### Baseline v1 — Training-Only Cross-Validation
 
 **Objective and identity:** Determine whether fixed Logistic Regression extracts
@@ -863,6 +1178,17 @@ recommendation. The result justifies retaining Logistic Regression as the
 interpretable reference for a separately approved comparator phase.
 
 ## Important Problems Encountered
+
+### Macro Milestone 2 recovery and selection serialization
+
+The Macro Milestone 2 section above documents the actual symptoms, causes,
+failed attempts, fixes and verification for three material issues: histogram
+boosting's hidden row-level early stopping, interrupted training calculations
+without reusable checkpoints, and a JSON family-key ordering mismatch that
+made the strengthened selection guard refuse before a holdout claim. It also
+records an unnecessary interruption caused by misreading a configuration
+line. No incomplete output was promoted to a completed result; the final
+guarded evaluation used verified training, selection and artifact records.
 
 ### Phase 4 Integration Test Used a False Holdout Boundary
 
@@ -975,6 +1301,38 @@ scikit-learn 1.10 rather than silently changing this experiment.
 
 ## Concepts Learned Through This Project
 
+**Patient-group nested CV.** Simple explanation: inner folds choose settings;
+outer folds estimate performance on patients unseen by that selection.
+Where used: `modeling.group_folds` and `experiment.training_evidence`.
+Why it mattered: repeated encounters from one patient would otherwise leak
+between fitting and validation. Be able to explain group disjointness, the
+five/three-fold roles, why fold SD is not a confidence interval, and why this
+still lacks hospital/time validation.
+
+**Probability calibration and ranking.** Simple explanation: sigmoid maps a
+model's raw probabilities toward observed frequencies using predictions for
+patients excluded from the base fit. Where used: `oof_sigmoid` and
+`evaluation.sigmoid_fit`. Why it mattered: class-weighted Logistic Regression
+ranked reasonably but had raw Brier 0.206511; sigmoid reduced it to 0.097854.
+Be able to explain Brier/log loss, why monotonic mapping preserved AP/ROC-AUC,
+why in-sample calibration leaks, and why held-out calibration is still not
+clinical validation.
+
+**Patient-cluster bootstrap.** Simple explanation: repeatedly sample patients
+with replacement and retain all their encounters together. Where used:
+`evaluation.cluster_intervals` on the single held-out vector, with 500 repeats
+and seed 4242. Why it mattered: encounters from one person are dependent.
+Be able to explain the sampling unit, interval interpretation, and why the
+interval cannot measure transport to a new hospital or decade.
+
+**Immutable selection and artifact identity.** Simple explanation: save the
+training-based choice before test prediction, then bind the fitted model to
+protocol and software hashes. Where used: `experiment.run`, `evaluate_once`
+and `load_trusted_artifact`. Why it mattered: it prevents accidental reruns,
+silent result replacement and loading an unrelated model. Be able to explain
+what the claim protects, why a failed claim must remain, why joblib requires
+trusted-local checksum verification, and what the JSON-order recovery taught.
+
 **Contract-based integration testing:** test the real caller-to-component flow
 against a verified contract, rather than preparing inputs that skip the risky
 boundary. The repaired baseline test captures evaluation inputs before CV.
@@ -1076,6 +1434,34 @@ case. Neither can be declared more costly without a defensible domain cost
 model, which this historical dataset does not provide.
 
 ## Project Defence and Interview Preparation
+
+**Why did the healthcare model win?** Histogram boosting had the highest
+five-fold outer mean AP (0.199591); among protocols within the predeclared
+0.005 AP margin, its sigmoid output had the lowest mean Brier (0.097624).
+Follow-up: did the holdout select it? No; selection and final parameters were
+frozen before its one-time held-out prediction.
+
+**What does the held-out result actually mean?** It ranked positives above
+negatives better than the prior dummy (AP 0.202633 versus training dummy outer
+AP 0.113698), within one historical patient-disjoint split. At threshold 0.5,
+it found only 12 of 2,240 positives, so it is not a usable clinical alert
+rule. Follow-up: why not tune 0.5 after seeing this? That would use the locked
+holdout for development and invalidate its independent-test role.
+
+**What was the hardest recovery bug?** The strengthened guard compared an
+ordered option list saved before JSON serialization with a recomputed list
+after JSON had alphabetized dictionary keys. It refused before the holdout
+claim. Candidate-order enumeration and a reordering regression test fixed
+the false mismatch; hashes and complete records were verified before
+continuing. Follow-up: why not rerun training? The complete saved training,
+selection and artifact identities were independently proven, so only the
+never-started held-out evaluation needed resumption.
+
+**What must happen before clinical use?** Verify feature availability at the
+actual discharge workflow, obtain contemporary external and temporal data,
+define harm/cost-based thresholds with clinicians, prospectively validate,
+and establish privacy, monitoring, governance and regulatory controls. None
+is established by this retrospective model card.
 
 **How do you test the held-out leakage boundary?** Capture the keys passed by
 the actual orchestrator to evaluation and require exact equality with verified
@@ -1196,6 +1582,21 @@ The complete calculation ran twice and had to match before atomic publication.
 
 ## Semester Viva Preparation
 
+**Healthcare basic:** What is the positive class? Why does a prior dummy's AP
+roughly equal prevalence? What do TP=12 and FN=2,228 mean at threshold 0.5?
+What does Brier score measure?
+
+**Healthcare intermediate:** Why use `StratifiedGroupKFold` in both outer and
+inner loops? Where are imputation and one-hot vocabularies fitted? Why does
+sigmoid improve Brier without changing AP here? Why did class weighting hurt
+raw Logistic Regression probability quality?
+
+**Healthcare difficult:** Why must calibration scores be out-of-fold by
+patient? Why is the 500-repeat patient bootstrap preferable to encounter
+resampling? How could JSON key order trigger a false selection mismatch?
+What evidence proves the one-time holdout was protected, and what cannot be
+proved about generalization to a different hospital or decade?
+
 **Repair questions:** Basic—does a row key specify its partition? No, the lock
 does. Intermediate—why test the orchestrator? It selects the rows before CV;
 testing the evaluator alone misses that boundary. Difficult—why combine exact
@@ -1222,9 +1623,13 @@ or serve as a confidence interval?
 
 ## Resume Evidence
 
-The figures below are **secondary South German Credit benchmark evidence** from
-earlier phases. The healthcare dataset and split facts are recorded in the
-Macro Milestone 1 section above; no healthcare model metric exists.
+Current healthcare evidence: four model families, eight raw/calibrated
+protocols, 79,808 training and 19,535 single held-out encounters, outer best
+mean AP 0.199591, held-out AP 0.202633 and ROC-AUC 0.639473, one sigmoid
+calibration technique, 87 passing offline tests, no measured inference latency
+or deployment. These facts support a bounded educational result, not a
+clinical-performance resume claim. The figures below are **secondary South
+German Credit benchmark evidence** from earlier phases.
 
 Verified evidence: four official dataset candidates compared; one selected raw
 file verified at 1,000 rows × 21 columns; one externally approved architecture
@@ -1237,6 +1642,18 @@ No held-out score, measured inference latency, implemented XAI method,
 application, or deployment is claimed.
 
 ## Limitations
+
+The healthcare evaluation is one retrospective, patient-disjoint split from
+1999–2008 data. It lacks hospital IDs and encounter dates, so it cannot test
+hospital transfer or future-time performance. Discharge-time availability of
+each predictor still needs clinical workflow verification. The conservative
+13-feature policy can omit useful signal; unknown-category zero encoding
+loses detail. AP and precision depend on prevalence. The chosen 0.5 cutoff
+has very low recall and no clinical cost justification. Calibration slope and
+patient-cluster intervals describe this cohort only. No prospective validation,
+subgroup fairness, XAI, clinical utility or deployment is established.
+
+The paragraph below preserves limitations of the secondary credit benchmark.
 
 South German Credit is old (1973–1975), geographically narrow, contains only
 granted credits, oversamples bad contracts, has no row dates or identifiers,
@@ -1252,10 +1669,11 @@ controls reduce but cannot eliminate reproducibility risk.
 
 ## Future Work
 
-**Useful next step, subject to approval:** complete the external supervisor's
-minor Macro Milestone 1 review repair, then await a separately authorized task.
-The healthcare modelling roadmap is planned only; this report does not authorize
-Macro Milestone 2 or resumption of the stashed credit comparator work.
+**Useful next step, subject to approval:** external supervisor review of Macro
+Milestone 2 evidence and the user-owned task-file whitespace finding. A later
+task could examine clinically meaningful threshold and external validation
+only with appropriate data and approval. This report does not authorize Macro
+Milestone 3 or resumption of the stashed credit comparator work.
 
 **Research extensions:** the separately gated global/local XAI, constrained
 counterfactual, stability, and conditional-fairness studies in the roadmap.

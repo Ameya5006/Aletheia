@@ -23,9 +23,23 @@ from .foundation import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="UCI 296 healthcare data foundation")
-    parser.add_argument("command", choices=("acquire", "lock", "verify"))
+    parser.add_argument("command", choices=("acquire", "lock", "verify", "model"))
     parser.add_argument("--raw-dir", type=Path, default=Path("data/raw/healthcare"))
     args = parser.parse_args()
+    if args.command == "model":
+        from .experiment import run
+
+        result = run()
+        print(
+            json.dumps(
+                {
+                    "selection": result["selection"]["protocol"],
+                    "holdout": result["holdout"]["metrics"],
+                },
+                sort_keys=True,
+            )
+        )
+        return
     contracts = load_contracts()
     archive = args.raw_dir / "diabetes_130_us_hospitals_1999_2008.zip"
     if args.command == "acquire":

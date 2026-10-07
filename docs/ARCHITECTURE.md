@@ -1,5 +1,42 @@
 # Aletheia — System Architecture
 
+## Macro Milestone 2 modelling boundary
+
+Healthcare modelling now lives in `modeling.py` (fold-local transforms and candidate
+construction), `evaluation.py` (metrics, calibration diagnostics and patient-cluster
+intervals), and `experiment.py` (nested CV, selection, immutable manifests,
+trusted-local artifact and single-use holdout gate). The healthcare CLI adds
+`model`. These modules depend on the committed `foundation.py` contracts; no
+credit, API or database module is changed. The model artifact is a joblib file
+under ignored `artifacts/healthcare-model-v1/`, bound to a config, protocol,
+software versions and SHA-256. Loading untrusted serialized objects is forbidden.
+
+```mermaid
+flowchart LR
+  A[Verified UCI 296 cohort] --> B[Locked patient partition]
+  B --> C[Training patients only]
+  C --> D[5 outer patient folds]
+  D --> E[3 inner patient folds and fold-local pipeline]
+  E --> F[Raw and OOF sigmoid validation]
+  F --> G[Immutable nested CV and selection]
+  G --> H[Full-training fit and checksummed artifact]
+  H --> I[Identity checks and exclusive holdout claim]
+  B --> I
+  I --> J[One held-out evaluation and cluster intervals]
+```
+
+The histogram candidate alone uses a dense one-hot matrix after a size check;
+other candidates use sparse one-hot output. This changes the internal training
+representation, not the frozen raw feature policy. The outer validation patients
+are excluded from inner search, preprocessor fits and calibration folds. The
+holdout claim persists even if evaluation fails, so an accidental retry needs
+supervisor investigation rather than a second look. No artifact migration or
+public API change is involved. The evaluator independently checks completeness
+and checksum of saved nested-CV evidence, then binds the frozen selection to
+that evidence and the versioned config before creating the holdout claim.
+Training calculations have no reusable fold checkpoint; an interrupted
+calculation without a complete manifest must restart.
+
 ## Macro Milestone 1 architecture decision (current)
 
 The current product is healthcare-primary and credit-secondary. Sections below this new decision describe the earlier credit-first architecture and preserve its approved implementation history; where scope or tooling differs, this section and [ADR 0003](decisions/0003-healthcare-primary-multi-domain-platform.md), [ADR 0004](decisions/0004-healthcare-target-and-patient-split.md), and [ADR 0005](decisions/0005-flagship-tooling-and-deployment-strategy.md) are current. The detailed future tool connections, alternatives, security and failures are in [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md).
