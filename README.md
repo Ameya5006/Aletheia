@@ -30,7 +30,8 @@ measured results are recorded in the model card, project report and handoff.
 
 **Selected for later milestones:** similar-case retrieval, MLflow registry,
 FastAPI, PostgreSQL, React/TypeScript, Docker/Compose, GitHub Actions, monitoring
-and RBAC. **Provisional:** DagsHub-hosted MLflow versus self-hosting, DVC versus
+and RBAC. Stage 0 selects local self-hosted MLflow for the first application.
+**Deferred hosting choices:** DagsHub-hosted MLflow, DVC versus
 source hashes/locks, managed host, optional Hugging Face demo and optional
 OpenRouter narrator. **Rejected:** RunwayML, which has no role in tabular auditing.
 Similar-case retrieval is not collaborative filtering; a recommendation project
@@ -39,9 +40,23 @@ would be separate. Clinically actionable counterfactual search remains unjustifi
 Five macro milestones are on the roadmap: (1) healthcare foundation and
 deployable design **committed and externally reviewed**; (2) frozen healthcare
 modelling/calibration **completed**, committed at `49a1a8c`; (3) explanations and audit methods
-**implemented and locally verified, pending external review**; (4) application and MLOps; (5) public delivery
+**completed and externally approved at `ff9dce291`**; (4) application and MLOps; (5) public delivery
 and operations. Definitions of done are in [the execution plan](docs/EXECUTION_PLAN.md).
 Milestones 4 and 5 remain planned and unimplemented. Only the current task authorizes work; this milestone does not authorize progression.
+
+**Macro Milestone 4 Stage 0:** documentation-only application contract prepared
+for supervisor review. The first application will serve verified aggregate
+audit evidence and the fixed synthetic local example, with authenticated live
+inference limited to `synthetic-discharge-v1`. It will accept no patient uploads
+or editable clinical inputs. MLflow will import the existing calibrated bundle
+without training; FastAPI/PostgreSQL will record synthetic predictions and
+review decisions under OIDC/RBAC; React/TypeScript and local Compose remain
+planned. The [application contract](docs/ARCHITECTURE.md),
+[screen contract](docs/PRODUCT_REQUIREMENTS.md),
+[local runtime contract](docs/DEPLOYMENT_ARCHITECTURE.md),
+[gated stages](docs/EXECUTION_PLAN.md) and
+[ADR 0008](docs/decisions/0008-application-mlops-contract.md) specify the design.
+Stage 0 authorizes no implementation, dependencies or service startup.
 
 ## Architecture and data flow
 
@@ -56,7 +71,7 @@ flowchart LR
   CORE --> REG[MLflow planned registry]
 ```
 
-**Implemented healthcare flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card → unchanged calibrated model with training-only XAI/stability, counterfactual feasibility and one separately guarded subgroup audit → aggregate audit evidence. **Planned prediction flow:** authenticated request → schema/feature validation → registered fitted pipeline → probability and explanation → append-only audit event → response. Delivery code will call the core rather than duplicate preprocessing or policy.
+**Implemented healthcare flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card → unchanged calibrated model with training-only XAI/stability, counterfactual feasibility and one separately guarded subgroup audit → aggregate audit evidence. **Planned prediction flow:** authenticated fixed synthetic case request → role/case/approved-version validation → complete calibrated bundle → probability and saved explanation reference → transactional append-only audit event → response. Delivery code will call the core rather than duplicate preprocessing or policy.
 
 ## Healthcare dataset and leakage boundary
 
@@ -74,7 +89,7 @@ Status is explicit. Configuration and artifacts are detailed in [deployment arch
 | Healthcare nested-CV runner and local joblib | Implemented research experiment; frozen selection and checksummed model live under ignored `artifacts/healthcare-model-v1` | `configs/experiments/healthcare_model_v1.toml`; trusted local artifact only, never load user-supplied pickle/joblib. The one-time holdout claim prevents reruns. |
 | Local JSON manifests | Implemented for credit and healthcare model/audit evidence; research runners write ignored artifacts | `artifacts/runs`, `artifacts/healthcare-model-v1`, `artifacts/healthcare-audit-v1`; no remote registry/concurrency. MLflow later. |
 | MLflow | Selected for model metrics/artifacts and registry consumed by API | Future `MLFLOW_TRACKING_URI`; secrets and PHI exclusion; service outage blocks promotion. Local manifests are current fallback. |
-| DagsHub-hosted MLflow | Provisional remote MLflow service | Future secret endpoint/credentials, non-sensitive metadata only; cost/retention review. Self-hosted MLflow fallback. |
+| DagsHub-hosted MLflow | Deferred remote alternative after local self-hosted v1 | Future secret endpoint/credentials, non-sensitive metadata only; cost/retention review. |
 | DVC | Provisional data pointer/version tool for training | Current raw SHA-256 + split lock suffice for UCI; remote storage and cost must be justified before adoption. |
 | FastAPI | Selected typed REST layer calling research use cases | Future registry URI, `DATABASE_URL`, auth issuer/audience; validate and rate-limit. Django REST is heavier. |
 | PostgreSQL | Selected transactional append-only audit/version metadata | Future secret `DATABASE_URL`, migrations/least privilege; audit write failure blocks served decision. SQLite is weaker for concurrent managed use. |
@@ -145,5 +160,6 @@ software licence should be checked before reuse; dataset reuse follows
 **CC BY 4.0** with UCI/Strack attribution. This is not medical advice.
 
 Read [product requirements](docs/PRODUCT_REQUIREMENTS.md), [dataset audit](docs/HEALTHCARE_DATASET_AUDIT.md), [architecture](docs/ARCHITECTURE.md), [deployment design](docs/DEPLOYMENT_ARCHITECTURE.md), [execution plan](docs/EXECUTION_PLAN.md), [project report](docs/PROJECT_REPORT.md), [credit audit](docs/DATASET_AUDIT.md), [ADRs](docs/decisions), and [supervisor handoff](docs/SUPERVISOR_HANDOFF.md).
-Macro Milestone 3 is locally verified and awaits external supervisor review.
-No later milestone or deployment exists; Codex has not committed or pushed.
+CURRENT_TASK.md records Macro Milestone 3 external approval at `ff9dce291`.
+Macro Milestone 4 Stage 0 prepares the contract only; application implementation
+and deployment remain absent. No implementation or Git mutation is authorized.

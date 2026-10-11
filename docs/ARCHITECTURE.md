@@ -1,5 +1,469 @@
 # Aletheia — System Architecture
 
+## Macro Milestone 4 Stage 0 — Application contract v1
+
+**Status: documentation contract prepared for supervisor review; implementation
+is unimplemented and unauthorized by Stage 0.** CURRENT_TASK.md records external
+approval of Macro Milestone 3 at `ff9dce291f63a6d4241360997ef0aff2308597f9`.
+The historical milestone/credit sections below preserve earlier states. This
+section governs the proposed first application; ADR 0008 records its trade-offs.
+
+### Components, dependency direction and threat boundaries
+
+Current architecture: one Python research package, trusted local joblib model
+bundle, six original model files and four aggregate audit files. No application
+services exist. Proposed change: add delivery adapters, a registry import
+adapter, transactional persistence and a browser client around that evidence.
+Research modules keep their existing interfaces and must not import delivery
+frameworks. New modules will wrap them; bound healthcare source/tests/configs
+must not be edited merely to make serving convenient. No research artifact
+format migration occurs. A separate release manifest describes copied bytes,
+wrapper code, serving schema and environment without rewriting old manifests.
+Database schema and HTTP APIs are new, so there are no existing users/rows/API
+clients to migrate. Cross-platform byte identity and synthetic parity tests are
+required before the proposed import is accepted.
+
+```mermaid
+flowchart LR
+  B[Untrusted browser] --> W[React static UI and same-origin proxy]
+  I[External OIDC issuer] --> B
+  W --> A[FastAPI authentication and schemas]
+  A --> U[Serving and review use cases]
+  U --> C[Existing calibrated probability callable]
+  U --> E[Verified precomputed evidence projections]
+  U --> P[PostgreSQL application database]
+  A --> J[Trusted issuer JWKS]
+  R[Operator import and release verification] --> M[Private MLflow tracking and registry]
+  R --> V[Approved immutable release bundle]
+  M --> V
+  V --> C
+  V --> E
+  R --> P
+```
+
+The browser, tokens, URL IDs and HTTP bodies are untrusted. API-to-database uses
+a non-owner role; migration owner, MLflow credentials and promotion operator are
+separate trust boundaries. MLflow is private and is not the public inference
+server. Hashes detect byte changes; an independently approved release digest is
+the trust anchor. A malicious operator able to replace both artifacts and the
+anchor defeats this control. No checksum can make an arbitrary pickle safe.
+
+### Product and explanation-serving boundary
+
+Select **both** precomputed verified evidence and restricted synthetic inference.
+Public visitors read aggregate evidence, model card and the fixed synthetic
+local example. Authenticated engineers/reviewers/admins may request one live
+synthetic demonstration. Its only input is `case_id=synthetic-discharge-v1`,
+mapped server-side to the 13 exact values in the existing audit configuration.
+There is no editable feature form, record upload, free text, bulk endpoint or
+arbitrary de-identified input in v1. De-identification alone would not establish
+privacy or clinical validity, so it requires a separate future contract.
+
+On-demand scoring uses `explain.probability(bundle, frame)` including the
+separate calibrator. It does not call a training/evaluation/audit runner. Local
+explanation is the existing `results.json.synthetic_local` only. Prediction
+probability must match that stored case within absolute tolerance `1e-10` before
+the release is approved; no live attribution or patient reference is needed.
+Global, stability, subgroup and feasibility endpoints project their matching
+saved result sections. Null metrics, suppressed counts, sampling semantics,
+calibrated output, uncertainty and limitations remain visible without rebins,
+new statistics or fair/unfair badges. No recourse candidate or similar-case
+retrieval is offered. Public presentation is planned; it is not deployed here.
+
+Trade-off: precomputed evidence is inexpensive and preserves the registered
+methodology; one fixed live case demonstrates exact serving and audit writes but
+does not demonstrate general patient intake. Arbitrary local XAI would require
+approved reference storage/privacy, method, sampling and latency budgets.
+The API and images must not contain raw CSV, patient rows or training references.
+
+### Frozen model and MLflow lifecycle
+
+The artifact is a dictionary with `model` and `calibrator`, not an estimator
+whose `predict_proba` alone is calibrated. Model SHA-256 is
+`8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`;
+selection SHA-256 is
+`85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7`;
+audit result SHA-256 is
+`2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
+Use the complete recorded identities, not these three checks alone.
+
+Proposed conventions: experiment `aletheia-healthcare-frozen-import-v1`, run
+name `import-healthcare-model-v1-<model hash prefix>-<release hash prefix>`,
+registered model `aletheia-healthcare-readmission`, monotonically allocated
+MLflow numeric version, aliases `candidate`, `approved`, `previous`. Version
+tags include research revision, selection/model/audit/protocol/config/split
+hashes, wrapper/schema version, approval status and approver event ID. Log
+existing aggregate metrics with `historical_holdout_` or `historical_cv_`
+prefixes and scope tags; they are imported measurements, not a new MLflow
+evaluation. Do not use deprecated stage names as the approval mechanism.
+
+```mermaid
+flowchart TD
+  S[Read-only original evidence] --> H[Verify all hashes and bindings in pinned research environment]
+  H --> Q[Copy bytes into new release staging area]
+  Q --> V[Validate copy inventory and synthetic parity]
+  V --> L[Log existing metrics and calibrated wrapper to MLflow]
+  L --> D[Download and independently verify logged package]
+  D --> C[Candidate model version]
+  C --> A[Administrator approval and append-only release event]
+  A --> P[Approved alias and explicit deployment version plus digest]
+  P --> R[Restart API with verified read-only local release]
+```
+
+Import is an operator command in a later stage, never an HTTP upload. First run
+the existing read-only inspector in its pinned original environment, which
+validates source/test/config/model bindings without patient-data loading. Copy
+all six original model files, four audit files and every byte-bound provenance
+file into private release storage without newline conversion. Preserve the
+split's CRLF checkout rule. Frozen Windows byte digests must not be replaced
+by hashes of a Linux checkout. A byte-preserving archive of original files is
+the provenance snapshot; new application source is a separate package.
+
+Create a custom MLflow pyfunc wrapper for the complete calibrated callable,
+with a 13-column ordered string input signature and one class-1 probability
+output. Package the existing joblib bytes as an artifact, with guarded loading
+inside the adapter. Use reviewed wrapper code (models-from-code), rather than
+logging only the base sklearn estimator or reserializing the old bundle. Verify
+the full downloaded MLflow package and reviewed code before any MLflow loader
+executes; verify the inner joblib, protocol and exact recorded versions before
+deserialization. Adapt trusted path handling in new delivery code: the old
+loader requires parent name `healthcare-model-v1`, so preserve that layout and
+also enforce an absolute release-root allowlist, reject symlinks/path traversal,
+and mount it read-only. No client model URL, joblib upload or arbitrary URI is
+accepted. Explicit synthetic examples prevent automatic signature/dependency
+inference from accidentally inspecting real data. No `fit`, `evaluate_once`,
+`audit freeze/run`, raw loading or holdout scoring is part of import.
+
+The approved release manifest includes every original byte hash, canonical
+protocol identity, wrapper and MLflow package hashes, exact research runtime
+(Python 3.12.10 and recorded sklearn/pandas/NumPy/SciPy versions), new application
+dependency lock, signature, synthetic case hash, tolerance and approval event.
+Stage 1 must verify availability and compatibility of this runtime before
+adding packages; incompatible versions are a blocker, not permission to refit.
+No release or MLflow record is created during Stage 0.
+
+Registration retries identify the same release digest and reuse a verified
+run/version; conflicting partial runs stay failed/quarantined, never approved.
+An administrator operator reviews identity, tests and privacy, records approval
+in PostgreSQL and assigns aliases. MLflow and PostgreSQL are not one atomic
+transaction: reconcile both, then publish an explicit deployment pin only after
+their records agree. Failure between steps blocks deployment and requires
+reconciliation; an alias alone is insufficient. Rollback selects a previously
+approved exact version/digest, records the change, updates aliases and restarts
+with that pin. No metric-based automatic promotion or per-request alias lookup.
+
+The API consumes an already verified local release pin and PostgreSQL approval
+record. An MLflow outage blocks import/promotion/refresh; a healthy running API
+may continue using the unchanged approved read-only release. A cold start can
+use that same digest-verified cache and DB approval; absent cache/approval fails
+readiness. No fallback to an unregistered model or mutable `latest` file. A
+revoked approval or checksum mismatch disables serving. Public evidence can
+remain available from its independently verified projection when inference is
+unready, with an explicit service-status notice.
+
+Official references consulted for planning: [registry aliases and workflows](https://mlflow.org/docs/latest/ml/model-registry/workflow/),
+[artifact storage](https://mlflow.org/docs/latest/self-hosting/architecture/artifact-store/)
+and [reviewable wrapper code](https://mlflow.org/docs/latest/ml/model/models-from-code/).
+These support the integration mechanism; project compatibility is still untested.
+
+### HTTP contract and permissions
+
+All application routes use `/api/v1`; breaking changes require `/api/v2`.
+`P` is unauthenticated public read, `E` engineer, `R` reviewer, `A` administrator.
+Roles are independent: administrator does not implicitly acquire reviewer
+permission. Multiple explicitly assigned roles may be combined.
+
+Audit-event RBAC uses the same server-side resource checks as prediction/review
+lookup, on both list and detail routes:
+
+| Role | Audit visibility |
+|---|---|
+| Engineer | own events only (`actor_id` equals the authenticated subject) |
+| Reviewer | prediction/review events only, joined to predictions and reviews the subject is authorized to access; no release, entitlement, bootstrap or other system-wide events |
+| Administrator | all events, including release, entitlement and system-wide events |
+
+V1 reviewers can access persisted fixed-synthetic predictions/reviews under the
+endpoint permissions below; that does not authorize unrelated event types.
+Enforce the event-type allowlist and resource authorization before pagination;
+reject guessed inaccessible event IDs with 404. Hash links do not grant access to
+adjacent events, and the UI must not claim a filtered history verifies the full chain.
+
+| Method and path | Allowed roles | Input | Output data schema |
+|---|---|---|---|
+| GET `/health/live` | P,E,R,A | none | `Live{status:alive}`; no dependency calls |
+| GET `/health/ready` | P,E,R,A | none | `Ready{status:ready|unready}`; 200 or 503, no secrets |
+| GET `/models/current` | P,E,R,A | none | `ModelMetadata{domain,target,family,calibration,feature_policy_version,threshold:0.5,approval_status,serving_available}` |
+| GET `/models/current/card` | P,E,R,A | none | `ModelCard{content_markdown,card_sha256,intended_use,limitations}` |
+| GET `/demo/cases` | P,E,R,A | none | fixed `SyntheticCase{id,source:synthetic,features}` list of one |
+| POST `/predictions` | E,R,A | `PredictionRequest{schema_version:application-v1,case_id:synthetic-discharge-v1,model_version:string}` | 201 `Prediction{prediction_id,case_id,input_sha256,probability,positive_class:1,threshold:0.5,class_at_threshold:0|1,explanation_ref,event_id}` |
+| GET `/predictions/{prediction_id}` | owner E/R/A; other R/A | UUID | persisted `Prediction`; 404 for absent/inaccessible |
+| GET `/explanations/global` | P,E,R,A | none | saved `global` object: method/output/population/samples/seeds/baselines/features/repeat ranges/limitations |
+| GET `/explanations/local/synthetic-discharge-v1` | P,E,R,A | none | saved `synthetic_local`: identity/method/output/baseline/probability/features with signed contributions/limitations |
+| GET `/audits/stability` | P,E,R,A | none | saved `stability`: bounds, comparisons, crossings, all/same/crossed summaries, undefined counts, flags, limitations |
+| GET `/audits/subgroups` | P,E,R,A | none | `SubgroupAudit{groups,threshold:0.5,methodology,limitations}`; saved group counts/status/reason/metrics/uncertainty |
+| GET `/counterfactuals/feasibility` | P,E,R,A | none | saved `counterfactual`: no-feasible-scenario, empty candidates, no-search flag, assessment/immutable fields/worked example |
+| GET `/audit-events` | E own; R authorized prediction/review events; A all | cursor optional, limit 1–100 default 20 | `Page<AuditEvent>` descending sequence and opaque next cursor; authorization filter before pagination; no actor identities for other users |
+| GET `/audit-events/{event_id}` | E own; R authorized prediction/review events; A all | UUID | `AuditEvent{id,sequence,type,resource_id,occurred_at,request_id,payload,prev_hash,event_hash,chain_version}`; redacted allowlist; 404 for absent/inaccessible |
+| POST `/predictions/{prediction_id}/reviews` | R | UUID and `ReviewRequest{schema_version,decision:acknowledged|needs_investigation|dismissed_demo,reason_code:evidence_reviewed|limitations_noted|identity_issue,expected_revision:nonnegative int}` | 201 `Review{review_id,prediction_id,revision,decision,reason_code,event_id,created_at}` |
+| GET `/predictions/{prediction_id}/reviews` | owner E; R/A | UUID | `Page<Review>` latest revision and append-only history |
+| GET `/admin/model-versions` | A | cursor, limit 1–100 | `Page<ModelVersion>` explicit MLflow run/version, digests, approval and release-event history |
+| GET `/admin/model-versions/{version}` | A | positive numeric MLflow version string | `ModelVersion` with package/signature/runtime identities, approval events and serving pin |
+
+Health paths are also under `/api/v1`. All 200/201 JSON responses use
+`{schema_version:application-v1,request_id:UUID,data:...,evidence:...}`.
+Except health, evidence contains domain `healthcare`, explicit numeric MLflow
+`model_version`, model SHA-256, audit protocol/result hashes and research
+revision. Every evidence/result response includes `educational_only:true`,
+`not_medical_advice:true`, source `precomputed_research|synthetic_inference`,
+and limitations. Public metadata uses the last approved projection; it must
+identify unavailable live serving. Serve no private paths, run credentials,
+claim internals or download link for executable artifacts. Arrays/field order
+follow the existing audit schema; probability is finite in [0,1], contributions
+are signed probability units, undefined numbers are JSON null, and suppressed
+counts remain `<20` strings. No silent numeric rounding in stored API data.
+
+The POST model version must equal the deployment pin; stale values return 409,
+preventing a UI from reviewing evidence for a different model. Input schemas
+reject unknown properties, free text, patient/demographic fields, nested feature
+objects and files. Store only server-defined synthetic case ID/hash; the request
+cannot smuggle identifying values. The model adapter constructs exact feature
+order and types; no preprocessing logic lives in routes or browser code.
+
+Errors use `{schema_version,request_id,error:{code,message,fields?}}` with
+sanitized field names only, never rejected values/body/token/traceback.
+400 invalid IDs/headers/cursors; 401 absent/invalid token plus Bearer challenge;
+403 insufficient role; 404 absent/inaccessible resource; 409 stale version,
+revision or conflicting idempotency payload; 413 body limit; 415 wrong content
+type; 422 schema rejection; 429 rate/concurrency limit with Retry-After;
+503 missing approved artifact/DB/JWKS/audit write or service unready; 504 deadline;
+500 unexpected sanitized failure. Evidence identity corruption fails closed
+with 503 and operator alert. No successful prediction/review without persistence.
+
+API generates UUID request IDs, returns `X-Request-ID`; incoming IDs are accepted
+only if valid UUIDs, otherwise replaced. Both POST routes require UUID
+`Idempotency-Key`, unique on (subject, method, normalized route, key). Hash
+canonical validated payload plus explicit model version; invalid bodies are
+never hashed/persisted. Same key/payload returns the original status/body/event
+with the new transport request ID; no new event or inference is required.
+Same key/different payload is 409. Concurrent duplicates serialize through DB
+uniqueness. Review revision is scoped to prediction plus reviewer; append with
+revision=expected_revision+1 or 409, never update an old decision. Review
+labels concern demonstration evidence, not clinical approvals.
+
+### PostgreSQL persistence and transactions
+
+Use one PostgreSQL instance with separate `aletheia_app` and `mlflow` databases,
+credentials and migration owners. No direct application access to MLflow tables.
+Application schema, proposed SQL types and constraints:
+
+| Table | Keys and required fields | Mutability and relationship |
+|---|---|---|
+| `subjects` | UUID PK; issuer text and opaque sub text unique together; created_at timestamptz; disabled_at nullable | no name/email/password; identity pair immutable; disable via operator audit |
+| `roles` | code text PK limited to engineer/reviewer/administrator | migration-owned fixed lookup |
+| `subject_roles` | subject_id FK + role_code FK composite PK; granted_at; granted_by nullable FK subject; grant_kind bootstrap/operator; grant_audit_event_id FK unique | operator-managed entitlement projection; NULL attribution only for the sole initial administrator bootstrap, as constrained below; grant/revoke emits audit; JWT role and active local entitlement must both allow access |
+| `model_versions` | UUID PK; registry_name + numeric version unique; run_id, model/package/release/config/selection/split/protocol/results hashes; signature_version, runtime JSON, created_at | insert-only identity; serving authorization derived from release events, not mutable tags |
+| `model_release_events` | UUID PK; model_version_id FK; actor_id FK; action approved/revoked/activated/rolled_back; previous_version_id nullable FK; created_at; audit_event_id FK unique | append-only lifecycle; serialize promotion/revocation on lifecycle lock |
+| `explanation_references` | UUID PK; model_version_id FK; kind global/synthetic_local/stability/subgroups/feasibility; case_id nullable; result_sha256 + section + schema_version unique per model | insert-only pointer to verified immutable release JSON, no real rows |
+| `prediction_events` | UUID PK; actor_id FK; model_version_id FK; case_id, input_sha256, probability double precision CHECK [0,1], threshold=0.5, class, explanation_ref_id FK; created_at; audit_event_id FK unique | insert-only; explanation FK must bind same model and synthetic case, enforced transactionally and by composite key constraints |
+| `reviewer_decisions` | UUID PK; prediction_id FK; reviewer_id FK; revision integer; enums decision/reason_code; created_at; audit_event_id FK unique; unique(prediction_id,reviewer_id,revision) | append-only; new revision supersedes display, never deletes history |
+| `audit_events` | UUID PK; chain_id FK chain head; sequence bigint unique per chain; actor_id nullable FK; request_id UUID; event_type allowlisted; resource_id UUID; payload JSONB allowlisted; occurred_at timestamptz; prev_hash, event_hash 64-hex; chain_version | insert-only; polymorphic resource ID is checked against typed business row in the transaction; no arbitrary payload |
+| `audit_chain_heads` | chain_id text PK; last_sequence, last_hash | mutable under row lock only; serialized bookkeeping, not historical evidence |
+| `idempotency_records` | UUID PK; actor_id FK; method, route, key UUID unique tuple; payload_sha256; resource_id; response_schema/status; created_at | insert-on-success; typed result reference, not raw request/response body |
+
+All business timestamps are server UTC `timestamptz`. Hash strings require
+lowercase 64-hex, UUIDs are server generated, FK deletes restrict, no cascades
+that erase evidence. Use finite-probability checks and schema-constrained JSON,
+not arbitrary JSON bags. Audit events contain approved action/result identity,
+not patient feature values, outcomes, email, tokens or free-text commentary.
+Role mappings are local operator-managed permissions, not custom passwords.
+
+Initial administrator bootstrap is a planned explicit one-time operator command,
+`aletheia-admin bootstrap-initial-administrator`, never an API endpoint or an
+automatic startup/migration seed. It runs only after migration head is verified,
+using operator credentials and configured `BOOTSTRAP_OIDC_ISSUER`/`BOOTSTRAP_OIDC_SUB`
+for a synthetic dev/test or deployment identity in the configured OIDC issuer.
+It creates no password, token or identity-provider account. No public provider is
+selected here. Under one serialized bootstrap lock and one DB transaction, refuse
+any previous bootstrap event, existing entitlement, conflicting subject identity
+or incomplete migrations; then insert/reuse the exact configured subject, append
+`initial_administrator_bootstrap` with system attribution (`actor_id=NULL`), and
+insert the administrator grant linked by `grant_audit_event_id`. Commit all or
+none; failure emits no successful grant. Concurrent attempts cannot both succeed.
+
+Exact invariant: `granted_by IS NULL` iff `grant_kind='bootstrap'`, and that kind
+requires `role_code='administrator'` and its linked system-attributed bootstrap
+event. Every operator grant has non-NULL `granted_by` equal to the linked event's
+actor, an active administrator checked in the same transaction. DB CHECK/FK and
+constraint-trigger enforcement bind grant kind/role/actor/event; a unique partial
+index permits only one bootstrap event per application database. Append-only
+event privileges preserve this marker even if the initial entitlement is later
+revoked; repetition must fail, including after revocation. This single system
+exception removes the first grant's circular dependency without granting later
+operators anonymous authority. Normal role changes use audited administrator
+commands; runtime API credentials cannot execute bootstrap.
+
+```mermaid
+erDiagram
+  SUBJECTS ||--o{ SUBJECT_ROLES : holds
+  ROLES ||--o{ SUBJECT_ROLES : grants
+  SUBJECTS ||--o{ PREDICTION_EVENTS : requests
+  SUBJECTS ||--o{ REVIEWER_DECISIONS : reviews
+  SUBJECTS ||--o{ AUDIT_EVENTS : acts
+  SUBJECTS ||--o{ IDEMPOTENCY_RECORDS : deduplicates
+  MODEL_VERSIONS ||--o{ MODEL_RELEASE_EVENTS : governs
+  MODEL_VERSIONS ||--o{ EXPLANATION_REFERENCES : binds
+  MODEL_VERSIONS ||--o{ PREDICTION_EVENTS : scores
+  EXPLANATION_REFERENCES ||--o{ PREDICTION_EVENTS : explains
+  PREDICTION_EVENTS ||--o{ REVIEWER_DECISIONS : receives
+  AUDIT_EVENTS ||--o| PREDICTION_EVENTS : records
+  AUDIT_EVENTS ||--o| REVIEWER_DECISIONS : records
+  AUDIT_EVENTS ||--o| MODEL_RELEASE_EVENTS : records
+  AUDIT_CHAIN_HEADS ||--o{ AUDIT_EVENTS : sequences
+```
+
+Prediction flow: authenticate/authorize → validate case and pinned version →
+check idempotency → bounded synthetic inference → transaction rechecks approval
+and subject status, inserts prediction, explanation link, audit event and
+idempotency reference → commit → return probability and event ID. No DB lock
+is held while computing inference. Review flow uses the same transaction pattern
+with reviewer authorization, resource existence and expected revision. Commit
+failure rolls back all writes and suppresses the result. Ambiguous commit/network
+failure is resolved by retrying the same idempotency key; never assume failure
+means nothing was persisted. Read-only evidence GETs do not generate business
+events; successful prediction/review, release and entitlement changes do.
+
+Hash chaining is justified as detectable accidental/event tampering evidence,
+not as an immutable-storage claim. Lock one application chain head using row
+locking, increment sequence and insert event in the same transaction. Hash
+version `audit-chain-v1` uses UTF-8 canonical JSON with fixed key ordering,
+no whitespace/NaN, UTC timestamp representation and no floating numbers in the
+hashed payload (probability becomes a specified decimal string); hash covers
+chain ID, sequence, actor/request/resource/type/time/payload and previous hash.
+Genesis previous hash is 64 zeroes. Golden-byte and concurrent-writer tests
+must verify this rule. The API role gets SELECT/INSERT on event tables and only
+the narrowly scoped chain-head update, with no UPDATE/DELETE/TRUNCATE on history;
+owner-managed reject-update/delete triggers provide defence in depth. A DB
+owner can still rewrite the chain; external checkpoint anchoring is deferred.
+[PostgreSQL privileges](https://www.postgresql.org/docs/current/ddl-priv.html)
+are the enforcement foundation, not a promise that administrators cannot alter data.
+
+Alembic ordered migrations are the proposed single migration mechanism; a
+one-shot owner job runs before API startup. Test empty-to-head and previous-to-head
+upgrade, constraints, role grants and transactional rollback; use a backup and
+forward repair for data-bearing changes, never a destructive automatic downgrade.
+The application runtime cannot migrate. Retain demo audit/decision/idempotency
+records for the life of a local review environment; there is no automatic TTL
+deletion. Reset is an explicit operator export/verified-backup then environment
+recreation, never routine shutdown. Public hosting and any real-user retention
+policy require separate approval. No identifiable patient data, raw features,
+labels, uploaded models, credentials or unbounded text may enter this schema.
+
+### OIDC/JWT and RBAC
+
+React uses an external provider's authorization-code flow with PKCE; no browser
+client secret, custom production passwords or API token-minting endpoint. Keep
+tokens in memory, not localStorage/URLs; discard on logout and do not log them.
+API validates bearer **access tokens**, not ID tokens, against explicitly
+configured HTTPS issuer/JWKS and API audience. Required claims: `iss`, opaque
+`sub`, `aud`, `exp`, `iat`, issuer-specific verified roles mapping; enforce `nbf`
+if present, at most 60s clock skew and a required positive configurable
+`OIDC_MAX_TOKEN_LIFETIME_SECONDS`, enforcing `0 < exp-iat <= configured maximum`
+and rejecting future `iat` beyond the allowed skew. Stage 1 must validate this
+maximum against the selected OIDC issuer's access-token lifetime configuration
+and signed-token tests before enabling authenticated use; no public provider is
+selected yet. Signature, issuer, audience, expiry and algorithm checks remain strict.
+Choose RS256 allowlist for v1; no `none`, client-chosen algorithms, token `jku`
+URLs, mixed symmetric/asymmetric fallback or arbitrary issuer. Map provider
+claims explicitly to E/R/A; require active subject and intersection with local
+operator entitlements before private access. Unknown subject has no roles.
+
+Known JWKS keys may be cached for at most 15 minutes; unknown `kid` triggers one
+rate-limited trusted fetch. Refresh deadline two seconds; stale/unavailable keys
+fail 503, invalid tokens fail 401 and valid tokens without role fail 403.
+Do not use unverified JWT contents as an entitlement. DB failures prevent
+private authorization. Token expiry and local disabling/revocation take effect
+on the next request; a POST rechecks permissions before commit. Failed
+authentication logs safe reason codes, never tokens or subject values.
+See [OIDC core](https://openid.net/specs/openid-connect-core-1_0.html) for browser
+identity and [JWT best practices](https://www.rfc-editor.org/info/rfc8725/) for
+token validation. These references do not authorize a password-grant implementation.
+
+Development uses a separately configured local signed-token issuer/JWKS with
+synthetic subjects and the explicit bootstrap/audited operator role grants; private signing key is
+generated outside Git. Unit tests use injected verifier/test keys, integration
+tests exercise the signed-token flow. Dev issuer is bound to loopback/test
+network, enabled only in explicit development/test profiles, and rejected in
+release configuration. External provider vendor/tenant remains a deployment
+choice; no account connection is needed for planning. Secrets use mounted
+ignored files or environment injection, never committed `.env`, browser bundle,
+TOML, container layers or command logs. OIDC public issuer/client ID is not secret.
+
+### Service limits, security, observability and failures
+
+Readiness checks the verified model/evidence cache, exact serving pin, database
+connectivity/migration head, current approval and usable trusted JWKS keys.
+Liveness checks only process responsiveness. MLflow availability is displayed
+separately and is not a dependency of already pinned cached inference. Public
+health responses contain only ready/unready; private diagnostics explain the
+failed component. A revoked model or failed integrity check immediately marks
+inference unready; no automatic retraining or evidence regeneration is allowed.
+
+Initial limits are design budgets, not measured performance: JSON body 4 KiB,
+single case per prediction, one API worker, inference threads=1, maximum two
+in-flight prediction tasks. API deadline 10s (inference budget 3s, DB statement
+and lock budgets 2s each, remaining validation/response margin), proxy deadline
+12s. Use bounded execution; expired inference cannot subsequently commit or
+publish a response. Registry downloads stay off the request path. Request
+timeouts are not automatic POST retries; the client keeps its idempotency key.
+
+Same-origin proxy is preferred; development CORS permits only the explicit
+localhost frontend origin. No wildcard credentialed CORS. Proxy and API enforce
+60 public reads/minute per client IP, 10 predictions/minute per subject,
+20 reviews/minute per subject, bounded pagination and 429 responses. Only
+trusted proxy forwarding addresses may affect limits. A single-process limiter
+is acceptable for this local contract; multiple replicas require an independently
+justified shared boundary, not an automatic Redis dependency. OpenAPI `/openapi.json`
+and interactive docs are enabled on loopback development/test only; release
+exposes a sanitized schema to engineers/admins with docs disabled publicly.
+
+Structured logs: UTC time, severity, request ID, route template, method, status,
+duration, error code, explicit model version/digest, committed event ID when
+applicable. Never log body, query values, path resource IDs, Authorization,
+cookies, subject/health values, rejected tokens or raw records. Exception
+details go only to sanitized operator diagnostics. Low-cardinality metrics:
+request duration histogram, requests/errors by route/status class, in-flight
+predictions, audit commit successes/failures, last successful audit write time,
+model readiness and verified version. Private `/internal/metrics` is local
+operator-only; request/subject IDs never become metric labels. No Prometheus
+server, drift detection or production alerting claim is made by Stage 0.
+
+| Failure/threat | Required behaviour and later verification |
+|---|---|
+| Untrusted file/path/URI or executable substitution | no upload/URI field; full trusted release hash before code execution and inner bundle hash before joblib; traversal/symlink/tamper tests |
+| Calibrator missing, runtime/signature/evidence mismatch | fail readiness/serving; no base-estimator fallback; synthetic parity and version tests |
+| MLflow outage or interrupted promotion | preserve valid pinned cache; block new registration/promotion; reconcile before deployment; outage/partial-operation tests |
+| DB outage or audit write failure | private operations fail 503, no unaudited success; public verified aggregates may remain read-only; rollback and ambiguous-commit retry tests |
+| Invalid/expired token, stale JWKS, role/resource attack | 401/503/403 or hidden-resource 404; signed JWT, revocation and object-access tests |
+| Large payload, patient-field injection, excessive calls | 413/422/429; reject without persisting/logging values; body/redaction/rate tests |
+| Stale model/review or duplicate request | 409 or original idempotent result; uniqueness/race/rollback tests |
+| Attribution/summary unavailable or corrupt | 503 for that evidence, no regeneration; release hash and section validation tests |
+| Deadline or process shutdown | cancel before commit, drain bounded requests then exit; ambiguous commit resolved by key; timeout/restart tests |
+| Browser XSS, cross-origin misuse or token leakage | CSP, safe Markdown rendering without raw HTML, strict origins, memory tokens, no arbitrary notes/uploads; browser security tests |
+
+Frontend proxy supplies CSP (`self` assets with explicit OIDC connect allowance,
+no unsafe inline scripts), frame-ancestors none, nosniff and Referrer-Policy
+no-referrer. TLS/HSTS become mandatory only for later non-local hosting.
+Dependency/license review, Python/Node dependency scanning and container scanning
+gate Stage 3; block exploitable critical/high findings or document a supervisor
+accepted exception. Do not disable frozen-version integrity to fix a scanner;
+escalate compatibility/security conflicts for separate review. No security
+certification or production drift detection is implemented.
+
+See [product requirements](PRODUCT_REQUIREMENTS.md) for screen/role journeys,
+[deployment contract](DEPLOYMENT_ARCHITECTURE.md) for Compose topology and package
+choices, [execution plan](EXECUTION_PLAN.md) for gated tests/order, and
+[ADR 0008](decisions/0008-application-mlops-contract.md) for alternatives.
+
 ## Macro Milestone 3 research audit boundary
 
 The healthcare modular monolith adds `explain.py` (complete calibrated inference,
@@ -97,7 +561,8 @@ calculation without a complete manifest must restart.
 The healthcare-primary design remains approved. Its foundation-only implementation
 state below is historical as of Macro Milestone 1; the Macro Milestone 2 and 3
 sections above describe the current implemented model and research audit. Macro
-Milestones 1 and 2 are completed; Macro Milestone 3 awaits external review.
+Milestones 1–3 are completed; Macro Milestone 3 external approval is recorded in
+CURRENT_TASK.md at `ff9dce291f63a6d4241360997ef0aff2308597f9`.
 
 The current product is healthcare-primary and credit-secondary. Sections below this new decision describe the earlier credit-first architecture and preserve its approved implementation history; where scope or tooling differs, this section and [ADR 0003](decisions/0003-healthcare-primary-multi-domain-platform.md), [ADR 0004](decisions/0004-healthcare-target-and-patient-split.md), and [ADR 0005](decisions/0005-flagship-tooling-and-deployment-strategy.md) are current. The detailed future tool connections, alternatives, security and failures are in [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md).
 

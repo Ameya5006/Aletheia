@@ -1,375 +1,425 @@
-# CURRENT TASK — Macro Milestone 3: Explainability and Responsible-AI Audit
+# CURRENT TASK — Macro Milestone 4 Stage 0: Application and MLOps Contract Freeze
 
 ## Status
 
-AUTHORIZED FOR IMPLEMENTATION.
+AUTHORIZED FOR PLANNING ONLY.
 
-This task begins only after the committed and pushed Macro Milestone 2 calibrated healthcare model.
+Macro Milestone 3 was externally approved at commit:
 
-Starting repository requirements:
+`ff9dce291f63a6d4241360997ef0aff2308597f9`
 
-- branch must be `main`;
-- local `HEAD` must equal `origin/main`;
-- the committed starting point should be the Macro Milestone 2 commit beginning with `49a1a8c`;
-- the working tree may contain only the user-owned modification to `docs/CURRENT_TASK.md`;
-- the existing stash must remain untouched.
+This task defines the exact implementation contract for Macro Milestone 4. It does not authorize application implementation.
 
-If the starting state differs, stop before editing and report the discrepancy.
+## Starting-State Gate
 
-## Objective
+Before editing, verify:
 
-Implement Aletheia’s first complete, reproducible and technically defensible Explainable AI and Responsible-AI audit layer for the frozen healthcare readmission model.
+- branch is `main`;
+- `HEAD` equals `origin/main`;
+- starting commit is `ff9dce291f63a6d4241360997ef0aff2308597f9`;
+- working tree contains only the user-owned modification to `docs/CURRENT_TASK.md`;
+- the existing stash remains untouched.
 
-This milestone must establish:
+Stop if the starting state differs.
 
-1. global model explanations;
-2. local prediction explanations;
-3. explanation stability analysis;
-4. subgroup fairness evaluation;
-5. a bounded counterfactual/scenario-analysis prototype;
-6. immutable, reproducible audit evidence;
-7. documentation sufficient for interviews, viva preparation and technical defence.
+## Mandatory Reading
 
-Do not begin the application backend, frontend, LLM/RAG layer, database, deployment or MLOps milestones.
+Read completely:
 
-## Mandatory preparation
-
-Before editing:
-
-1. Read `AGENTS.md` completely.
-2. Read this file completely.
-3. Read:
-   - `README.md`;
-   - `docs/ARCHITECTURE.md`;
-   - `docs/EXECUTION_PLAN.md`;
-   - `docs/PROJECT_REPORT.md`;
-   - `docs/SUPERVISOR_HANDOFF.md`;
-   - `docs/HEALTHCARE_DATASET_AUDIT.md`;
-   - `docs/model_cards/healthcare_readmission_v1.md`;
-   - healthcare-related ADRs;
-   - healthcare dataset, feature, split and experiment configurations.
-4. Inspect the healthcare foundation, modelling, evaluation and experiment implementations.
-5. Inspect the complete healthcare test suite.
-6. Inspect the preserved Macro Milestone 2 run, manifest, model-selection record and holdout-evaluation record.
-7. Verify hashes, configuration bindings, model identity and split identity before using any artifact.
-8. Inspect official documentation for any new dependency before adding it.
-
-Repository evidence takes priority over documentation claims.
-
-## Methodology gate
-
-Before calculating audit results, create and test versioned audit protocols covering:
-
-- explanation method and reference/background data;
-- global and local explanation semantics;
-- model-output scale being explained;
-- sampling strategy and random seeds;
-- stability perturbations and comparison metrics;
-- protected/audit-only attributes;
-- subgroup inclusion and minimum-support rules;
-- uncertainty estimation;
-- counterfactual mutability and feasibility constraints;
-- privacy and artifact-publication rules.
-
-Do not inspect final audit outcomes before the protocol is frozen.
-
-If the selected explanation method cannot validly explain the calibrated healthcare pipeline, stop and document the methodological blocker. Do not silently explain a different estimator while presenting it as the calibrated model.
-
-If the base estimator and calibrated probability layer require different explanations, distinguish clearly between:
-
-- features influencing the underlying model score; and
-- the calibration layer converting scores into probabilities.
-
-## Global explanations
-
-Implement reproducible global explanation evidence for the frozen selected model.
-
-At minimum:
-
-- calculate a defensible global feature-importance or attribution summary;
-- retain human-readable source-feature mappings after preprocessing;
-- distinguish categorical encodings from original clinical fields;
-- document the explained output and attribution baseline;
-- include uncertainty or repeated-sample stability where feasible;
-- verify that audit-only, excluded, identifier and target fields never enter the prediction feature matrix;
-- do not describe association as causation.
-
-Prefer SHAP when it is valid and computationally practical, but do not force SHAP if the calibrated pipeline is unsupported or the resulting interpretation would be misleading. A documented, tested model-agnostic alternative is acceptable.
-
-## Local explanations
-
-Implement local explanations for individual predictions.
-
-Each local explanation must include:
-
-- model and dataset identity;
-- prediction probability;
-- explanation method and output scale;
-- influential features with direction and magnitude where supported;
-- original human-readable feature values;
-- limitations and non-causal wording;
-- explicit indication that the output is educational research evidence and not medical advice.
-
-Tests must verify deterministic behaviour under fixed configuration and correct mapping from transformed features back to source fields.
-
-Do not publish raw patient records or directly identifying values.
-
-## Explanation stability
-
-Implement stability analysis showing whether explanations remain reasonably consistent under controlled, clinically plausible perturbations.
-
-The protocol must define:
-
-- which fields may be perturbed;
-- perturbation ranges or categories;
-- which fields must remain immutable;
-- number of repetitions;
-- fixed random seeds;
-- comparison metrics such as rank correlation, top-k overlap or attribution-distance measures;
-- interpretation thresholds without pretending they are universal clinical standards.
-
-Report instability honestly. Do not tune the model after observing stability results.
-
-## Fairness audit
-
-Use race, gender and age only as audit attributes unless an already-approved contract states otherwise. They must not silently become prediction features.
-
-Evaluate the frozen model across defensible subgroups using appropriate metrics, including where support permits:
-
-- sample and positive counts;
-- prevalence;
-- average precision;
-- ROC-AUC;
-- Brier score or calibration evidence;
-- sensitivity/recall;
-- specificity;
-- false-positive rate;
-- false-negative rate;
-- positive prediction rate.
-
-Requirements:
-
-- handle undefined metrics explicitly;
-- enforce minimum-support rules;
-- report uncertainty intervals where feasible;
-- distinguish observed performance differences from discrimination or causality;
-- document missingness and historical-data limitations;
-- do not claim legal, clinical or ethical fairness certification.
-
-A guarded post-selection audit of the locked holdout is permitted only if it is pre-registered, performed once, append-only, and cannot influence model selection or hyperparameters. Record the access and prove that the model remains frozen.
-
-## Counterfactual or scenario analysis
-
-Implement only a bounded research prototype if defensible.
-
-Requirements:
-
-- distinguish counterfactual explanation from clinical recommendation;
-- classify fields as immutable, conditionally mutable or excluded;
-- prohibit changes to identifiers, demographics, outcomes and clinically impossible fields;
-- avoid recommending medication or treatment changes;
-- enforce valid categorical domains and observed constraints;
-- report when no feasible scenario is found;
-- label generated scenarios as model-sensitivity evidence, not guaranteed real-world interventions.
-
-If clinically meaningful counterfactuals cannot be justified from repository evidence, implement and document a feasibility assessment instead of fabricating recourse.
-
-## Artifacts and reproducibility
-
-Create versioned configuration and immutable audit evidence.
-
-Artifacts must contain:
-
-- dataset, split, model, protocol and configuration hashes;
-- software versions;
-- random seeds;
-- timestamps;
-- method metadata;
-- aggregate results;
-- explicit holdout-access status;
-- limitations.
-
-Do not publish:
-
-- raw healthcare data;
-- row-level identifying data;
-- unrestricted patient-level predictions;
-- secrets;
-- caches;
-- temporary outputs;
-- downloaded archives.
-
-Publication must refuse overwriting an existing immutable audit run.
-
-## Tests
-
-Add meaningful unit and integration tests covering:
-
-- feature-name mapping;
-- global explanation reproducibility;
-- local explanation structure and determinism;
-- forbidden-feature exclusion;
-- calibrated-versus-base-estimator semantics;
-- stability calculations;
-- fairness subgroup calculations;
-- minimum-support and undefined-metric handling;
-- counterfactual constraint enforcement;
-- infeasible-scenario handling;
-- artifact hashes and manifest bindings;
-- overwrite refusal;
-- holdout audit guard;
-- no raw or patient-identifying data in published evidence.
-
-Tests must verify actual behaviour rather than merely asserting that files exist.
-
-Do not rerun expensive model selection or retrain the model unless repository evidence proves it is technically unavoidable. If unavoidable, stop and explain before doing so.
-
-## Documentation
-
-Update truthfully:
-
+- `AGENTS.md`;
+- this file;
 - `README.md`;
+- `docs/PRODUCT_REQUIREMENTS.md`;
 - `docs/ARCHITECTURE.md`;
+- `docs/DEPLOYMENT_ARCHITECTURE.md`;
 - `docs/EXECUTION_PLAN.md`;
 - `docs/PROJECT_REPORT.md`;
 - `docs/SUPERVISOR_HANDOFF.md`;
-- the healthcare model card;
-- relevant ADRs.
+- healthcare model card;
+- healthcare ADRs;
+- healthcare foundation, model, experiment and audit modules;
+- existing configuration and tests.
 
-Create a new ADR for the explanation and responsible-audit protocol.
+Repository evidence overrides documentation claims.
 
-`docs/PROJECT_REPORT.md` must become a study and defence guide for this milestone. Explain:
+## Objective
 
-- what each XAI/fairness/stability/counterfactual component does;
-- why it exists;
-- how data flows through it;
-- which model output is explained;
-- global versus local explanations;
-- attribution baselines;
-- feature transformations and source-feature mapping;
-- fairness metrics and their limitations;
-- explanation-stability methodology;
-- counterfactual assumptions and restrictions;
-- alternatives considered;
-- trade-offs;
-- important functions and files;
+Freeze a technically coherent and implementable contract for Macro Milestone 4:
+
+- model lifecycle and MLflow integration;
+- FastAPI application boundary;
+- PostgreSQL persistence and append-only audit trail;
+- authentication and RBAC;
+- React/TypeScript reviewer interface;
+- Docker/Compose local environment;
+- testing, security and observability;
+- safe use of the existing frozen model and audit evidence.
+
+This task must remove important design ambiguity before implementation begins.
+
+## Required Decisions
+
+### 1. Product Boundary
+
+Define the exact supported user journeys for:
+
+- ML engineer;
+- reviewer;
+- administrator;
+- public portfolio visitor.
+
+Separate:
+
+- implemented research evidence;
+- synthetic demonstration;
+- authenticated reviewer functionality;
+- future clinical or production functionality.
+
+The public application must not accept or persist identifiable patient information.
+
+### 2. Model and MLflow Lifecycle
+
+Define:
+
+- how the existing frozen model is imported without retraining;
+- MLflow experiment, run, model-version and alias conventions;
+- checksum and configuration validation before registration;
+- artifact storage;
+- promotion and rollback rules;
+- how the API selects an approved model;
+- behaviour when MLflow is unavailable;
+- prohibition on loading user-supplied pickle/joblib files;
+- prohibition on new holdout evaluation.
+
+Do not migrate or rewrite existing evidence during this planning task.
+
+### 3. Explanation-Serving Boundary
+
+Define which evidence can safely be served:
+
+- global aggregate explanation;
+- fixed synthetic local explanation;
+- stability summary;
+- subgroup summary;
+- counterfactual feasibility result;
+- model-card and limitation metadata.
+
+Do not assume arbitrary local explanations can be publicly generated unless their reference data, privacy, computational cost and methodology are defensibly specified.
+
+Decide whether the first deployed application should use:
+
+- precomputed verified audit evidence;
+- on-demand inference with restricted synthetic inputs;
+- or both.
+
+Document the trade-off.
+
+### 4. FastAPI Contract
+
+Specify endpoint paths, methods, roles, input/output schemas, error responses and versioning for at least:
+
+- liveness;
+- readiness;
+- current model metadata;
+- model card;
+- prediction for approved synthetic/de-identified input;
+- global explanation;
+- synthetic local explanation;
+- stability results;
+- subgroup audit;
+- counterfactual-feasibility result;
+- audit-event lookup;
+- reviewer decision;
+- administrator model-version lookup.
+
+Define:
+
+- correlation/request IDs;
+- idempotency where required;
+- schema/model version fields;
+- timeout and fail-closed behaviour;
+- OpenAPI exposure;
+- rate limiting boundary;
+- no raw healthcare-record logging.
+
+### 5. PostgreSQL Contract
+
+Design tables and relationships for:
+
+- users or external subject references;
+- roles;
+- model versions;
+- prediction events;
+- explanation references;
+- reviewer decisions;
+- append-only audit events;
+- integrity/hash-chain metadata where justified.
+
+Specify:
+
+- primary and foreign keys;
+- timestamps;
+- immutable fields;
+- retention boundary;
+- migration strategy;
+- transaction boundary;
+- what must never be stored;
+- audit-write failure behaviour.
+
+Do not add unrelated databases merely for resume value. Redis, MongoDB, vector databases, graph databases and time-series databases remain deferred unless a real measured requirement emerges.
+
+### 6. Authentication and RBAC
+
+Define:
+
+- external OIDC/JWT validation boundary;
+- engineer, reviewer and administrator roles;
+- endpoint permission matrix;
+- token claims required;
+- authentication failures;
+- development/test identity strategy;
+- secret management;
+- prohibition on committed credentials.
+
+Do not implement a custom production password system.
+
+### 7. Frontend Product Contract
+
+Define React/TypeScript routes and screens for:
+
+- project/evidence overview;
+- model card;
+- synthetic encounter demonstration;
+- prediction explanation;
+- global feature evidence;
+- stability results;
+- subgroup audit;
+- reviewer decision;
+- audit history;
+- administrator model metadata.
+
+The visual direction must be professional, functional and portfolio-quality—not a generic AI-generated dashboard.
+
+Use:
+
+- strong typography and spacing;
+- restrained healthcare visual language;
+- accessible contrast;
+- meaningful charts;
+- subtle micro-interactions;
+- responsive layouts;
+- loading, empty and error states;
+- reduced-motion support.
+
+Avoid animation-heavy presentation, fake real-time activity, glassmorphism everywhere, excessive gradients and decorative 3D that reduces readability.
+
+### 8. Docker and Local Runtime
+
+Design a laptop-conscious Compose topology for:
+
+- API;
+- frontend;
+- PostgreSQL;
+- MLflow;
+- required artifact storage.
+
+Define:
+
+- health checks;
+- startup order;
+- volumes;
+- ports;
+- resource considerations for an 8 GB laptop;
+- non-root containers;
+- configuration and secrets;
+- development versus test profiles;
+- clean shutdown and recovery.
+
+Kubernetes remains deferred until a measured orchestration requirement exists.
+
+### 9. Testing and Quality Gates
+
+Define required:
+
+- unit tests;
+- API contract tests;
+- database integration tests;
+- migration tests;
+- RBAC/security tests;
+- model/artifact identity tests;
+- frontend component tests;
+- frontend accessibility tests;
+- end-to-end synthetic workflow;
+- Docker smoke test;
+- existing 122-test regression suite.
+
+No test may retrain the frozen model or inspect the holdout again.
+
+### 10. Observability and Security
+
+Define:
+
+- structured logs;
+- correlation IDs;
+- health/readiness;
+- request duration and error metrics;
+- model-version tagging;
+- audit-write monitoring;
+- secret handling;
+- dependency scanning;
+- container scanning;
+- CORS and security headers;
+- input-size limits;
+- request-log redaction;
+- trusted artifact loading;
+- failure behaviour.
+
+Monitoring must not claim implemented production drift detection during this planning task.
+
+### 11. Deferred Technologies
+
+Explicitly keep these outside the first Macro Milestone 4 implementation unless independently justified:
+
+- LLM or LangChain narration;
+- OpenRouter;
+- vector databases;
+- collaborative filtering;
+- Redis;
+- Kafka or queues;
+- microservices;
+- Kubernetes;
+- multiple database technologies;
+- tool calling;
+- cloud deployment;
+- new model training.
+
+Record where they could fit later without claiming they are already used.
+
+## Required Architecture Evidence
+
+Update the appropriate documentation with:
+
+- component diagram;
+- online request flow;
+- model-registration flow;
+- database ER diagram;
+- authentication/RBAC matrix;
+- API endpoint table;
+- artifact lifecycle;
+- failure-mode table;
+- threat boundaries;
+- frontend route/component map;
+- Docker topology;
+- implementation order.
+
+Create one ADR for the Macro Milestone 4 application and MLOps contract.
+
+## Implementation Order
+
+Define a gated implementation sequence inside Macro Milestone 4:
+
+1. packaging/configuration and artifact import;
+2. MLflow registration and verification;
+3. PostgreSQL schema and migrations;
+4. FastAPI core and RBAC;
+5. audit persistence;
+6. React/TypeScript interface;
+7. Docker/Compose integration;
+8. complete tests, security checks and documentation.
+
+Each stage must preserve the frozen research evidence.
+
+## Documentation
+
+Update only where necessary:
+
+- `README.md`;
+- `docs/PRODUCT_REQUIREMENTS.md`;
+- `docs/ARCHITECTURE.md`;
+- `docs/DEPLOYMENT_ARCHITECTURE.md`;
+- `docs/EXECUTION_PLAN.md`;
+- `docs/PROJECT_REPORT.md`;
+- `docs/SUPERVISOR_HANDOFF.md`;
+- one new ADR.
+
+`PROJECT_REPORT.md` must explain the planned components, decisions, alternatives, trade-offs, data flow, security boundaries, failure modes and implementation order in interview-ready language.
+
+Do not claim any planned technology is implemented.
+
+## Prohibited Work
+
+Do not create or modify:
+
+- Python application source;
+- frontend source;
+- API routes;
+- database migrations;
+- Dockerfiles or Compose files;
+- dependencies or lockfiles;
+- CI workflows;
+- MLflow records;
+- model artifacts;
 - tests;
-- results;
-- interpretation;
-- unresolved limitations;
-- likely interview and viva questions.
+- raw data;
+- experiment or audit evidence;
+- `prompt.txt`;
+- the existing stash.
 
-Add a clearly structured problem-and-recovery record for every meaningful issue encountered:
+Do not modify `docs/CURRENT_TASK.md`.
 
-- symptom;
-- root cause;
-- investigation;
-- rejected approaches;
-- final resolution;
-- verification;
-- lesson learned.
+## Verification
 
-Do not fabricate problems, decisions, metrics, results or implementation.
+Run:
 
-## Authorized paths
+- `git diff --check`;
+- documentation contradiction searches;
+- link/path consistency checks where available;
+- `git status --short --untracked-files=all`.
 
-Codex may modify existing healthcare ML, experiment, contract, documentation, testing and dependency files only where required by this milestone.
+No implementation test run is required because implementation files must remain unchanged.
 
-Codex may create:
+## Expected Git Status
 
-- versioned audit configuration under `configs/audit/`;
-- healthcare XAI, fairness, stability, counterfactual and audit modules;
-- corresponding healthcare tests;
-- one responsible-AI/XAI ADR;
-- immutable generated audit evidence only in the already-approved ignored artifact location.
+Only the following may appear:
 
-Do not modify unrelated projects, credit-domain implementation, `prompt.txt`, raw data or the existing stash.
+- `M docs/CURRENT_TASK.md` — user-owned;
+- modifications to the authorized documentation files;
+- one new ADR under `docs/decisions/`.
 
-Do not modify this `docs/CURRENT_TASK.md` file.
+No source, dependency, test, data, model, artifact, frontend, database, container or workflow file may appear.
 
-## Required verification
-
-Run and report:
-
-1. dependency consistency check;
-2. Ruff lint;
-3. Ruff formatting check;
-4. targeted new unit tests;
-5. targeted healthcare integration tests;
-6. complete offline test suite;
-7. artifact and manifest inspection;
-8. hash/configuration/model/split binding checks;
-9. privacy inspection of published audit evidence;
-10. `git diff --check`;
-11. `git status --short --untracked-files=all`.
-
-Use repository-safe temporary locations and ensure no cache, raw data, temporary audit output or generated healthcare record appears in Git status.
-
-## Stop conditions
-
-Stop immediately if:
-
-- starting Git state is inconsistent;
-- frozen model, split or experiment hashes do not match;
-- valid explanation semantics cannot be established;
-- completing the task would require model reselection;
-- holdout access cannot be guarded;
-- counterfactual constraints cannot be defended;
-- a required command fails and the task specifically prohibits a fallback;
-- an unauthorized file appears in status.
-
-Preserve completed valid work and report the blocker precisely.
-
-## Final response
+## Final Response
 
 Report:
 
-1. milestone status;
-2. starting commit and repository state;
-3. explanation methods implemented;
-4. global explanation results;
-5. local explanation behaviour;
-6. explanation stability results;
-7. fairness methods and results;
-8. counterfactual/scenario-analysis outcome;
-9. model-output semantics;
-10. holdout-access record;
-11. artifacts and hashes;
-12. tests and exact results;
-13. files created;
-14. files modified;
-15. files intentionally unchanged;
-16. problems encountered and resolutions;
-17. limitations;
-18. what the user should understand for interviews;
-19. confirmation that no later milestone began;
-20. confirmation that Codex did not commit or push;
-21. exact final `git status --short --untracked-files=all`;
-22. recommended commit message.
+1. planning status;
+2. starting commit;
+3. product boundary;
+4. model/MLflow lifecycle;
+5. API contract;
+6. PostgreSQL design;
+7. authentication/RBAC design;
+8. frontend contract;
+9. Docker topology;
+10. security and observability;
+11. testing strategy;
+12. implementation sequence;
+13. deferred technologies;
+14. files modified and created;
+15. checks and results;
+16. unresolved decisions;
+17. what the user should understand;
+18. confirmation that no implementation began;
+19. confirmation that Codex did not commit or push;
+20. exact final Git status;
+21. recommended commit message.
 
 If successful, recommend:
 
-`feat: add healthcare XAI and responsible audit`
+`docs: freeze Aletheia application contract`
 
-Do not claim external supervisor approval.
+## Stop Rule
 
-## Final stop rule
+Stop after completing the Macro Milestone 4 contract.
 
-Stop after Macro Milestone 3.
-
-Do not begin:
-
-- FastAPI product APIs;
-- PostgreSQL application persistence;
-- authentication;
-- React frontend;
-- LLM or RAG integration;
-- MLflow;
-- Docker deployment;
-- CI/CD;
-- monitoring;
-- Kubernetes;
-- cloud infrastructure;
-- or additional model training.
-
-Do not commit or push.
+Do not implement the application, change dependencies, retrain models, access the holdout, commit or push.

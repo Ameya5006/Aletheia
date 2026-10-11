@@ -1,5 +1,225 @@
 # Aletheia — Project Report
 
+## Macro Milestone 4 Stage 0 — Application contract planning (2026-10-11)
+
+**Current state and authority:** Macro Milestones 1–3 are completed.
+CURRENT_TASK.md records external Macro Milestone 3 approval at
+`ff9dce291f63a6d4241360997ef0aff2308597f9`. Stage 0 is documentation only,
+prepared for supervisor review; all application/MLOps components below remain
+planned and unimplemented. Earlier milestone/repair sections retain historical
+approval states and verification results, not new commands or current authority.
+Neither planning completion nor the longer original vision authorizes Stage 1.
+
+### Milestone, rationale and decisions
+
+**What was accomplished:** defined the first product journeys, exact HTTP/role
+schemas, transactional database model, trusted artifact/registry lifecycle,
+OIDC boundary, React screens, local runtime, failure/security/observability rules
+and gated implementation tests/order. ADR 0008 records the major alternatives.
+No technology was installed, model registered, source changed or service started.
+
+**Why now:** research already fixes what the model and its explanations mean.
+Delivery planning can now use those real interfaces rather than invent new
+inference/XAI semantics. Without a contract, frontend feature entry or model
+registration might accidentally expose patients, omit calibration or rewrite
+frozen evidence. The original platform vision remains in prompt.txt; the first
+application is deliberately bounded and does not complete that entire vision.
+
+**Product choice:** public visitors inspect aggregate evidence and the existing
+fixed synthetic local case. Engineers request its authenticated prediction and
+inspect their history; reviewers record coded evidence-review decisions;
+administrators manage approved releases/access through private operator tools
+and inspect metadata. Only `case_id=synthetic-discharge-v1` can be submitted;
+there is no editable patient form, free text or arbitrary de-identified input.
+This sacrifices breadth for a defensible privacy and explanation boundary.
+Precomputed-only serving was simpler but would omit inference/audit transaction
+demonstration; unrestricted live XAI needs an approved reference and cost/privacy
+design that the repository does not supply. The published local explanation
+stays precomputed. No clinical recommendation or actionable recourse is added.
+
+**Lifecycle choice:** import the unchanged `model` plus `calibrator` dictionary
+into local self-hosted MLflow through a guarded calibrated pyfunc adapter.
+`explain.probability` calls the exact fitted preprocessing/base classifier and
+the external sigmoid. Registering only a sklearn estimator would serve a different
+output. Keep original six model/four audit files and every bound provenance byte;
+add a distinct release manifest and package identity. Copy original Windows bytes
+without newline conversion; the prior CRLF bug shows why Linux checkout text
+cannot replace frozen byte-bound files. Import historical metrics, not a new
+evaluation; synthetic probability parity at tolerance `1e-10` is a software gate.
+No research reference data or raw source is needed online.
+
+Numeric registry versions and candidate/approved/previous aliases give operators
+review and rollback conventions. API pins exact approved version/digest rather
+than resolving `latest` per request. Cached verified bytes permit availability
+through an MLflow outage; missing cache or DB approval fails closed. Hosted
+MLflow was deferred to reduce credentials/cost and laptop-network dependence.
+Registry and DB cannot share a local transaction, so both must reconcile before
+a release pin becomes deployable. No MLflow record exists yet.
+
+**Persistence choice:** PostgreSQL supplies concurrency, foreign keys and one
+transaction for prediction/review, append-only audit and idempotency. Store only
+opaque subjects, synthetic case IDs/hashes, model/evidence identities, probability,
+coded review/release actions and timestamps; never patient records/tokens/free
+notes. Audit-write failure suppresses success. Same idempotency key with same
+payload returns the prior result; changed payload conflicts. Review revisions
+append new records. Privileges/triggers and a serialized hash chain detect
+bounded history tampering; they cannot prove physical immutability against an
+owner who rewrites both history and checkpoints. SQLite/JSON would be simpler
+but weaker for the intended concurrent review workflow. Other DB types have no
+measured need. One PostgreSQL instance uses separate app/MLflow databases/roles.
+
+**Identity and UI choice:** external OIDC/PKCE supplies login and API access JWTs;
+API checks signature/issuer/audience/expiry and role plus local entitlement on
+every private request. Administrator and reviewer are separate permissions.
+No custom production passwords, browser token persistence or arbitrary issuer
+URL. React/TypeScript presents API data with an accessible evidence workbench,
+saved model context, support/uncertainty captions, no-recourse result and honest
+loading/empty/error states. It computes no ML and records no real encounters.
+This adds a browser toolchain compared with static documents but supports review
+state, version conflicts and audit navigation.
+
+### Planned system/data flow and files to inspect
+
+Existing research dependencies point inward and remain unchanged. Proposed
+delivery consists of FastAPI adapters/use cases, new registry/verified-release
+adapter, DB persistence and static React UI. Component/request/registration/ER
+diagrams, API/RBAC schemas, transactions, artifact lifecycle, threat boundaries
+and failure tables are in [ARCHITECTURE.md](ARCHITECTURE.md). Screen/component
+map and role journeys are in [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md).
+Compose volumes/ports/resources, dependency rationale and recovery are in
+[DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md). These are specifications,
+not source paths that already exist.
+
+Online flow: browser access token → role/case/version validation → server-owned
+synthetic features in exact frozen order → complete calibrated probability →
+saved explanation reference → transaction rechecks approval/role and commits
+prediction + audit + idempotency → response. Review appends a coded decision
+and event similarly. Public evidence is projected from verified saved results
+without new calculations. Model import verifies originals → copies exact bytes
+→ checks package/synthetic parity → registers candidate → records administrator
+approval → reconciles alias/DB → pins release → API verifies cache at startup.
+No step invokes the model/audit runner or reopens the holdout.
+
+### Why implementation follows this order
+
+Packaging/runtime and byte-preserving import preparation come first because an
+unloadable or mismatched model invalidates every later screen. MLflow verification
+then establishes registered identity. Schema/migrations precede HTTP writes;
+API/RBAC precedes audit persistence so permissions and atomic success are defined.
+UI follows stable APIs; Compose follows known service boundaries; full security,
+regression, synthetic E2E and documentation gates close the sequence. Stages
+1–3 and their definitions of done are in [EXECUTION_PLAN.md](EXECUTION_PLAN.md).
+Stage 1 combines backend packaging/registry/migrations/API/RBAC/audit and tests
+in that dependency order; activation and successful POSTs wait for verified
+atomic release/audit transactions. Stage 2 integrates the React/TypeScript UI;
+Stage 3 integrates Compose and completes E2E/security/accessibility/resource and
+release gates. Each executable stage still needs its own supervisor-approved task.
+Future milestones use 95% implementation/testing and 5% concise documentation,
+retaining all required verification and evidence.
+
+**Supervisor contract corrections:** JWT lifetime now has a configurable maximum
+validated against the selected OIDC issuer; strict signature/issuer/audience/
+expiry/skew/algorithm validation remains, without choosing a public provider.
+The initial administrator uses a one-time post-migration operator command with
+configured identity and one system-attributed grant/event; subsequent grants
+require an active administrator. A permanent unique append-only bootstrap event
+prevents repetition after revocation and resolves the first grant's circular FK
+dependency. Reviewers see only audit events for authorized predictions/reviews;
+administrators inspect release/entitlement/system-wide history and engineers only
+their own events. These corrections make the contract executable and limit event
+disclosure; all remain planned, not implemented.
+
+### Important problems encountered and learning
+
+**Documentation-state ambiguity:** current README/product/execution/architecture
+passages still said Macro Milestone 3 awaited review although the replacement
+task explicitly records its approval. Cause: those files recorded the earlier
+review state. Update current summaries; preserve dated history and the immutable
+model card/ADRs (outside authorized edit paths) with explicit historical context.
+Verification uses targeted contradiction searches and diff review. Lesson:
+current authorization and historical evidence have different responsibilities.
+
+**Patch context failure:** an initial multi-hunk README patch could not match a
+prediction-flow sentence embedded in a longer paragraph. Diff/text inspection
+confirmed README had not changed; smaller matching hunks completed the status
+edit. No implementation, task content or evidence was affected. Prevention:
+inspect whole paragraph boundaries and use small patches; a failed patch is not
+verification. No new ML-methodology, model, dependency or environment failure
+occurred in this planning milestone. Pinned-package/image compatibility remains
+a future gate, not a failed test invented here.
+
+### Concepts learned through this planning task
+
+**Model registration versus training:** registration catalogs already fitted
+bytes with version/approval identity. Used in the proposed MLflow import; matters
+because adding MLOps must not spend the holdout again. Explain historical metrics,
+numeric versions, mutable aliases versus immutable hashes and rollback pins.
+
+**Atomic audit and idempotency:** a request either commits result/event/key
+together or returns no successful result; an uncertain response can be retried
+with its original key. Used in planned POST transactions. Explain uniqueness
+under concurrent retries, ambiguous commit, changed-payload conflict and why
+idempotency is not implemented by merely caching responses in process memory.
+
+**OIDC and authorization:** an identity provider proves a token's issuer/subject;
+application permissions additionally restrict role, entitlement and resource.
+Used at FastAPI boundary. Explain access token versus ID token, JWKS/expiry,
+PKCE, 401 versus 403, and why a hidden frontend button cannot secure an API.
+
+**Append-only versus tamper-evident:** database privileges restrict ordinary edits;
+hash chains expose changed history against a trusted anchor, but an owner can
+rewrite storage. Used in planned audit events. Explain canonical bytes, concurrent
+chain locking, checkpoint trust and why neither is physical WORM.
+
+### Project defence and semester viva preparation
+
+Why fixed synthetic input? Only that case has published local evidence and known
+privacy/method semantics; arbitrary records need separately reviewed boundaries.
+Why include the calibrator? The displayed probability is sigmoid of clipped
+base-probability logit, not base `predict_proba` alone. Why not always call MLflow?
+An exact reviewed local pin keeps requests stable and lets a registry outage
+block promotion rather than change the model. Why audit before response? A
+successful result without its durable trace defeats the project's purpose.
+Why not Kafka/Redis/Kubernetes? No measured asynchronous, shared-cache or
+orchestration requirement exists. What remains unproved? All application runtime,
+security, accessibility, resource and latency behaviour until implementation tests.
+
+**Basic:** What is a model version? An immutable registry identity for a package.
+What does RBAC restrict? Which authenticated role can perform each operation.
+**Intermediate:** What if commit succeeded but the response was lost? Retry the
+same key and retrieve the stored event/result. Why keep source hashes and release
+hashes separate? One identifies frozen research; the other identifies its delivery
+packaging. **Difficult:** Can registry/DB promotion be atomic? No; reconcile and
+publish a pin only after agreement. Can hashes alone authorize pickle loading?
+No; the expected digest and code origin must already be trusted. Can a DB owner
+forge the chain? Yes without an external trusted checkpoint.
+
+**Resume evidence and limitations:** Stage 0 adds documentation only, one ADR and
+a three-stage implementation contract after Stage 0; there is no new endpoint, registered
+model, migration, UI, deployment, test count, measured latency or ML experiment.
+Existing 122-test evidence is historical, not rerun here. Research limitations
+remain unchanged. Provider/host/region/real-user retention and clinical validation
+remain future work; package/image compatibility and laptop budgets require later
+verification. No production drift detector is implemented. Required Stage 0
+checks and exact repository evidence are recorded in SUPERVISOR_HANDOFF.md.
+Next step is supervisor review of this contract; no implementation begins here.
+
+**Initial Stage 0 verification (before supervisor repair):** `git diff --check` exited 0. Read-only link/fence
+checks exited 0 across eight changed/new documents: 64 local links resolved,
+no unbalanced fences; 14 Mermaid blocks counted but not rendered. Targeted
+contradiction searches and current/historical context review passed. Snapshot
+comparison found all 87 protected files unchanged, including user-owned task
+and ten frozen model/audit files. Branch remains main, HEAD equals origin/main
+at `ff9dce291f63a6d4241360997ef0aff2308597f9`, stash unchanged and staged file
+list empty. Only seven authorized docs, one new ADR and user-owned CURRENT_TASK
+appear in status; the handoff records the exact inventory. No implementation
+tests, training, inference, holdout access, artifact writes, commit or push occurred.
+
+## Historical completed milestone and repair records
+
+Review/authorization statements below preserve the state at the recorded dates.
+Current status is the Stage 0 section above and current-state overview below.
+
 ## Macro Milestone 3 final reproducibility repair (2026-10-11)
 
 **Symptom and root cause:** external review passed the saved audit's technical,
@@ -938,7 +1158,8 @@ measure selected properties, not legal compliance or universal fairness.
 **Established scope:** Macro Milestone 1 passed external review at `9073c453`.
 Macro Milestone 2 is the preserved committed model prerequisite at `49a1a8c`.
 Macro Milestone 3 adds the locally verified explanation/stability/subgroup audit
-and no-recourse assessment documented above, pending external supervisor review.
+and no-recourse assessment documented above, externally approved at `ff9dce291`
+as recorded by CURRENT_TASK.md.
 Earlier approved credit phases provide the secondary benchmark,
 including a training-only dummy/Logistic Regression baseline. Neither domain
 has a deployed application; the healthcare result is retrospective educational
@@ -956,12 +1177,12 @@ before the dataset is understood.
 
 `prompt.txt` preserves Aletheia's permanent original vision. It describes the
 complete platform ambition, not permission to implement every feature now.
-`docs/CURRENT_TASK.md` authorizes only Macro Milestone 3. Its tested protocol and
-one guarded post-selection subgroup audit are completed locally and await
-external review. Completion does not authorize a later milestone. The frozen
+`docs/CURRENT_TASK.md` authorizes only Macro Milestone 4 Stage 0 documentation
+planning. Macro Milestone 3's completed audit is externally approved at
+`ff9dce291`. Planning completion does not authorize implementation. The frozen
 contracts, split, source, model, dependencies, preserved credit work and earlier
 metrics remain unchanged. Application, MLOps, LLM/RAG and later work remain
-outside this task.
+outside implementation authority for this task.
 
 ## Functional Requirements
 
@@ -1120,7 +1341,7 @@ and entity leakage.
 
 **Current healthcare boundary:** global/local sampled Shapley probability
 explanations, training-only recording stability, guarded subgroup metrics and
-counterfactual feasibility are implemented and locally verified, pending review.
+counterfactual feasibility are completed and externally approved at `ff9dce291`.
 The conceptual credit-first requirements below are historical planning; their
 deferred methods do not describe missing healthcare implementation. The exact
 current method, samples, limitations and evidence are recorded in Macro Milestone
@@ -2261,7 +2482,7 @@ controls reduce but cannot eliminate reproducibility risk.
 ## Future Work
 
 **Useful next step, subject to approval:** external supervisor review of Macro
-Milestone 3 and its limitations. A later task could examine clinically reviewed
+Milestone 4 Stage 0 and its implementation contract. A later task could examine clinically reviewed
 feasibility or external validation with appropriate data and approval. This
 report authorizes neither a later milestone nor the stashed credit work.
 

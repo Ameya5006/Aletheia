@@ -8,13 +8,69 @@ This sequence supersedes the older credit-first phase sequence recorded below. E
 |---|---|---|
 | 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Completed; externally approved at `9073c453` |
 | 2. Healthcare research | Group-aware nested CV, bounded model comparison, sigmoid calibration and one locked holdout evaluation; model card and reproducible manifests | Completed; committed frozen prerequisite at `49a1a8c`; preserved |
-| 3. Explainable audit | Tested frozen protocols; global/local calibrated-output explanations; recording stability; guarded subgroup audit; counterfactual feasibility or defensible bounded scenarios; immutable aggregate evidence and defence guide | Implemented and locally verified; external supervisor review pending; stop here |
-| 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved model serving | Planned, not authorized |
+| 3. Explainable audit | Tested frozen protocols; global/local calibrated-output explanations; recording stability; guarded subgroup audit; counterfactual feasibility or defensible bounded scenarios; immutable aggregate evidence and defence guide | Completed; externally approved at `ff9dce291f63a6d4241360997ef0aff2308597f9` per CURRENT_TASK.md |
+| 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved synthetic model serving | Stage 0 documentation contract only; implementation unauthorized |
 | 5. Public delivery and operations | CI/CD, managed deployment, drift monitoring, code dependency graph and final defence evidence | Planned, not authorized |
 
 Credit remains a secondary benchmark. The older Phase 5 comparator/XAI/counterfactual/stability roadmap and WIP stash are not active implementation instructions. No future application dependencies are installed in milestone 1. See [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) for users and boundaries and [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md) for tooling.
 
-### Macro Milestone 3 execution and completion evidence
+## Macro Milestone 4 gated implementation sequence — planned
+
+Stage 0 freezes [product/screens](PRODUCT_REQUIREMENTS.md),
+[API/model/database/auth/security contracts](ARCHITECTURE.md),
+[runtime/artifact storage](DEPLOYMENT_ARCHITECTURE.md) and
+[ADR 0008](decisions/0008-application-mlops-contract.md). Completion means required
+decisions are documented, contradiction and local path checks pass, whitespace
+passes and only authorized docs plus user-owned CURRENT_TASK.md appear in status.
+No implementation test run, service startup, package install, artifact import,
+holdout access, implementation or Git mutation is part of Stage 0.
+
+The stages below describe order, not blanket authorization. A replacement
+CURRENT_TASK.md and supervisor review gate each executable stage. Each stage
+preserves original model/audit/source/test/config bytes, adds appropriate tests
+outside the bound research files, updates report/architecture/handoff and stops
+for review. Future milestones follow a 95% implementation/testing and 5% concise-documentation policy; required evidence and safety gates remain mandatory.
+Failure of identity, privacy, runtime compatibility or no-holdout
+constraints stops the stage. No stage reruns frozen model selection/evaluation
+or audit freeze/run; ordinary synthetic test models may be fitted as software
+fixtures, never used as the deployed frozen model.
+
+| Stage | Planned work and why this order | Evidence required before review |
+|---|---|---|
+| 1. Backend foundation and tests | delivery package/config schemas and pinned runtime → byte-preserving private frozen-artifact staging/trust anchor → historical metric import and guarded complete-callable MLflow pyfunc verification → typed PostgreSQL migrations (separate app/MLflow owners) → post-migration one-time administrator bootstrap → FastAPI/OIDC/RBAC → transactional prediction/review, audit/idempotency and operator release/entitlement persistence | every original/copy hash matches; reject symlink/traversal/wrong runtime/missing calibrator; exact 13-field/synthetic identity; distinguish provenance from app code; downloaded package hashes/signature/version and synthetic parity <=1e-10; duplicate/partial import refusal; no raw/holdout/training calls; empty/previous upgrades, FK/unique/check/no-delete grants, chain locking, rollback, backup/restore and no runtime migrations; bootstrap first-use/repetition/conflict/concurrency/system-attribution checks; provider-validated configurable JWT lifetime, all endpoint/role/resource permissions, invalid/expired/wrong issuer/audience/algorithm, JWKS outage/revocation, size/redaction/CORS/unready checks; commit-required success, failure/timeout suppression, uncertain-commit retries, same/different/concurrent keys, revision races, tamper/golden bytes and role recheck; no successful POST or approval/activation before atomic audit/release transactions pass; registry/DB partial promotion cannot activate |
+| 2. React/TypeScript frontend and complete API integration | defined evidence/review screens consume the stable, verified Stage 1 backend; no duplicated ML or patient forms | all route/API/schema integration and component checks; exact model/evidence context; loading/empty/error/conflict and retry states; keyboard/contrast/reduced-motion; role/resource navigation including scoped audit events; safe Markdown and memory token handling |
+| 3. Docker Compose integration and release readiness | non-root images, private DB/MLflow, static proxy, dev/test identity, volumes and explicit migration/bootstrap/import jobs → synthetic E2E and complete security/accessibility/resource verification | measured laptop startup/RAM, health order, restart, migration failure, MLflow/DB outage, graceful shutdown and verified restore; raw data absent from images/volumes and no automatic registration/bootstrap on startup; all unit/API/DB/migration/RBAC/artifact/component/accessibility/E2E/smoke gates below and full offline regression; image/dependency/license scans, reviewed vulnerabilities, unchanged hash inventory, OpenAPI/UI/doc consistency, exact results/limitations and concise final handoff; no clinical/latency/production claims without measurements |
+
+### Required application test matrix — defined, not executed in Stage 0
+
+| Gate | Meaningful checks and fixture/data boundary |
+|---|---|
+| Unit | case-ID/schema refusal; canonical hashes and event bytes; version/approval selection; permission mapping; deadlines; idempotency and review revision logic; small injected providers |
+| API contracts | every method/path/status/envelope above; unknown properties and PHI fields rejected; no input echo; source/calibration/threshold/limitations preserved; typed fixtures/mock services |
+| DB integration | real ephemeral PostgreSQL, separate owner/runtime credentials; transaction rollback, chain/uniqueness races, constrained FK model/explanation identity and append-only privileges |
+| Migration | empty-to-head and previous-to-head upgrades, failed migration rollback, correct grants, restore verification and no destructive routine downgrade |
+| RBAC/security | signed synthetic access tokens with wrong key/issuer/audience/algorithm, expiry, unknown roles, disabled subject, local entitlement intersection, JWKS unavailable, IDOR/cross-owner restrictions; no bypass issuer in release mode |
+| Artifact/model identity | preserved six/four files and provenance bytes; package/code before loader; joblib before deserialization; exact recorded versions; complete sigmoid result; fixed synthetic parity only, no raw/holdout mounts |
+| Frontend components | API-fed charts/tables, model version mismatch, suppressed/null subgroup metrics, no-recourse labels, idempotent retry/conflict and accessible loading/error/empty states |
+| Accessibility | automated axe checks plus manual keyboard/focus/screen-reader/contrast and reduced-motion/mobile review; automation alone is insufficient |
+| E2E | dev identity → fixed-case prediction → explanation reference → reviewer coded decision → committed audit IDs/history; denied engineer review and unavailable dependencies; no real patient data |
+| Docker smoke | fresh migrated DB → explicit approved import → healthy API/UI; privilege/port/volume inspection, restart/outage/drain and image privacy, measured resource use |
+| Regression | existing offline suite historically 122 passed, 1 live test deselected; run with disabled cache and ignored temp path only in later authorized implementation checks; expected count is a baseline, not a new result |
+| Security and quality | Ruff/pip plus frontend type/build/lint, dependency/license and container vulnerability scans; findings and exceptions recorded; no automatic frozen dependency upgrade |
+
+No test re-evaluates the holdout or retrains the frozen artifact. New application
+tests use fixed synthetic inputs, temporary databases/releases and mocked outage
+providers. Existing synthetic research tests may execute their established
+fixture fits and guard paths in temporary locations; their success is software
+verification, not a new empirical experiment. Live-data tests stay disabled.
+
+Unresolved implementation gates: compatible package/image versions and 8 GB
+runtime measurements. Public OIDC provider/region/retention/host belongs to later
+deployment review. These are explicit verification/deployment choices, not
+missing v1 product/API/schema decisions. Implementation may begin only after
+external Stage 0 review and a new task. Stage 0 ends at the contract.
+
+### Macro Milestone 3 execution and completion evidence (historical)
 
 Preparation verifies the preserved run and patient split before code changes.
 Next, the versioned explanation, stability, subgroup/support/uncertainty,
@@ -37,7 +93,8 @@ backend, UI, database, LLM, registry, deployment or further training may begin.
 Everything below records the earlier credit Phase 0–4 state and its proposed
 next steps at that time. References to the "current task", blocked phases or
 Phase 4 review below are historical, not the current healthcare authorization
-or next step. Current work stops at Macro Milestone 3 review in the table above.
+or next step. Current work stops at the Macro Milestone 4 Stage 0 contract review
+in the table above; no application implementation is authorized.
 
 ## Status and Authority
 
