@@ -1,5 +1,93 @@
 # Aletheia — Project Report
 
+## Macro Milestone 4 Stage 1 — Backend implementation (2026-10-11)
+
+The existing backend foundation was preserved and repaired under the supervisor's
+Stage 1 task. Earlier Stage 0 entries are planning history; this work does not
+authorize Stage 2 or represent production deployment.
+
+**Implemented flow and locations:** [release.py](../src/aletheia/application/release.py)
+verifies approved original inventories/bindings before joblib loading, copies bytes,
+binds application code/dependencies in a separate manifest and checks the fixed
+synthetic probability within 1e-10. [registry.py](../src/aletheia/application/registry.py)
+imports the complete calibrated models-from-code adapter and historical metrics.
+New versions remain `verifying` until independent download, inventory/hash checks,
+calibrated synthetic parity, durable receipt and completed run. An independent
+intent permits deterministic crash recovery; conflicts are quarantined. Exact
+PostgreSQL registration is idempotent. Approval and lifecycle publication reconcile
+the same database event, MLflow tags/aliases and atomic deployment pin. Pending
+publication fails readiness; a registry alias cannot authorize serving. Valid
+pinned cached serving does not query MLflow per request.
+
+[api.py](../src/aletheia/application/api.py) rejects extra/patient fields and accepts
+only synthetic-discharge-v1. Access JWT verification plus active local entitlements
+precedes inference; [store.py](../src/aletheia/application/store.py) rechecks permissions
+and approval, then commits result/review, canonical chained audit event and
+idempotency reference together. Lost acknowledgements retry the same key; changed
+payloads conflict. Reviews append revisions; reviewer event visibility is scoped.
+[migrations](../migrations/env.py) enforce PostgreSQL constraints, restrictive FKs,
+append-only history and attributed grants with separate owner/runtime privileges.
+Migration `0003_integrity` adds deferred reverse audit bindings and one deployment
+projection: orphan or mismatched business events cannot commit. Internal operation
+deadlines, inference checks and PostgreSQL statement/lock timeouts roll back expired
+commands before a response; async cancellation alone cannot stop a worker thread.
+The explicit bootstrap works once after migrations; its permanent audited system
+exception prevents repetition even after revocation. Audited `revoke-role` and
+`disable-subject` CLI commands require an administrator, refuse repeated/unsafe
+states and recheck authorization before commit. Disabled access is checked on each
+private request. No public administrative write endpoint was added.
+
+**Tools and rationale:** FastAPI/Pydantic provide strict request/versioned envelope
+contracts; SQLAlchemy/psycopg/Alembic provide real PostgreSQL transactions/migrations;
+PyJWT/cryptography/httpx verify RS256 access tokens and bounded trusted JWKS.
+MLflow supplies registry identity without training. Typed trusted endpoints permit
+exact loopback hosts or an explicitly configured private hostname such as `mlflow`;
+scheme/host/port mismatches and redirects are rejected. PEP 508 requirement parsing
+checks exact applicable versions and preserves MLflow markers: pywin32 is Windows
+only; MLflow's gunicorn dependency is pinned for Linux. Ten direct dependencies and
+83 additional lock pins were added; all 20 previous pins are unchanged.
+
+**Meaningful problems and recovery:** unconditional Windows dependencies and naive
+lock splitting broke portable verification; marker-aware exact parsing fixes this.
+Premature verified tags, non-idempotent registration and separate publication writes
+made crashes unsafe; durable identities and retryable publication now converge
+without duplicate model/release/audit rows. Forward-only audit checks admitted
+orphans; deferred reverse constraints close that gap. Async request cancellation
+could leave synchronous work committing after a timeout; deadlines now live inside
+the transaction. Real MLflow testing also exposed adapter execution creating
+`__pycache__` inside the immutable release: executing a verified temporary byte copy
+preserves the inventory. The SDK reports a missing alias with an unexpected error
+code; checking the registered model's alias map fixes revocation retries. Windows
+service cleanup required approved process-tree execution; disposable backends are
+removed after testing. Lesson for viva: a database transaction cannot atomically
+commit MLflow metadata and a file, so pending publication must fail closed and
+retry the same durable event. See the two repair test modules for fault boundaries.
+
+**Migration reproducibility repair:** the supervisor found that revisions 0001
+and 0003 still imported live schema objects; filtering metadata had fixed the
+immediate table boundary but future application edits could change historical replay.
+Both revisions now own fixed SQL with the existing schema, privileges, seeds and
+triggers preserved. Tests block application imports and reproduce the pre-repair
+PostgreSQL catalog after replacing live schema objects, for empty-to-head and
+0001-to-head paths. Trade-off: intentional DDL duplication; future schema changes
+must use a new forward revision. Runtime correctness alone does not prove replay
+reproducibility. No new architecture or research change was needed.
+
+**Evidence and limitations:** the final offline suite passed 270 tests, one
+live-data test deselected, 63 warnings in 1056.03s; focused migration tests
+passed 3 tests and real PostgreSQL integration passed 61. Exact commands and fresh
+registry identity are in the handoff. Real PostgreSQL 18.6 tests cover
+empty/previous-to-head migrations, runtime
+SQL negatives, concurrent sequencing, interrupted publication, ambiguous retries,
+deadline rollback and RBAC removal. Clean MLflow integration starts without model
+versions, proves fresh version 1 plus duplicate identity and six real import crash
+recoveries. Dependency metadata checks cover 102 applicable exact pins on each
+Windows/Linux environment; an actual Linux container was not run. Ruff and pip
+checks pass. Protected research evidence remains unchanged. Public OIDC integration
+and later deployment/resource/accessibility gates remain unverified. No frozen
+fitting, holdout records/scoring or research audit rerun occurred; regression fixture
+fits are software tests. No frontend/Stage 2 or Git mutation.
+
 ## Macro Milestone 4 Stage 0 — Application contract planning (2026-10-11)
 
 **Current state and authority:** Macro Milestones 1–3 are completed.
