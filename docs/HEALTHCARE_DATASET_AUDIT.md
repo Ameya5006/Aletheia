@@ -1,5 +1,13 @@
 # Healthcare dataset audit — UCI 296
 
+This document preserves foundation measurements from 2026-10-05. Subsequent
+Macro Milestone 2 modelling and Macro Milestone 3 explanation/subgroup/stability
+results are in the healthcare model card and PROJECT_REPORT.md. Statements below
+about unmeasured modelling/audits describe that original foundation stage.
+The source identity, cohort, feature roles and patient split are unchanged.
+Macro Milestone 3 found no defensible clinical recourse; no treatment changes
+or actionable counterfactuals are justified by this dataset evidence.
+
 Audit date: 2026-10-05. Selected for an **educational, non-clinical** discharge-time readmission-risk audit. Primary records: [UCI dataset 296](https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008), DOI [10.24432/C5230J](https://doi.org/10.24432/C5230J), CC BY 4.0; associated [Strack et al. 2014 paper](https://doi.org/10.1155/2014/781670). Attribution: Strack, DeShazo, Gennings, Olmo, Lucas, 2014, *Impact of HbA1c Measurement on Hospital Readmission Rates*. The paper analyzes a narrower ~70,000 patient-record study cohort; its statistics must not be confused with the UCI archive's encounter counts.
 
 ## Source and file evidence

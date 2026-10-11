@@ -1,6 +1,533 @@
 # Aletheia — Project Report
 
+## Macro Milestone 3 final reproducibility repair (2026-10-11)
+
+**Symptom and root cause:** external review passed the saved audit's technical,
+chronology, metric, binding and privacy checks, but the split-lock byte hash
+depended on Git checkout line endings. The frozen Windows working copy used CRLF;
+the committed Git blob used LF. JSON parsers treat those whitespace differences
+equally, while SHA-256 hashes every byte, so a default LF checkout would fail the
+existing audit binding despite having identical split meaning.
+
+**Independent proof:** Python `subprocess.check_output(['git', 'show',
+'HEAD:configs/splits/healthcare_uci296_v1.lock.json'])` read committed bytes without
+PowerShell text conversion. Its SHA-256 was
+`9543d65d1dc4fc2ef3e3f6a4f43fa88828550241a78291876d289d3e83755ecd`.
+Converting LF to CRLF in memory reproduced the frozen working-copy hash exactly:
+`a3ca2af19215bcf965afecaa75a1c6ec2912f3cf832f2aaec82562ec7855446d`.
+The committed, converted and existing working-copy JSON objects were equal.
+Their `membership_sha256` remained
+`6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316`.
+No split content, membership, model, threshold or result changed.
+
+**Resolution and alternatives:** repository-root `.gitattributes` now contains
+only `configs/splits/healthcare_uci296_v1.lock.json text eol=crlf`. This makes the
+one bound file's checkout representation explicit across platforms while Git
+retains its normalized LF blob. No repository-wide CRLF rule was added and no
+existing split bytes were rewritten. Rewriting frozen protocol/manifests/hashes
+was rejected because it would alter already reviewed evidence rather than fix
+checkout reproducibility. No code/configuration/test or experiment migration
+occurred; the frozen model and all four audit records remain untouched.
+
+**Prevention and learning:** future structured-artifact protocols should define
+canonical JSON serialization and semantic hashes (explicit ordering, encoding,
+numeric and whitespace rules), alongside file-byte hashes when exact storage
+integrity is required. This is a recommendation, not a change to the current
+protocol. Viva answer: byte identity and semantic identity differ; preserve a
+frozen byte-bound experiment and make its required checkout representation
+explicit instead of silently changing its evidence.
+
+**Documentation consistency:** README, this report, PRODUCT_REQUIREMENTS,
+DEPLOYMENT_ARCHITECTURE, ARCHITECTURE, EXECUTION_PLAN and SUPERVISOR_HANDOFF agree
+that Macro Milestones 1–2 are completed and Macro Milestone 3 is implemented,
+pending external review. Historical foundation/credit states are labelled.
+Application, MLOps and deployment remain unimplemented. No additional current-state
+contradiction required correction. Final repair checks and the portable complete
+review patch are recorded in SUPERVISOR_HANDOFF.md. This repair authorizes no
+Macro Milestone 4, audit/model run or new holdout access.
+
+**Final verification:** `git check-attr text eol --
+configs/splits/healthcare_uci296_v1.lock.json` returned `text: set`, `eol: crlf`.
+Read-only `audit inspect` exited 0 with `status: verified`. Pip check exited 0
+with no broken requirements; Ruff lint exited 0 with all checks passed; Ruff
+format check exited 0 with 69 files already formatted. Complete offline pytest
+with cache disabled and ignored `data/processed/pytest-m3-final-repro-offline`
+storage exited 0: **122 passed, 1 deselected, 25 existing credit Logistic Regression
+deprecation warnings in 33.50s**. `git diff --check` passed. Four audit file hashes
+matched the frozen values before/after, as did all 79 protected files in this
+repair's snapshot, including the unchanged model and split bytes. No real-data
+test or prediction was run. The only index change was authorized `git add -N --
+.gitattributes`; a sandbox index-lock permission failure was resolved through
+command escalation. `git diff --cached --name-only` was empty: no contents staged.
+The complete working-tree review patch is exported outside the repository at
+`%TEMP%\aletheia-macro3-final-review.patch`, including existing milestone changes,
+both product/deployment documentation repairs and the narrow attributes rule.
+
+## Macro Milestone 3 external-review documentation repair (2026-10-11)
+
+**Status and boundary:** Macro Milestones 1 and 2 are completed; Macro Milestone
+3 is implemented and locally verified, pending external review. This repair
+changes current-state documentation only and authorizes no Macro Milestone 4.
+The implementation record below describes the earlier completed audit, not
+commands repeated during this repair.
+
+**Problem and recovery:** product requirements and deployment design still
+presented healthcare modelling/calibration/XAI/stability/subgroup methods as
+planned. README understated the engineer workflow, and foundation/credit report
+passages used historical "current" or "future" language without sufficiently
+local labels. The documents had evolved at different milestones, so readers
+could mistake an old state for today's implementation. Reconciled README,
+PRODUCT_REQUIREMENTS, DEPLOYMENT_ARCHITECTURE, ARCHITECTURE, EXECUTION_PLAN and
+this report against the existing model card, ADRs and saved audit bindings.
+Retained earlier decisions/results with explicit historical labels. Feasibility
+assessment is implemented; actionable recourse/search is not. Application/API,
+UI, databases, MLflow, authentication, deployment, CI/CD, monitoring, LLM/RAG and
+later operations remain unimplemented. No scientific method, evidence or metric
+was changed. A context-sensitive documentation patch failed; inspecting the
+actual text before smaller follow-up patches preserved already applied edits.
+Lesson/viva answer: distinguish a historical design decision, current verified
+implementation and future delivery plan; documentation consistency is part of
+evidence integrity, and a failed edit must be checked before retrying.
+
+**Verification in this repair:** branch `main`, HEAD and origin/main remained
+`49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb`. The initial file inventory matched
+the reported Macro Milestone 3 changes, including the user-owned CURRENT_TASK
+modification. The credit WIP stash was preserved. Read-only `audit inspect`
+returned `verified`, checking saved artifact hashes, bindings, inventory and
+publication schema without patient-data loading or new predictions. Pip check
+found no broken requirements; Ruff lint passed; Ruff format check reported 69
+files already formatted. Complete offline pytest with cache disabled and ignored
+`data/processed/pytest-m3-review-repair-offline` temporary storage passed:
+**122 passed, 1 deselected, 25 existing credit L2-deprecation warnings in 33.94s**.
+The live-data test was excluded. No audit freeze/run, model selection, retraining
+or new holdout access occurred. Final whitespace, protected-file, ZIP and status
+evidence is recorded in SUPERVISOR_HANDOFF.md and the external-review bundle.
+
+**Review delivery:** the portable bundle at
+`%TEMP%\aletheia-macro3-review-evidence.zip` contains the four existing aggregate
+audit records and a plain-text verification file. It excludes raw data, fitted
+joblib, real patient-level records, secrets and caches. This provides reviewable
+saved evidence without regenerating a claimed experiment. Remaining statistical,
+clinical, privacy and local-filesystem limitations are unchanged. External review
+is still required; no later milestone, commit or push is authorized.
+
+Bundle verification confirmed exactly the four copied audit files and
+VERIFICATION.txt, all copy hashes matching, and identical Git status before/after
+creation. All 74 protected files matched the pre-repair snapshot and the stash
+object remained unchanged. The first PowerShell packaging attempt failed before
+creating the ZIP because the compression assembly was not loaded. Loading both
+System.IO.Compression and System.IO.Compression.FileSystem explicitly resolved
+the runtime issue; archive inventory/copy hash checks passed. This was a tooling
+failure, not an audit rerun or evidence failure. Lesson: load .NET types explicitly
+in Windows PowerShell and verify portable copies by bytes rather than filenames.
+
+## Macro Milestone 3 — Explainability and responsible audit (2026-10-11)
+
+This is the current healthcare audit record. Older milestone/credit sections
+preserve the state at those earlier times; their future-work statements are
+historical. Starting `main`, `HEAD` and `origin/main` all identified
+`49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb`; only user-owned CURRENT_TASK.md was
+modified, and the existing credit WIP stash was preserved. No Git mutation is
+authorized. The model, 13 predictors, calibration, patient split, thresholds,
+source and earlier measurements remain frozen.
+
+### Purpose, sequencing and data flow
+
+The model milestone answered how a bounded model comparison ranked and
+calibrated risk. This milestone asks what influences the selected probability,
+how explanations respond to a small recording change, and what error patterns
+are observed across supported groups. A probability alone cannot answer those
+questions. Audit results cannot select or improve the model after its holdout
+has been evaluated. We inspected the original source/roles/configs, complete
+healthcare tests, saved nested CV, selection, fitted manifest and prior holdout
+record, then verified their hashes and selection bindings before implementation.
+
+The order is: choose and test versioned methodology using synthetic data →
+exclusively freeze config/code/test/model/data/split/software bindings → verify
+source bytes and actual patient membership → sample training references/cases →
+explain the complete calibrated callable → measure recording sensitivity →
+claim one post-selection holdout subgroup access → predict once and compute
+guarded aggregate subgroup metrics → prove original bindings unchanged →
+validate the privacy schema → exclusively publish results/manifest → inspect
+saved evidence. Counterfactual feasibility is assessed under fixed discharge
+semantics. No estimator, imputer, encoder or calibrator is fitted by this flow.
+The full source loader and split verifier necessarily inspect source structure
+and already-frozen class counts; the exclusive audit claim guards new holdout
+predictions and subgroup outcome calculations.
+
+### Components and code ownership
+
+| Component and important functions | Purpose, callers and dependencies | Failure boundary and evidence |
+|---|---|---|
+| `explain.py`: `probability`, `feature_mapping`, `attributions`, `local_explanation`, `global_explanation` | Audit orchestrator calls the original fitted pipeline plus `sigmoid_predict`; fitted encoder categories map transformed columns to source fields; paired paths provide signed probability contributions | Exact predictor order, class orientation, finite probability, lineage and additive reconstruction; calibrated-versus-base, additive toy, mapping and seeded tests |
+| `stability.py`: `perturb`, `compare`, `analyze_stability` | Orchestrator samples training cases, perturbs two recording counts and calls the same explainer with identical paths; SciPy rank correlation and NumPy summaries | Bounded nonnegative integers, immutable remaining fields, explicit undefined rank/distance, threshold crossings and unchanged cases; known-metric and perturbation tests |
+| `fairness.py`: `subgroup_metrics`, `subgroup_intervals`, `audit_subgroups` | Guarded orchestrator supplies one aligned holdout probability Series, separate audit view, outcomes and patient groups | Exact index alignment, supported original categories, minimum support, null undefined values, patient resampling and suppressed small counts; metric/support/alignment/cluster tests |
+| `counterfactual.py`: `assess`, `validate_scenario`, `scenario_result` | Orchestrator publishes fixed feasibility assessment; tests attempt prohibited changes | All care/history and demographics/IDs immutable, targets/excluded fields forbidden, no invented cost/search or treatment change; every-source-field refusal and no-result tests |
+| `audit.py`: `bindings`, `verify_model`, `freeze`, `verified_protocol`, `claim_holdout`, `validate_publication`, `run`, `inspect` | Research CLI composes modules, reuses foundation/experiment contracts, and exclusively writes ignored local evidence | Model/source/split/config/software checks, immutable claim/overwrite refusal, persisted-byte hashing, allowlisted aggregate schema and fixed synthetic values; synthetic integration and tamper/privacy tests |
+
+Configuration is `configs/audit/healthcare_audit_v1.toml`; tests are
+`tests/healthcare/test_audit.py` and `test_audit_integration.py`. Architecture
+and alternatives are recorded in ADR 0007. No new dependency or hosted service
+is installed. Existing pandas/NumPy/scikit-learn/SciPy and its already locked
+threadpoolctl runtime are used, with inference threads limited to one.
+
+### What the explanation means
+
+The base Histogram Gradient Boosting pipeline produces a raw positive-class
+probability `p`. The external calibration layer computes
+`sigmoid(a * logit(clip(p, 1e-6, 1-1e-6)) + b)`. Calibration parameters `a` and
+`b` convert scores into probabilities; they are not clinical feature effects.
+Our attributions explain this entire composite probability. We do not present
+base tree scores as calibrated risk. The score remains an observed historical
+30-day readmission estimate, not an individual's guaranteed outcome.
+
+There are 13 players, one per original field. The eight quantitative fields
+mean hospital days, laboratory procedure count, procedure count, medication
+count, prior outpatient/emergency/inpatient utilization, and diagnosis count.
+The five categorical fields are admission type/source, maximum glucose serum
+category, A1C category and diabetes medication indicator. Numeric administrative
+codes are labels: the synthetic example's admission type `1` is Emergency and
+source `1` is Physician Referral in the verified UCI mapping. Fitted
+imputation/scaling and one-hot encoding produce 43 estimator columns. A whole
+categorical field is replaced as a unit before preprocessing, preventing
+impossible one-hot combinations such as two admission types at once. Fitted
+encoder categories, not string splitting on underscores, provide lineage.
+Identifiers, outcomes, disposition, demographics and excluded care fields
+never enter this matrix.
+
+For each case, 32 random orders and their reverses start with a sampled training
+reference, then insert the case's fields one at a time. Each model-output
+increment is assigned to the field just inserted. Averaging these increments
+gives a Monte Carlo estimate of interventional Shapley contributions. A positive
+contribution raises the model probability relative to the reference, while a
+negative contribution lowers it. Every path telescopes, so contributions plus
+the average sampled reference probability reconstruct the case's calibrated
+probability. This arithmetic identity is tested; it does not prove causal
+faithfulness or that the finite estimate equals exact Shapley values.
+
+The 64-row background is sampled from training encounters with seed 3101.
+One reference is sampled per paired path; the baseline is the mean probability
+over those path references, not the prediction at mean clinical values and not
+necessarily the exact mean of all 64 rows. Seed 3105 fixes local paths. Global
+samples use seeds 3102/3103/3104, 128 encounters each, and corresponding path
+seeds `3105 + sample_seed`. Global importance is mean absolute probability
+contribution per field, averaged across three repeats. Repeat min/max capture
+both case and path variation; three repeats are not a confidence interval.
+This is training-population descriptive importance, not held-out generalization.
+
+Local explanations include model/dataset/split identity, calibrated probability,
+method/output/baseline, original feature values, signed contributions and
+educational/non-causal limitations. They can explain an individual input in
+memory. Publication is restricted to the protocol-fixed synthetic case; real
+patient records, row keys and unrestricted patient predictions are omitted.
+Using a public historical dataset does not justify publishing its patients.
+
+SHAP's model-agnostic permutation approach inspired the transparent sampled
+estimator, but the SHAP package was not installed. Tree-specific explanations
+would need a separate treatment of external calibration. Global permutation
+importance is an alternative measure of score degradation and would not supply
+signed local additive contributions. LIME would require surrogate-fidelity
+checks; exact coalition enumeration has exponential cost. The chosen approach
+trades library optimizations and exactness for readable, tested calculations
+on existing dependencies. Marginal replacements can still combine correlated
+fields unrealistically; a clinically justified conditional model is absent.
+
+### Stability methodology and interpretation
+
+Sixteen training cases use seed 3201. Five perturbations per case use seed 3202
+and adjust lab/procedure counts independently by +/-1 within training-observed
+integer bounds. These are small plausible recording corrections, with all other
+fields fixed. Schema plausibility is not clinician validation or an actionable
+intervention. Identical reference/path seeds before and after isolate input
+sensitivity from newly drawn explanation noise.
+
+Top-3 overlap counts common influential fields divided by three, with ties
+resolved in frozen field order. Spearman correlation compares ranks of absolute
+contributions; constant vectors yield null. Normalized L1 divides absolute
+contribution changes by the original attribution L1; zero norms yield null.
+Prediction changes are measured separately, and comparisons crossing the
+unchanged descriptive 0.5 cutoff are summarized separately. Overlap below 2/3
+or normalized L1 above 0.25 is a predeclared descriptive flag, not a clinical
+stability pass/fail standard. Bounds may produce unchanged cases, which are
+counted. Limited fields, small sample and fixed paths cannot prove robustness.
+
+### Fairness methodology and metric meanings
+
+Race, gender and original ten age bands remain audit-only. Their source
+categories, missing race and unknown gender are retained; no proxy identity,
+intersections or arbitrary age bins are introduced. Index equality and unique
+indices preserve alignment between predictions, outcomes, patients and the
+separate audit view. Inclusion requires 200 encounters, 100 patients, 20
+positive and 20 negative encounters. Unsupported groups have no metrics;
+counts below 20 are displayed as `<20` rather than exact values.
+
+Prevalence is the observed outcome fraction. AP summarizes positive ranking
+and changes with prevalence; ROC-AUC measures two-class ranking. Brier is mean
+squared probability error, not a complete calibration certificate. At 0.5,
+recall is the fraction of positives flagged, specificity the fraction of
+negatives unflagged, FPR the fraction of negatives flagged, FNR the fraction of
+positives missed, and positive prediction rate the fraction of all group cases
+flagged. Undefined AP/recall for no positives, ROC-AUC for one class and
+specificity for no negatives are null. Support gating prevents such groups
+from receiving headline performance estimates.
+
+Two hundred draws with seed 3301 resample patients within each supported group,
+keeping that patient's subgroup encounters together. The percentile 95%
+intervals are marginal within-group uncertainty; undefined draws are omitted
+per metric and counted. They are not uncertainty intervals for paired group
+differences, adjusted multiple-comparison tests, clinical uncertainty, evidence
+of discrimination or an ethical/legal fairness certificate. Historical care,
+readmission ascertainment, missing race and sparse groups limit comparisons.
+The original threshold's extremely low recall must remain visible in every
+subgroup interpretation; no threshold is tuned against these outcomes.
+
+### Counterfactual feasibility and worked no-result example
+
+A model counterfactual would be a feasible changed input that changes the fitted
+model's class. At discharge, prior utilization and administered care are already
+historical. Changing identifiers, demographics or outcomes is prohibited;
+changing medications/treatment would require clinical review, a time horizon,
+joint feasibility and an intervention model that this dataset does not supply.
+There are therefore zero mutable or conditionally mutable fields. All predictor
+and demographic/identifier fields are immutable; excluded/target fields remain
+forbidden. A distance/cost function is explicitly undefined because there is no
+admissible intervention space. Search is not performed and no candidate is
+fabricated. Tests reject changes to every predictor, including invalid categories.
+
+Worked example: the synthetic case has one prior inpatient visit and twelve
+medications. Reducing either value rewrites history or care rather than providing
+defensible discharge recourse. Both proposals are refused; the result is
+`no_feasible_scenario`. Recording-sensitivity perturbations in the stability
+study do not make historical care mutable for a clinical recommendation.
+Clinical counterfactual search may be reconsidered only with reviewed evidence.
+
+### Important problems encountered and recovery
+
+**Persisted JSON hash mismatch.** Symptom: all nine initial synthetic audit
+integration setups failed `audit manifest binding mismatch`; 20 unit tests
+passed. Investigation compared publication and inspection hash paths. Root
+cause: existing `experiment.write_once` returns the digest of LF text before
+Windows translates it to CRLF. Using that return value for the new result
+manifest therefore disagreed with persisted bytes. The original experiment
+records were not changed. Rejected approach: weaken the hash guard or replace
+prior evidence. Resolution: the new audit hashes the persisted result file
+after exclusive writing. The real synthetic publication/inspection path and
+artifact-tamper test pass. Prevention: compute evidence hashes from saved bytes,
+and test the writer-to-reader flow on the actual platform. Interview explanation:
+serialization is a byte contract; equivalent JSON content can have different
+file hashes when newline handling differs. No real holdout claim existed.
+
+**Tooling and documentation recovery.** Creating the protocol initially failed
+because `configs/audit` did not exist. Status showed no changes; creation of
+only that authorized directory allowed the patch. Initial Ruff findings were
+long literals and import/fixture formatting, resolved before tests/freezing.
+A later multi-file documentation patch reported a context failure even though
+README changes were visible. Inspection of current text/diff preserved those
+valid changes, then a smaller patch updated the remaining documents. Do not
+assume a reported patch failure implies no changes; inspect state before retry.
+An early multiline Python inspection transported through PowerShell produced
+no output, so it was not counted as successful verification. A readable `--%`
+command returned explicit successful binding checks before implementation.
+These tooling issues changed no data, method, frozen model or empirical result.
+
+### Concepts learned, interview defence and viva
+
+**Interventional Shapley sampling:** share probability change across fields by
+averaging their increments in many insertion orders. Used in `attributions` to
+explain the full callable without a tree/calibration mismatch. Explain the
+reference distribution, paired paths, additivity, finite sampling and correlated
+hybrid limitations. Global mean absolute contribution describes a population;
+signed local contributions describe one prediction relative to a reference.
+
+**Explanation versus calibration:** calibrating a score changes magnitudes,
+so base-estimator contributions cannot be relabelled probability contributions.
+Used in `probability` and the manifest's separate calibration metadata. Explain
+the logit/sigmoid composition and why coefficients `a,b` are not feature effects.
+
+**Conditional subgroup measurement:** an aggregate model score can conceal
+group-specific prevalence and errors. Used in `audit_subgroups` with support,
+alignment and patient uncertainty. Explain undefined denominators, AP/prevalence,
+threshold effects, clustering and why removing race from inputs cannot prove
+fairness or remove proxies.
+
+**Explainability stability:** local importance can change with small input
+corrections even if a probability changes little. Used in `analyze_stability`.
+Explain top-k ties, undefined ranks, normalized L1, fixed-path comparisons and
+why a descriptive reference flag is not a universal clinical standard.
+
+**Recourse feasibility:** valid categories alone do not make a change an
+available intervention. Used in `assess` and `validate_scenario`. Explain
+observation time, history, mutable versus immutable fields, missing clinical
+constraints and why no-result evidence can be the defensible outcome.
+
+**Project defence:** Why did you avoid tree-only SHAP? The selected output is
+an externally calibrated probability; we explain the complete callable. Does
+additivity prove causality? No, it checks reconstruction of a model output under
+the chosen reference. Why publish synthetic locals? Real patient values are
+unnecessary for demonstrating the explanation structure. Why use a second
+holdout claim? It registers one new post-selection subgroup audit, preserves
+the original model evaluation and prevents accidental audit retries. Why no
+counterfactual search? No clinical intervention set is defensible at discharge.
+What would you improve? Pre-register larger independent samples, clinically
+review recording/joint plausibility, and obtain contemporary external evidence.
+
+**Semester viva — Basic:** What is a global/local explanation? A global summary
+describes typical contribution magnitudes; a local one assigns signed change
+for a case against a baseline. What is FNR? One minus recall. What is the
+positive class? `<30` readmission. **Intermediate:** Why group one-hot fields?
+They are one source variable, and independent dummy switching can violate valid
+encoding. Why fix paths in stability? To reduce new sampling noise. Why suppress
+small subgroup results? Estimates and privacy are weak at sparse support.
+**Difficult:** What does marginal masking assume? It replaces fields from an
+empirical training reference, without modelling conditional clinical dependence.
+Why is a zero-norm distance undefined? There is no original magnitude to divide
+by. Why are marginal subgroup intervals not a disparity significance test?
+They do not estimate the paired difference or adjust multiple comparisons.
+Can an exclusive filesystem claim prevent a malicious administrator? No; stronger
+storage/governance is outside the current local research boundary.
+
+### Empirical results and completion evidence
+
+Implemented and verified locally; external supervisor review is pending. The
+protocol was frozen at `2026-10-11T05:15:09.910670+00:00`, before outcomes. The
+completed manifest timestamp is `2026-10-11T05:17:30.784462+00:00`. The audit
+claimed one post-selection subgroup access to 19,535 encounters/13,812 patients.
+The original model holdout evaluation and claim were preserved; there was no
+model reselection, fitting, calibration fitting or threshold tuning.
+
+Global mean absolute contributions are in calibrated probability units, not
+percentages of causal influence. Prior inpatient utilization was largest in
+all three repeats; its mean 0.032975 is approximately 3.30 probability percentage
+points. The baseline probabilities for the three repeats were 0.107816,
+0.110666 and 0.105843. Results reflect the frozen model and sampled reference.
+
+| Source field | Mean absolute contribution | Three-repeat range |
+|---|---:|---:|
+| Prior inpatient visits | 0.032975 | 0.028624–0.036702 |
+| Time in hospital | 0.007839 | 0.007793–0.007901 |
+| Diagnosis count | 0.005413 | 0.005119–0.005659 |
+| Diabetes medication indicator | 0.003951 | 0.003747–0.004136 |
+| Medication count | 0.003593 | 0.003352–0.004053 |
+| Prior emergency visits | 0.002866 | 0.002491–0.003075 |
+| A1C result | 0.002245 | 0.001861–0.002634 |
+| Lab procedure count | 0.001953 | 0.001896–0.002046 |
+| Procedure count | 0.001707 | 0.001665–0.001738 |
+| Prior outpatient visits | 0.001074 | 0.000840–0.001203 |
+| Admission type | 0.000962 | 0.000914–0.001024 |
+| Admission source | 0.000543 | 0.000395–0.000763 |
+| Maximum glucose serum category | 0.000388 | 0.000115–0.000625 |
+
+The fixed synthetic local probability was 0.127821691881, against baseline
+0.108475507333. The signed contributions sum to 0.019346184548. Largest positive
+contributions were prior inpatient visits +0.016184960386 and procedure count
++0.005361225860; diagnosis count contributed -0.008901138329. The complete local
+record contains all 13 original synthetic values and contributions. These are
+reference-dependent model associations, not patient evidence or care advice.
+The frozen calibration coefficients are `a=1.046740791844`,
+`b=0.093210594239`; these are the fitted mapping parameters, distinct from the
+Milestone 2 held-out diagnostic calibration regression's slope/intercept.
+
+Eighty stability comparisons had mean top-3 overlap 0.95 (minimum 1/3), mean
+absolute-attribution Spearman correlation 0.945536 (minimum 0.631868), and mean
+normalized L1 change 0.077479 (maximum 0.516299). Mean absolute probability change
+was 0.002753, maximum 0.033485. Three comparisons fell below overlap 2/3 and five
+exceeded normalized L1 0.25. There were zero 0.5 boundary crossings, zero wholly
+unchanged perturbations and zero undefined comparison metrics. Observed bounds
+were labs 1–132 and procedures 0–6. Good average overlap therefore coexists with
+material local attribution changes; no universal stability conclusion follows.
+The crossed-class summary is null because there were no such comparisons.
+
+Fifteen of 21 predeclared subgroup slots met support: five race categories
+including missing, two genders and eight source age bands. Asian, unknown/missing
+gender, the two youngest age bands and missing age were withheld. Missing race
+comprised 410 encounters, including 40 positives. Counts below 20 are suppressed.
+All supported metrics had 200 valid bootstrap replicates and zero undefined
+replicates. The following values are descriptive subgroup point estimates; the
+complete result retains nine metrics and 95% intervals for every supported group.
+
+| Attribute/group | Encounters | Patients | Positives | Prevalence | AP | ROC-AUC | Brier | Recall at 0.5 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Race/AfricanAmerican | 3,631 | 2,500 | 398 | 0.109612 | 0.221488 | 0.642704 | 0.093631 | 0.015075 |
+| Race/Caucasian | 14,685 | 10,362 | 1,709 | 0.116377 | 0.195458 | 0.635365 | 0.099950 | 0.003511 |
+| Race/Hispanic | 404 | 301 | 47 | 0.116337 | 0.341211 | 0.698820 | 0.094700 | 0 |
+| Race/Other | 280 | 233 | 28 | 0.100000 | 0.223538 | 0.653132 | 0.086358 | 0 |
+| Race/Missing | 410 | 362 | 40 | 0.097561 | 0.198620 | 0.605000 | 0.085954 | 0 |
+| Gender/Female | 10,343 | 7,255 | 1,177 | 0.113797 | 0.196189 | 0.629115 | 0.097973 | 0.007647 |
+| Gender/Male | 9,192 | 6,557 | 1,063 | 0.115644 | 0.210509 | 0.650909 | 0.098574 | 0.002822 |
+| Age/[20-30) | 292 | 224 | 29 | 0.099315 | 0.240104 | 0.715353 | 0.084597 | 0 |
+| Age/[30-40) | 738 | 534 | 87 | 0.117886 | 0.367450 | 0.795981 | 0.091777 | 0.068966 |
+| Age/[40-50) | 1,835 | 1,336 | 193 | 0.105177 | 0.245566 | 0.668772 | 0.088911 | 0.025907 |
+| Age/[50-60) | 3,386 | 2,501 | 354 | 0.104548 | 0.194858 | 0.652099 | 0.090417 | 0 |
+| Age/[60-70) | 4,426 | 3,166 | 510 | 0.115228 | 0.200782 | 0.636677 | 0.098762 | 0 |
+| Age/[70-80) | 4,871 | 3,569 | 547 | 0.112297 | 0.179552 | 0.609731 | 0.097658 | 0.001828 |
+| Age/[80-90) | 3,289 | 2,294 | 432 | 0.131347 | 0.190385 | 0.600354 | 0.112380 | 0 |
+| Age/[90-100) | 527 | 385 | 80 | 0.151803 | 0.207096 | 0.587109 | 0.128457 | 0 |
+
+Observed differences include gender ROC-AUC 0.629115 versus 0.650909, and age
+ROC-AUC 0.795981 for [30-40) versus 0.587109 for [90-100). The corresponding
+95% patient intervals are Female [0.608449, 0.648161], Male [0.632397, 0.673503],
+[30-40) [0.729181, 0.849195], and [90-100) [0.514392, 0.660598]. These intervals
+describe separate group estimates; no adjusted statistical disparity test or
+causal discrimination claim was implemented. Hispanic AP 0.341211 has a broad
+interval [0.197289, 0.478389] with only 47 positives. Non-overlapping or
+overlapping marginal intervals alone are not the registered disparity test.
+
+At 0.5, supported-group recall ranges from zero to 0.068966, specificity from
+0.993856 to 1, FPR from zero to 0.006144, FNR from 0.931034 to 1, and positive
+prediction rate from zero to 0.013550. Many groups have zero alerts and recall.
+The audit reinforces the existing threshold limitation, not threshold selection.
+Bootstrap intervals of [0,0] for zero observed events are an empirical-bootstrap
+limitation: resampling cannot create an unseen event and does not prove true
+population error is zero. No group is described as unbiased or certified fair.
+
+The recourse result is `no_defensible_recourse` / `no_feasible_scenario`, with
+no search and no candidates. This implements the authorized feasibility branch;
+clinically actionable counterfactual generation is not an accomplishment.
+
+Evidence lives only in ignored `artifacts/healthcare-audit-v1`, containing the
+four intended files. Full SHA-256 identities:
+
+- Model: `8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`.
+- Selection: `85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7`.
+- Split membership: `6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316`.
+- Audit configuration bytes: `36c0a12c710a2cf04ce650a780d165d72eea281479db3aa34ae7433f96b8804c`.
+- Canonical protocol: `fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f`.
+- Protocol file: `2f5ed6f4427ee64c145a8e72a1f89c398e1303ae12a8386ecf2ff28e71b49cb2`.
+- Results file: `2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
+- Audit claim: `8844e211c51259ffee18e81514f4aac6974ca1e7c1d867054a258de477a0e9fd`.
+- Manifest: `3fbbf27c0d3489768bc457f21cc5e1ec7b4f2326c7b5b5a35b3d54ab20e12b01`.
+
+The manifest binds source/feature/split/config/code/test/model-run file hashes,
+software, seeds, timestamps, method metadata, limitations and explicit access.
+Privacy inspection uses the strict publication schema and matching synthetic
+values; raw records, identifying values and real prediction/attribution vectors
+are absent. Aggregate release is not formal differential privacy. Local file
+immutability prevents accidental overwrites; it does not prevent malicious deletion.
+
+**Verification and resume evidence.** Python 3.12.10 pip check and Ruff lint
+passed; formatting reports 69 files already formatted. New unit tests: 25 passed
+in 2.48s; new integration tests: 10 passed in 9.06s; all healthcare tests: 56
+passed in 13.29s. Complete offline suite: 122 passed, 1 live test deselected,
+25 existing credit L2-deprecation warnings in 17.46s. One seeded empirical audit
+completed; it checked original frozen bindings again and inspected saved
+manifest/privacy successfully. No clinical latency or deployment was measured.
+There is one sampled attribution method serving global and local explanations,
+80 recording comparisons, 15 supported subgroup estimates and one feasibility
+assessment; do not claim multiple XAI techniques or clinical recourse.
+
+**Remaining limits and next step.** The sample/reference and marginal hybrids
+restrict XAI; the recording probe has no clinician validation; sparse historical
+groups and empirical-bootstrap zero-event intervals restrict fairness evidence;
+recourse lacks a feasible intervention space. The next step is external
+supervisor review of this milestone. No later milestone, similar-case retrieval,
+application, LLM/RAG, registry, database or deployment was begun. No commit/push
+was made; review authorization is not inferred from completion.
+
 ## Macro Milestone 2 — Patient-safe healthcare modelling (2026-10-06)
+
+**Historical milestone record:** the model/results below remain valid frozen
+evidence. Statements about future XAI/audits describe the end of Macro Milestone
+2; those methods are now implemented in Macro Milestone 3 above.
 
 **Scope and order.** After the UCI 296 identity, target, 99,343-encounter
 eligible cohort, 13-field feature policy and patient split were frozen in
@@ -307,7 +834,14 @@ evaluation? How does the selection record stop retrospective model shopping?
 
 ## Macro Milestone 1 — Healthcare realignment and evidence (2026-10-05)
 
-**Current interpretation:** Aletheia remains a high-stakes tabular XAI platform, now demonstrated primarily with hospital readmission risk and secondarily with the approved South German Credit benchmark. The original `prompt.txt` named credit first, so the early approved phases built a credit data foundation and training-only baseline. The supervisor then selected healthcare as the flagship. Preserving credit avoids discarding tested methods and supplies a second domain against which later shared interfaces can be judged. Older credit-first wording below is historical; this section, the new ADRs, and the healthcare audit state the current scope. No healthcare model, API, UI, database, registry or deployment exists yet.
+**Historical foundation record:** all implementation-status, review and next-step
+statements in this section describe Macro Milestone 1 at that date. Macro
+Milestones 1 and 2 are now completed; the healthcare model and Macro Milestone 3
+XAI, stability, subgroup audit and feasibility assessment now exist. Macro
+Milestone 3 awaits external review. API/UI/database/registry/deployment remain
+unimplemented. The source/cohort/split measurements below remain unchanged.
+
+**Interpretation at Macro Milestone 1:** Aletheia remained a high-stakes tabular XAI platform, demonstrated primarily with hospital readmission risk and secondarily with the approved South German Credit benchmark. The original `prompt.txt` named credit first, so the early approved phases built a credit data foundation and training-only baseline. The supervisor then selected healthcare as the flagship. Preserving credit avoided discarding tested methods and supplied a second domain against which later shared interfaces could be judged. At that foundation stage, no healthcare model, API, UI, database, registry or deployment existed yet.
 
 ### What was built, why now, and how it works
 
@@ -402,9 +936,10 @@ measure selected properties, not legal compliance or universal fairness.
 ## Scope, Users, and Assumptions
 
 **Established scope:** Macro Milestone 1 passed external review at `9073c453`.
-Macro Milestone 2 now has a locally verified healthcare model comparison,
-checksummed fitted artifact and one locked-holdout evaluation, pending external
-review. Earlier approved credit phases provide the secondary benchmark,
+Macro Milestone 2 is the preserved committed model prerequisite at `49a1a8c`.
+Macro Milestone 3 adds the locally verified explanation/stability/subgroup audit
+and no-recourse assessment documented above, pending external supervisor review.
+Earlier approved credit phases provide the secondary benchmark,
 including a training-only dummy/Logistic Regression baseline. Neither domain
 has a deployed application; the healthcare result is retrospective educational
 evidence, and credit's training CV is not held-out or production evidence.
@@ -421,15 +956,21 @@ before the dataset is understood.
 
 `prompt.txt` preserves Aletheia's permanent original vision. It describes the
 complete platform ambition, not permission to implement every feature now.
-`docs/CURRENT_TASK.md` authorizes only Macro Milestone 2. That milestone has
-completed one guarded held-out evaluation and awaits external review. It does
-not authorize a later milestone. The frozen contracts, split, source,
-dependencies, preserved credit work and earlier metrics remain unchanged.
-XAI, fairness, stability and application work remain outside this task.
+`docs/CURRENT_TASK.md` authorizes only Macro Milestone 3. Its tested protocol and
+one guarded post-selection subgroup audit are completed locally and await
+external review. Completion does not authorize a later milestone. The frozen
+contracts, split, source, model, dependencies, preserved credit work and earlier
+metrics remain unchanged. Application, MLOps, LLM/RAG and later work remain
+outside this task.
 
 ## Functional Requirements
 
-The planned research prototype must:
+Current healthcare implementation satisfies the source, preprocessing, model
+comparison, class-aware evaluation, global/local XAI, stability, subgroup audit
+and reproducible evidence requirements. Counterfactual feasibility is implemented
+with an explicit no-recourse result; candidate generation is not justified.
+Stability uses training cases, not another holdout access. The list below preserves
+the original research requirements rather than claiming every item is future work:
 
 1. preserve an approved dataset's source, licence, version, schema, and data
    dictionary;
@@ -439,8 +980,10 @@ The planned research prototype must:
    without tuning on final test data;
 5. produce global and selected-case local explanations, labelling native and
    post-hoc methods;
-6. generate valid constrained counterfactual candidates;
-7. run a predeclared explanation-stability study for selected held-out cases;
+6. assess counterfactual feasibility and generate constrained candidates only
+   where defensible (healthcare currently has no admissible recourse);
+7. run a predeclared explanation-stability study for authorized cases
+   (implemented healthcare study uses training-only cases);
 8. perform subgroup analysis only when defensible; and
 9. record data version, seed, split, preprocessing, feature schema, algorithm,
    hyperparameters, environment where practical, and metrics.
@@ -469,7 +1012,9 @@ are not prerequisites for answering the research question.
 **Primary current question:** For the documented healthcare readmission cohort,
 how can later model families trade predictive performance, calibration,
 interpretability, explanation stability, and conditional subgroup evidence in a
-human-auditable workflow? No healthcare model has yet been trained or compared.
+human-auditable workflow? Macro Milestones 2 and 3 now supply bounded model,
+calibration and audit evidence; contemporary external and clinical validity
+remain unresolved.
 The earlier credit-specific version of this question remains a secondary-domain
 research record for the approved benchmark.
 
@@ -540,6 +1085,11 @@ including four bad outcomes.
 
 ## Planned ML and Evaluation Strategy
 
+**Historical credit-first planning:** the strategy below preceded healthcare
+selection. Current healthcare modelling/calibration is completed under the
+patient-group protocol in Macro Milestone 2 above and ADR 0006; it does not use
+the credit random-split defaults described here.
+
 **Candidate models:** Regularised Logistic Regression is the required,
 interpretable baseline: fast, reproducible, and directly inspectable through
 coefficients. A shallow constrained Decision Tree is an optional native
@@ -567,6 +1117,14 @@ definitions. This protects against target, temporal, preprocessing, duplicate,
 and entity leakage.
 
 ## Explainability and Audit Requirements
+
+**Current healthcare boundary:** global/local sampled Shapley probability
+explanations, training-only recording stability, guarded subgroup metrics and
+counterfactual feasibility are implemented and locally verified, pending review.
+The conceptual credit-first requirements below are historical planning; their
+deferred methods do not describe missing healthcare implementation. The exact
+current method, samples, limitations and evidence are recorded in Macro Milestone
+3 above and ADR 0007. No actionable counterfactual search is implemented.
 
 **Global vs local:** Global explanations ask which inputs generally influence a
 model over a stated population; native coefficients/tree structure and
@@ -622,7 +1180,10 @@ and later privacy-conscious audit design.
 
 The following Research MVP and semester-application boundaries describe the
 earlier **credit-first phases**. The current healthcare-first capability and
-tooling boundaries are in the Macro Milestone 1 record above and its ADRs.
+tooling boundaries are in the Macro Milestone 2–3 records above, the current
+five-milestone execution plan and product requirements. Every status statement
+in the credit-first boundaries below is historical, including the then-unselected
+tools and then-unimplemented stability study.
 
 **Research MVP:** the minimum evidence-producing ML/XAI prototype: one approved
 documented dataset; leakage-safe reproducible preprocessing and splitting; an
@@ -658,6 +1219,10 @@ learning, and local LLMs.
 
 ## Decisions Finalized for the Baseline and Deferred Work
 
+**Historical secondary credit baseline decisions:** the deferred healthcare
+model/XAI status is superseded by Macro Milestones 2–3. Future application tools
+are selected/provisional in the current deployment design, still unimplemented.
+
 Phase 2 selects a research-first modular monolith, Python 3.12, pandas,
 scikit-learn, standard TOML/JSON configuration/artifacts, pytest, Ruff,
 Matplotlib/Markdown reporting, and an immutable local run-store concept. Phase
@@ -675,6 +1240,17 @@ stability, FastAPI, frontend frameworks, MLflow, databases, Docker, deployment,
 authentication, and enterprise infrastructure remain deferred or unselected.
 
 ## System Architecture
+
+**Current implementation:** the healthcare Python research core now includes
+foundation, patient-group modelling/evaluation, frozen calibrated inference,
+global/local XAI, recording stability, guarded subgroup audit and fail-closed
+recourse feasibility, with immutable local model/audit records. See
+[ARCHITECTURE.md](ARCHITECTURE.md) and the Macro Milestone 2–3 component/data-flow
+records above. API, UI, database, MLflow, authentication, deployment, CI/CD,
+monitoring, LLM/RAG and later operations remain unimplemented.
+
+**Historical credit Phase 2–4 architecture:** the following description and its
+future-method statements preserve the secondary benchmark's earlier state.
 
 **Externally supervisor-approved Phase 2 design:** a research-first modular
 monolith. One Python research core contains small components for verified data
@@ -898,6 +1474,16 @@ calculated, or preserved metric changed. This repair is pending external review;
 it supplies software-boundary evidence, not new empirical ML evidence.
 
 ## Data Flow
+
+**Current healthcare flow:** verified source/cohort/roles → locked patient split
+→ training-only nested group CV and calibration → frozen selection/fitted artifact
+→ one locked model evaluation → unchanged calibrated model with training-only
+XAI/stability and feasibility assessment → one separately guarded subgroup audit
+→ aggregate evidence and checksummed manifest. This documentation repair reads
+saved evidence only; it repeats none of these empirical stages.
+
+**Historical credit flow:** the Phase 3–4 flows below and their deferred final
+fit/holdout/XAI statements describe the secondary benchmark only.
 
 The implemented Phase 3 flow is: official source → temporary download → archive
 size/hash verification → exact safe member read → raw size/hash verification →
@@ -1626,8 +2212,10 @@ or serve as a confidence interval?
 Current healthcare evidence: four model families, eight raw/calibrated
 protocols, 79,808 training and 19,535 single held-out encounters, outer best
 mean AP 0.199591, held-out AP 0.202633 and ROC-AUC 0.639473, one sigmoid
-calibration technique, 87 passing offline tests, no measured inference latency
-or deployment. These facts support a bounded educational result, not a
+calibration technique, one sampled Shapley method used globally/locally,
+80 recording-sensitivity comparisons, 15 supported subgroup estimates,
+one no-recourse feasibility assessment, and 122 passing offline tests. No
+measured inference latency or deployment exists. These facts support a bounded educational result, not a
 clinical-performance resume claim. The figures below are **secondary South
 German Credit benchmark evidence** from earlier phases.
 
@@ -1650,8 +2238,11 @@ each predictor still needs clinical workflow verification. The conservative
 13-feature policy can omit useful signal; unknown-category zero encoding
 loses detail. AP and precision depend on prevalence. The chosen 0.5 cutoff
 has very low recall and no clinical cost justification. Calibration slope and
-patient-cluster intervals describe this cohort only. No prospective validation,
-subgroup fairness, XAI, clinical utility or deployment is established.
+patient-cluster intervals describe this cohort only. The sampled XAI and
+subgroup/stability evidence above is limited to its registered reference,
+samples and methods; marginal hybrids, sparse groups, bootstrap zero-event
+intervals and absent clinical recourse remain unresolved. No prospective
+validation, clinical utility, fairness certification or deployment is established.
 
 The paragraph below preserves limitations of the secondary credit benchmark.
 
@@ -1670,13 +2261,14 @@ controls reduce but cannot eliminate reproducibility risk.
 ## Future Work
 
 **Useful next step, subject to approval:** external supervisor review of Macro
-Milestone 2 evidence and the user-owned task-file whitespace finding. A later
-task could examine clinically meaningful threshold and external validation
-only with appropriate data and approval. This report does not authorize Macro
-Milestone 3 or resumption of the stashed credit comparator work.
+Milestone 3 and its limitations. A later task could examine clinically reviewed
+feasibility or external validation with appropriate data and approval. This
+report authorizes neither a later milestone nor the stashed credit work.
 
-**Research extensions:** the separately gated global/local XAI, constrained
-counterfactual, stability, and conditional-fairness studies in the roadmap.
+**Research extensions:** larger pre-registered XAI/stability samples, justified
+conditional attribution, clinician-reviewed intervention feasibility, and
+contemporary external/temporal evaluation. Existing subgroup evidence does not
+remove the need for a reviewed disparity methodology.
 Developer Code Intelligence and System Traceability is proposed and
 unimplemented, placed after core data, modelling, evaluation/XAI, and basic
 application boundaries stabilize; it requires its own approved task.

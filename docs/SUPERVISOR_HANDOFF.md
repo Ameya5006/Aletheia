@@ -1,62 +1,204 @@
-﻿# Supervisor Handoff — Macro Milestone 2
+# Supervisor Handoff — Macro Milestone 3
 
 ## 1. Current milestone and status
 
-Macro Milestone 2's implementation and one locked-holdout evaluation are locally verified; external supervisor review is pending. The required global git diff --check remains failing only on trailing whitespace in user-owned CURRENT_TASK.md, which Codex may not change. Starting HEAD and local origin/main were both 9073c4531bcd01f70050450425c2e25b8b508abb on main. No commit or push was made. The user-owned CURRENT_TASK.md modification and WIP stash were not changed.
+Current task: final Macro Milestone 3 reproducibility repair. Macro Milestones
+1–2 are completed; Macro Milestone 3 remains implemented, pending external review.
+The supervisor reports that uploaded evidence passed internal technical,
+chronology, metric, binding and privacy review. This does not authorize Macro
+Milestone 4. Starting `main`, HEAD and origin/main remained
+`49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb`; status matched the authorized inventory
+and stash remained `c6b91a13bf4338e559dfaad49f850dd719f5ca47`.
 
-## 2. Implemented work and files
+Files changed in this final repair: new repository-root `.gitattributes`,
+docs/PROJECT_REPORT.md and this handoff only. Documentation consistency inspection
+found the seven requested documents agree on completed Macro Milestones 1–2,
+implemented Macro Milestone 3 pending review, and unimplemented application/MLOps/
+deployment; earlier foundation/credit states are explicitly historical.
 
-The frozen UCI 296 foundation feeds fold-local preprocessing, four bounded candidates, five outer and three inner patient-group folds, group-OOF sigmoid calibration, deterministic training repeat, immutable nested-CV and selection records, a checksum-bound trusted-local joblib artifact, and one guarded held-out evaluation with patient-cluster intervals. The healthcare CLI calls the experiment. The production records are ignored under artifacts/healthcare-model-v1.
+Symptom: an LF checkout produces a different split-lock byte digest from the
+frozen Windows CRLF file. Root cause: SHA-256 includes line-ending bytes even
+when parsed JSON is identical. Independently read the committed Git blob as
+bytes: LF SHA-256
+`9543d65d1dc4fc2ef3e3f6a4f43fa88828550241a78291876d289d3e83755ecd`;
+in-memory CRLF conversion exactly reproduces the frozen/current working-copy
+SHA-256 `a3ca2af19215bcf965afecaa75a1c6ec2912f3cf832f2aaec82562ec7855446d`.
+Committed/converted/working JSON objects are equal; `membership_sha256` remains
+`6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316`.
 
-Modified: README.md; docs/ARCHITECTURE.md; docs/EXECUTION_PLAN.md; docs/PROJECT_REPORT.md; docs/SUPERVISOR_HANDOFF.md; src/aletheia/domains/healthcare/__main__.py. The existing modification to docs/CURRENT_TASK.md is user-owned. Created: configs/experiments/healthcare_model_v1.toml; docs/decisions/0006-healthcare-model-selection-protocol.md; docs/model_cards/healthcare_readmission_v1.md; src/aletheia/domains/healthcare/modeling.py, evaluation.py and experiment.py; tests/healthcare/test_modeling.py and test_experiment.py.
+Resolution: `.gitattributes` contains the single narrow rule
+`configs/splits/healthcare_uci296_v1.lock.json text eol=crlf`.
+Rewriting frozen evidence was rejected: it would alter reviewed bindings rather
+than fix checkout representation. No split bytes/membership, model, results,
+threshold, configuration, implementation or tests changed. Future structured
+artifacts should specify canonical JSON hashes alongside exact-byte integrity
+hashes; this is advisory and does not change current methodology or architecture.
 
-## 3. Decisions and architecture
+Final repair verification commands/results (all exit 0):
 
-The 13 frozen predictors receive fold-fitted median imputation and scaling for eight numeric fields, and constant missing imputation plus one-hot encoding for five categorical fields. Unknown categories map to all-zero indicators for their field. Patient grouping is required at every CV and calibration fold; histogram boosting disables its internal row-level early stopping and uses a checked dense fold-local transform. Average precision is primary; candidates within 0.005 use Brier, ROC-AUC and log loss. Threshold 0.5 is descriptive. The evaluator checks complete nested-CV evidence, selection/config/split identities and artifact hashes before an exclusive holdout claim. No credit, API, registry, database, frontend or deployment boundary changed. See ADR 0006 and ARCHITECTURE.md.
+- `git check-attr text eol -- configs/splits/healthcare_uci296_v1.lock.json`:
+  `text: set`, `eol: crlf`.
+- `.\.venv\Scripts\python.exe -m aletheia.domains.healthcare.audit inspect`:
+  `status: verified`, no patient-data loading, predictions or new holdout access.
+- `.\.venv\Scripts\python.exe -m pip check`: no broken requirements.
+- `.\.venv\Scripts\python.exe -m ruff check .`: all checks passed.
+- `.\.venv\Scripts\python.exe -m ruff format --check .`: 69 files formatted.
+- `.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp data/processed/pytest-m3-final-repro-offline -m "not live_data"`:
+  **122 passed, 1 deselected, 25 existing credit deprecation warnings in 33.50s**.
+- `git diff --check`: passed; `git diff --cached --name-only`: empty.
+- Independent committed-byte LF/CRLF hash and JSON-equality assertions passed;
+  all 79 protected files matched the pre-repair snapshot. All four audit hashes
+  before/after matched exactly (full unchanged hashes in section 8).
 
-## 4. Exact experiment evidence
+Only authorized `git add -N -- .gitattributes` exposed the new file in the diff;
+no contents were staged. The first attempt was blocked by sandbox permission on
+`.git/index.lock`; command escalation succeeded without additional Git changes.
+Complete review export: `%TEMP%\aletheia-macro3-final-review.patch`, generated
+from `git diff --binary --full-index HEAD --` with byte-preserving subprocess
+output. It includes every current milestone change, PRODUCT_REQUIREMENTS.md,
+DEPLOYMENT_ARCHITECTURE.md and .gitattributes; it is outside repository status.
+The existing evidence ZIP/artifacts remain untouched. No audit freeze/run,
+retraining/reselection, production predictions, new holdout access, later
+milestone, commit or push occurred. Remaining historical-data, sparse-group,
+XAI/stability sampling, no-recourse and absent deployment limitations remain.
+Advisory next step: external supervisor review of the complete patch. Future
+canonical JSON hashing requires a separately approved protocol; do not retrofit
+it into frozen evidence.
 
-Training: 79,808 encounters, 56,178 patients, 70,734 negatives and 9,074 positives. Two full training-only calculations agreed excluding wall-clock timing. Outer mean AP: dummy 0.113698, Logistic Regression 0.197312, Random Forest 0.196374, Histogram Gradient Boosting 0.199591. The selected histogram plus sigmoid had outer mean ROC-AUC 0.635554, Brier 0.097624 and log loss 0.340964. Final inner selection chose 15 leaves, 30 iterations and minimum leaf size 40. Forest training versus validation AP was 0.235960 versus 0.196374; selected histogram was 0.215586 versus 0.199591. No captured convergence warnings occurred.
+### Earlier documentation repair record (historical)
 
-Selection SHA-256: 85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7. Deterministic training-results SHA-256: 152b87cc3e0bc2ccaa365d7ea7de192f3f128214203ce38a1b88704a8a576aa4. Fitted artifact SHA-256: 8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a. Recorded runtime versions: Python 3.12.10, scikit-learn 1.9.0, pandas 3.0.5, numpy 2.5.3 and SciPy 1.18.1.
+Current task: external-supervisor-directed Macro Milestone 3 documentation-only
+review repair. Macro Milestones 1 and 2 are completed; Macro Milestone 3 remains
+implemented and locally verified, pending external review. The starting file
+inventory matched the reported Macro Milestone 3 work; new files retained their
+existing intent-to-add index state. Repair edits only README.md,
+docs/PRODUCT_REQUIREMENTS.md, docs/DEPLOYMENT_ARCHITECTURE.md,
+docs/ARCHITECTURE.md, docs/EXECUTION_PLAN.md, docs/PROJECT_REPORT.md and this handoff.
+Stale planned/current statements are reconciled and earlier states labelled
+historical. There is no architecture or methodology change in this repair.
 
-One held-out evaluation: 19,535 encounters, 13,812 patients, 17,295 negatives and 2,240 positives. ROC-AUC 0.639473 [0.626640, 0.653593]; AP 0.202633 [0.184091, 0.221497]; balanced accuracy 0.502418 [0.500125, 0.505621]; recall 0.005357 [0.000452, 0.012309]; specificity 0.999480 [0.998931, 0.999858]; precision 0.571429 [0.200000, 0.693429]; F1 0.010615 [0.000902, 0.024124]; log loss 0.342237 [0.331423, 0.352035]; Brier 0.098255 [0.094170, 0.101733]. These are 95% intervals from 500 seeded patient-cluster resamples, seed 4242. At threshold 0.5: TN 17,286, FP 9, FN 2,228, TP 12. Calibration intercept 0.133640, slope 1.058929; curve points are in holdout.json. This threshold misses almost all positive encounters and is not clinically approved.
+Fresh repair verification: pip check exit 0 (no broken requirements); Ruff lint
+exit 0 (all checks passed); Ruff format check exit 0 (69 files already formatted);
+complete offline pytest exit 0, **122 passed, 1 deselected, 25 existing credit
+L2-deprecation warnings in 33.94s**. Command:
+`.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp data/processed/pytest-m3-review-repair-offline -m "not live_data"`.
+Read-only `.\.venv\Scripts\python.exe -m aletheia.domains.healthcare.audit inspect`
+exit 0, status `verified`; no new predictions or holdout access. No freeze/run,
+model fitting or selection occurred during the repair. The sections below retain
+the implementation evidence; their freeze/run and earlier test commands are
+historical, not fresh repair commands.
 
-## 5. Checks actually executed
+Implemented and locally verified; external supervisor review pending. Starting main, HEAD and origin/main: 49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb. Only user-owned CURRENT_TASK.md was modified. Its contents and the existing credit WIP stash remain untouched. No commit, push, branch/remote mutation or later milestone began.
 
-Final Python 3.12.10 checks: pip check exited 0, “No broken requirements found”; Ruff check exited 0, “All checks passed”; Ruff format check exited 0, “61 files already formatted”; targeted healthcare modelling tests exited 0, 10 passed in 2.91s; complete offline suite exited 0, 87 passed, 1 live-data test deselected, 25 existing scikit-learn deprecation warnings in 10.24s. The runner's deterministic training repeat matched. Read-only record comparison confirmed training completeness, selection recomputation, config/training/selection/artifact/holdout hash links, artifact version match and trusted-local load. Synthetic tests covered artifact checksum/version refusal and an existing holdout claim. A real second CLI invocation exited 1 before data loading with “experiment directory exists; refusing rerun.” No second held-out prediction occurred.
+## 2. What was implemented
 
-The required global git diff --check reports trailing whitespace on line 20 of user-owned docs/CURRENT_TASK.md. The scoped check excluding that file exits 0; the file is intentionally untouched. Final exact Git status is recorded below after all edits.
+Complete calibrated-probability source-field sampled Shapley explanations; fitted transformed/source lineage; repeated-sample global evidence; deterministic local structure with a fixed synthetic publication example; bounded recording stability; support-guarded race/gender/source-age subgroup metrics with patient uncertainty; explicit no-recourse feasibility; frozen protocol and exclusive aggregate audit artifacts. No audit function fits preprocessing, model or calibration, reselects a model, or tunes a threshold.
 
-## 6. Problems and recovery
+## 3. Files created/modified and preserved
 
-An earlier manually interrupted roughly 55-minute training run left no production checkpoint or claim; it was restarted. Histogram boosting's default internal row validation was discovered before selection, so early_stopping=False and a regression test were added. During recovery, an unnecessary interruption followed a mistaken reading of the already complete Brier metric list; no config edit or output resulted. The final training repeat and model fit completed, but the strengthened holdout guard initially refused before any claim because JSON key sorting changed selection option-list order. A canonical candidate-order enumeration fixed this without changing the winner or rule. The complete training record, selection and artifact were verified, then only guarded evaluation resumed once. No holdout retry or selection based on held-out results occurred.
+Created: configs/audit/healthcare_audit_v1.toml; docs/decisions/0007-healthcare-explanation-responsible-audit.md; healthcare audit.py, explain.py, fairness.py, stability.py, counterfactual.py; tests/healthcare/test_audit.py and test_audit_integration.py.
 
-Initial parallel shell launches failed with CreateProcessWithLogonW error 1056;
-sequential inspection commands succeeded and no output was affected.
+Modified: README.md; docs/ARCHITECTURE.md; EXECUTION_PLAN.md; PROJECT_REPORT.md; SUPERVISOR_HANDOFF.md; HEALTHCARE_DATASET_AUDIT.md; model_cards/healthcare_readmission_v1.md; decisions/0006-healthcare-model-selection-protocol.md. CURRENT_TASK.md is a preserved user modification.
 
-## 7. Limits, evidence, and next step
+Intentionally unchanged: AGENTS.md, prompt.txt, task contents, dataset/feature/split/model configs and lock, original model/joblib and all original experiment files/claim, foundation/modelling/experiment code, dependencies, credit code and stash. Generated audit evidence is ignored under artifacts/healthcare-audit-v1 only.
 
-The historical UCI sample lacks hospital and encounter dates, external validation and clinical timestamp proof. The split is patient-disjoint but not temporal or hospital-disjoint. Unknown-category zero mapping loses detail. The 0.5 cutoff has extremely low recall and no clinical utility validation. Cluster intervals express sampling uncertainty in this cohort, not future or external uncertainty. No XAI, fairness, counterfactual, API, UI or deployment work began.
+## 4. Important decisions
 
-Inspect the versioned experiment TOML, modelling/evaluation/experiment modules, the two healthcare test files, ADR 0006, the model card, the report, and the ignored nested_cv.json, selection.json, artifact.json, holdout.claim and holdout.json. Unresolved: external review, clinical data-timing and transportability, a justified operational threshold, and the user-owned task-file whitespace check. Suggested next step: external supervisor review of Macro Milestone 2; any later milestone requires a replacement CURRENT_TASK.md.
+Explain the entire sigmoid-calibrated callable, with 13 original fields and 43 transformed columns. Paired permutation Monte Carlo interventional Shapley uses existing packages; SHAP was considered, not installed. Reference: 64 seeded training encounters, 32 orders plus reverses, sampled reference-probability baseline. Three 128-encounter training samples give descriptive repeat ranges, not confidence intervals. Stability fixes explanation paths for 16 cases × five +/-1 lab/procedure recording corrections. Fairness retains source categories; support requires 200 encounters/100 patients/20 positives/20 negatives; threshold stays 0.5; 200 subgroup patient-cluster draws give marginal 95% intervals. Exact counts below 20 are suppressed. No clinically reviewed mutable field or cost exists, so recourse is refused. See ADR 0007.
 
-## Final Git status
+## 5. Historical implementation tests/checks actually executed
 
-```text
- M README.md
- M docs/ARCHITECTURE.md
- M docs/CURRENT_TASK.md
- M docs/EXECUTION_PLAN.md
- M docs/PROJECT_REPORT.md
- M docs/SUPERVISOR_HANDOFF.md
- M src/aletheia/domains/healthcare/__main__.py
-?? configs/experiments/healthcare_model_v1.toml
-?? docs/decisions/0006-healthcare-model-selection-protocol.md
-?? docs/model_cards/healthcare_readmission_v1.md
-?? src/aletheia/domains/healthcare/evaluation.py
-?? src/aletheia/domains/healthcare/experiment.py
-?? src/aletheia/domains/healthcare/modeling.py
-?? tests/healthcare/test_experiment.py
-?? tests/healthcare/test_modeling.py
-```
+All use .venv/Scripts/python.exe. Pytest disables cache and uses ignored data/processed temporary paths.
+
+- pip check: exit 0, No broken requirements found.
+- ruff check .: exit 0, All checks passed!
+- ruff format --check .: exit 0, 69 files already formatted.
+- pytest -p no:cacheprovider --basetemp data/processed/pytest-m3-final-unit tests/healthcare/test_audit.py: exit 0, 25 passed in 2.48s.
+- pytest -p no:cacheprovider --basetemp data/processed/pytest-m3-final-integration tests/healthcare/test_audit_integration.py: exit 0, 10 passed in 9.06s.
+- pytest -p no:cacheprovider --basetemp data/processed/pytest-m3-final-healthcare tests/healthcare: exit 0, 56 passed in 13.29s.
+- pytest -p no:cacheprovider --basetemp data/processed/pytest-m3-final-offline -m "not live_data": exit 0, 122 passed, 1 deselected, 25 existing credit L2-deprecation warnings in 17.46s.
+- audit freeze: exit 0, protocol frozen, no audit outcomes calculated.
+- audit run: exit 0, status verified, original model unchanged and one guarded subgroup access.
+- audit inspect: exit 0, status verified; saved hashes, bindings, inventory and privacy passed without new predictions.
+- git diff --check: exit 0. Exact final git status is in the user response; no data, caches, temporary output or generated healthcare record appears there.
+
+## 6. Exact result evidence
+
+Global mean absolute probability contributions: prior inpatient visits 0.032975 (range 0.028624–0.036702), stay 0.007839, diagnoses 0.005413, diabetes medication indicator 0.003951, medication count 0.003593. All 13 fields/repeats are recorded. Synthetic local probability 0.127821691881, baseline 0.108475507333, summed signed contributions 0.019346184548. Fitted sigmoid coefficients a=1.046740791844, b=0.093210594239 convert clipped base-probability logits; they are not clinical feature effects or the previous holdout diagnostic regression.
+
+Stability: 80 comparisons; mean top-3 overlap 0.95 (minimum 1/3), absolute-rank correlation 0.945536 (minimum 0.631868), normalized L1 0.077479 (maximum 0.516299). Mean absolute probability change 0.002753, maximum 0.033485. Three comparisons below overlap reference 2/3, five above distance reference 0.25; zero class crossings, unchanged perturbations or undefined metrics. Bounds: labs 1–132, procedures 0–6. Average similarity coexists with local instability.
+
+Fairness: 15/21 subgroup slots supported: five race categories including missing, two genders, eight age bands. Asian, unknown/missing gender, youngest two bands and missing age withheld. Missing race: 410 encounters/40 positives. Nine metrics with all 200 valid interval replicates per supported group. Female/Male ROC-AUC 0.629115 [0.608449,0.648161] / 0.650909 [0.632397,0.673503]; AfricanAmerican/Caucasian AP 0.221488 [0.166015,0.291205] / 0.195458 [0.176630,0.215708]; age [30-40)/[90-100) ROC-AUC 0.795981 [0.729181,0.849195] / 0.587109 [0.514392,0.660598]. These are separate estimates, not adjusted disparity tests. Recall ranges 0–0.068966, specificity 0.993856–1, FPR 0–0.006144, FNR 0.931034–1, positive prediction rate 0–0.013550. Many groups have no alerts. No threshold tuning or fairness certification followed.
+
+Counterfactual: no_defensible_recourse / no_feasible_scenario, no search, zero candidates. The worked synthetic example refuses reducing prior inpatient visits or medication count because it rewrites history/care.
+
+## 7. Holdout access and reproducibility
+
+Protocol frozen at 2026-10-11T05:15:09.910670+00:00 before outcomes; manifest completed 2026-10-11T05:17:30.784462+00:00. One exclusive audit claim preceded predictions on 19,535 holdout encounters/13,812 patients. The original model evaluation/claim is preserved. A failed audit claim consumes access; no automatic retry or alternate production path exists. Source/schema/split integrity and already-frozen structural counts precede new prediction. Original bindings were verified again afterward. Software: Python 3.12.10, scikit-learn 1.9.0, pandas 3.0.5, NumPy 2.5.3, SciPy 1.18.1; seeds/config/code/test/data/split/model hashes are in the manifest.
+
+## 8. Artifacts and hashes
+
+Exactly four ignored audit files: protocol.json, holdout.claim, results.json, manifest.json. Full SHA-256:
+
+- Model: 8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a
+- Selection: 85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7
+- Split membership: 6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316
+- Audit config: 36c0a12c710a2cf04ce650a780d165d72eea281479db3aa34ae7433f96b8804c
+- Canonical protocol: fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f
+- Protocol file: 2f5ed6f4427ee64c145a8e72a1f89c398e1303ae12a8386ecf2ff28e71b49cb2
+- Results file: 2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8
+- Audit claim: 8844e211c51259ffee18e81514f4aac6974ca1e7c1d867054a258de477a0e9fd
+- Manifest file: 3fbbf27c0d3489768bc457f21cc5e1ec7b4f2326c7b5b5a35b3d54ab20e12b01
+
+## 9. Privacy inspection
+
+Strict schema inspection passed. Real raw records, row/identifier values and unrestricted patient predictions/attributions are absent. Only aggregates and the protocol-fixed synthetic local example are published. Exact counts below 20 are suppressed. This is not formal differential privacy or physical WORM storage. Local exclusive writes prevent accidental overwrite, not malicious administrator deletion.
+
+## 10. Problems and recovery
+
+Initial synthetic integration: 20 unit tests passed, nine setups failed manifest binding. Existing write_once returned an LF-payload digest while Windows persisted CRLF bytes. The new audit hashes persisted bytes after exclusive publication; original experiment code/evidence was preserved. Recovery and final tamper/privacy tests pass; no real holdout claim existed during the fix.
+
+The first protocol patch lacked configs/audit; creating only that authorized directory resolved it. Ruff import/long-literal findings were fixed before freezing. A documentation patch reported context failure after README edits were visible; current diff inspection preserved valid work, then smaller patches completed remaining files. A multiline Python/PowerShell inspection produced no output and was not counted as verification; explicit --% transport yielded successful bindings. The report documents actual symptoms, cause, investigation, rejected approaches, fixes, tests and lessons. No empirical method/model failure occurred.
+
+## 11. Known limitations
+
+Historical data without time/hospital external validation; missing/sparse groups and prevalence/case-mix dependence; marginal hybrids and finite XAI samples; recording sensitivity without clinician validation; no defensible intervention space; empirical-bootstrap zero-event intervals cannot prove zero population rates; no paired disparity or multiple-comparison inference, clinical validation or fairness certification. No latency/security/deployment claim.
+
+## 12. Architecture changes
+
+Five healthcare-only research modules call existing foundation/model contracts. No public API, database schema, fitted artifact migration, new package or hosted service. Similar-case retrieval, backend, frontend, LLM/RAG, registry, deployment and additional training remain outside this task.
+
+## 13. Documentation and evidence to inspect
+
+Repair review should also inspect PRODUCT_REQUIREMENTS.md and
+DEPLOYMENT_ARCHITECTURE.md: they now agree with the five-milestone roadmap and
+existing model/audit evidence. Selected future tools remain unimplemented;
+counterfactual feasibility does not imply actionable recourse. The external
+portable bundle is `%TEMP%\aletheia-macro3-review-evidence.zip`; its verification
+file records inspect output, all four audit file hashes, HEAD, exact status and
+the verification commands. No raw data or fitted model is included.
+
+Bundle created and verified at
+`C:\Users\agarw\AppData\Local\Temp\aletheia-macro3-review-evidence.zip`.
+Exactly five entries: protocol.json, holdout.claim, results.json, manifest.json
+under `artifacts/healthcare-audit-v1/`, plus VERIFICATION.txt. Each copied entry's
+SHA-256 matches its existing source (full hashes in section 8). ZIP SHA-256:
+`0be3b3792f11579cbb064001132a09a160751b66af29dfdee33a367e1593caf6`.
+Git status immediately before/after ZIP creation matched exactly. All 74 protected
+source/test/config/governing/dependency/model/audit files matched the pre-repair
+snapshot; refs/stash remained `c6b91a13bf4338e559dfaad49f850dd719f5ca47`.
+The first packaging attempt failed before ZIP creation because Windows PowerShell
+had not loaded System.IO.Compression; explicitly loading that assembly and
+System.IO.Compression.FileSystem succeeded. No repository artifact was changed.
+Repair `git diff --check` passed; exact final status is supplied to the user and
+in the bundle. CURRENT_TASK.md remains the original user-owned modification.
+
+README, architecture, execution plan, project report, dataset-audit context, model card, ADR 0006 status/addendum, new ADR 0007 and this handoff are current. Inspect the audit TOML, five modules, two new tests, four audit files and unchanged six original model-run files. The report includes component responsibilities, every global field, supported subgroup point estimates, uncertainty, the no-result example, recovery evidence and viva/interview notes. Use python -m aletheia.domains.healthcare.audit inspect; do not rerun/delete a claimed audit/model experiment.
+
+## 14. Unresolved questions
+
+External supervisor review; contemporary external data; clinical recording/intervention/joint feasibility; better pre-registered attribution samples/conditional reference; reviewed operational threshold and disparity inference. None is automatically authorized by completion.
+
+## 15. Advisory next step and Git recommendation
+
+Stop after Macro Milestone 3. External supervisor reviews evidence and determines any future task. Recommended user-performed commit message: feat: add healthcare XAI and responsible audit. Codex did not commit or push.

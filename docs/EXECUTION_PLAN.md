@@ -6,15 +6,38 @@ This sequence supersedes the older credit-first phase sequence recorded below. E
 
 | Macro milestone | Scope and definition of done | Status |
 |---|---|---|
-| 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Externally approved at `9073c453` |
-| 2. Healthcare research | Group-aware nested CV, bounded model comparison, sigmoid calibration and one locked holdout evaluation; model card and reproducible manifests | Implemented locally with one guarded holdout evaluation; external review pending |
-| 3. Explainable audit | Global/local XAI, constrained counterfactuals, explanation stability, conditional fairness and similar-case retrieval with measured limitations | Planned, not authorized |
+| 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Completed; externally approved at `9073c453` |
+| 2. Healthcare research | Group-aware nested CV, bounded model comparison, sigmoid calibration and one locked holdout evaluation; model card and reproducible manifests | Completed; committed frozen prerequisite at `49a1a8c`; preserved |
+| 3. Explainable audit | Tested frozen protocols; global/local calibrated-output explanations; recording stability; guarded subgroup audit; counterfactual feasibility or defensible bounded scenarios; immutable aggregate evidence and defence guide | Implemented and locally verified; external supervisor review pending; stop here |
 | 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved model serving | Planned, not authorized |
 | 5. Public delivery and operations | CI/CD, managed deployment, drift monitoring, code dependency graph and final defence evidence | Planned, not authorized |
 
 Credit remains a secondary benchmark. The older Phase 5 comparator/XAI/counterfactual/stability roadmap and WIP stash are not active implementation instructions. No future application dependencies are installed in milestone 1. See [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) for users and boundaries and [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md) for tooling.
 
+### Macro Milestone 3 execution and completion evidence
+
+Preparation verifies the preserved run and patient split before code changes.
+Next, the versioned explanation, stability, subgroup/support/uncertainty,
+counterfactual and privacy protocol is implemented and tested using synthetic
+inputs. `audit freeze` publishes its immutable bindings before empirical
+outcomes. `audit run` uses training-only XAI/stability and claims one
+post-selection holdout subgroup audit before scoring. No reselection, model fit,
+calibration fit or threshold change is authorized. Counterfactual feasibility
+assessment is a valid outcome where clinical recourse cannot be justified.
+
+Done requires dependency/lint/format checks, targeted unit and healthcare
+integration tests, the full offline suite, saved manifest and privacy inspection,
+model/config/split hash checks, current documentation, whitespace/status checks
+and external handoff. Codex stops after this milestone. Similar-case retrieval
+is part of the longer vision, excluded from the narrower current task; no
+backend, UI, database, LLM, registry, deployment or further training may begin.
+
 ## Historical credit-first execution record
+
+Everything below records the earlier credit Phase 0–4 state and its proposed
+next steps at that time. References to the "current task", blocked phases or
+Phase 4 review below are historical, not the current healthcare authorization
+or next step. Current work stops at Macro Milestone 3 review in the table above.
 
 ## Status and Authority
 

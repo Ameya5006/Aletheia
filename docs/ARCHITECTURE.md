@@ -1,5 +1,60 @@
 # Aletheia — System Architecture
 
+## Macro Milestone 3 research audit boundary
+
+The healthcare modular monolith adds `explain.py` (complete calibrated inference,
+source lineage and sampled Shapley paths), `stability.py` (bounded count-recording
+perturbations and attribution comparisons), `fairness.py` (separate aligned audit
+attributes, support guards and patient-cluster intervals), `counterfactual.py`
+(fail-closed feasibility assessment), and `audit.py` (protocol freeze, original
+run validation, single-use subgroup claim and aggregate publication). These call
+the existing foundation and experiment contracts; no fitting occurs in the audit.
+There is no public API, database, fitted artifact migration or new dependency.
+
+```mermaid
+flowchart LR
+  P[Tested versioned protocol] --> F[Exclusive freeze and hash bindings]
+  M[Verified frozen calibrated pipeline] --> F
+  D[Verified source and patient lock] --> T[Training-only reference and samples]
+  F --> X[Global and local Shapley paths]
+  T --> X
+  X --> S[Recording stability]
+  F --> C[Recourse feasibility assessment]
+  F --> G[Exclusive post-selection holdout audit claim]
+  D --> G
+  G --> H[One frozen probability vector and subgroup metrics]
+  X --> A[Allowlisted aggregate evidence and synthetic local example]
+  S --> A
+  C --> A
+  H --> A
+  A --> I[Immutable local result and checksummed manifest]
+```
+
+The explainer's players are original fields; categorical dummy columns remain
+grouped by the fitted encoder. It explains `sigmoid(a*logit(base_probability)+b)`
+with the original clipping rule, including calibration rather than substituting
+tree scores. The baseline is the mean output of sampled training path references.
+Identifiers, outcomes and audit-only/excluded fields are refused by exact
+source-matrix order and checked fitted lineage.
+
+`artifacts/healthcare-audit-v1` contains exclusively created `protocol.json`,
+`holdout.claim`, `results.json` and `manifest.json`. Protocol/config/code/tests,
+software, data/feature/split policies, split membership and all original model
+records are bound before audit outcomes. The claim precedes holdout inference,
+survives failure and has no automatic retry. Original model evidence is checked
+again afterward. Saved-byte checksums handle Windows newline translation.
+Read-only `inspect` validates bindings, file inventory and the privacy schema.
+These filesystem controls prevent accidental overwrite, not malicious local
+deletion or administrator modification. Real row values and prediction vectors
+remain in memory; only a protocol-fixed synthetic local example is published.
+
+Tests exercise calibrated semantics, lineage, signed additive paths,
+determinism, forbidden fields, stability and bounds, fairness support/undefined
+metrics/alignment/bootstrap, immutable recourse, hash tampering, privacy and
+exclusive claim/overwrite refusal. Source and artifact checks reuse existing
+foundation/model boundaries. Similar-case retrieval and all application/MLOps
+work remain outside Macro Milestone 3's authorized task.
+
 ## Macro Milestone 2 modelling boundary
 
 Healthcare modelling now lives in `modeling.py` (fold-local transforms and candidate
@@ -37,7 +92,12 @@ that evidence and the versioned config before creating the holdout claim.
 Training calculations have no reusable fold checkpoint; an interrupted
 calculation without a complete manifest must restart.
 
-## Macro Milestone 1 architecture decision (current)
+## Macro Milestone 1 architecture decision (retained design)
+
+The healthcare-primary design remains approved. Its foundation-only implementation
+state below is historical as of Macro Milestone 1; the Macro Milestone 2 and 3
+sections above describe the current implemented model and research audit. Macro
+Milestones 1 and 2 are completed; Macro Milestone 3 awaits external review.
 
 The current product is healthcare-primary and credit-secondary. Sections below this new decision describe the earlier credit-first architecture and preserve its approved implementation history; where scope or tooling differs, this section and [ADR 0003](decisions/0003-healthcare-primary-multi-domain-platform.md), [ADR 0004](decisions/0004-healthcare-target-and-patient-split.md), and [ADR 0005](decisions/0005-flagship-tooling-and-deployment-strategy.md) are current. The detailed future tool connections, alternatives, security and failures are in [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md).
 
@@ -61,6 +121,10 @@ Healthcare foundation flow is archive size/SHA-256 check → safe extraction →
 Future delivery is a single FastAPI process using registered fitted pipelines and transactionally append-only audit events, a React/TypeScript client, managed PostgreSQL, MLflow tracking/registry, Docker images and GitHub Actions. DagsHub hosting, DVC and public host are provisional. Future developer-quality CI parses Python/TypeScript imports, emits a dependency graph, detects cycles and forbidden directions, publishes an artifact and links components to code. These are design goals, not implemented components. Public examples must be synthetic/de-identified, with authentication and RBAC before any real-user workflow. No clinical deployment is claimed.
 
 ## Earlier credit-first architecture record
+
+The sections below preserve the earlier credit design and Phase 0–4 implementation
+state. Their planned XAI, stability and model-serialization passages describe that
+secondary benchmark, not the implemented healthcare model/audit above.
 
 ## Status and Approval Boundary
 

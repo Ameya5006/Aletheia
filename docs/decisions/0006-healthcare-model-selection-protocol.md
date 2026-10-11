@@ -1,6 +1,9 @@
 # ADR 0006 — Healthcare modelling, calibration and holdout protocol
 
-Status: implemented for Macro Milestone 2; external review pending.
+Status: implemented in the preserved Macro Milestone 2 commit `49a1a8c`.
+Macro Milestone 3 adds a separate post-selection audit under ADR 0007; it changes
+no model, grid, calibration, feature, split, threshold or selection decision here.
+This status records the committed prerequisite, not a new external approval claim.
 
 ## Context and choice
 

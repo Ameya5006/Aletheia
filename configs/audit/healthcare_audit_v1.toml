@@ -1,0 +1,75 @@
+[audit]
+version = "healthcare-audit-v1"
+model_sha256 = "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a"
+selection_sha256 = "85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7"
+holdout = "once, post-selection subgroup audit only; no tuning"
+
+[explanation]
+method = "Monte Carlo interventional Shapley, paired forward/reverse paths"
+output = "calibrated probability of readmitted_30d=1"
+background = "training encounters sampled without replacement; empirical marginal reference"
+background_size = 64
+background_seed = 3101
+sample_size = 128
+sample_seeds = [3102, 3103, 3104]
+permutations = 32
+path_seed = 3105
+baseline = "mean calibrated probability of the sampled path reference rows"
+publication = "aggregate real-case evidence only; local values only for the fixed synthetic example"
+
+[stability]
+sample_size = 16
+sample_seed = 3201
+repetitions = 5
+seed = 3202
+fields = ["num_lab_procedures", "num_procedures"]
+integer_delta = 1
+limits = "training-observed integer min/max; all other fields immutable"
+interpretation = "recording sensitivity only; no clinical intervention or universal standard"
+top_k = 3
+overlap_reference = 0.6666666666666666
+distance_reference = 0.25
+
+[fairness]
+attributes = ["race", "gender", "age"]
+groups = "original source categories, missing separately; no intersections or age rebins"
+minimum_encounters = 200
+minimum_patients = 100
+minimum_positive = 20
+minimum_negative = 20
+privacy_count_floor = 20
+threshold = 0.5
+bootstrap_repetitions = 200
+bootstrap_seed = 3301
+confidence = 0.95
+uncertainty = "percentile patient-cluster bootstrap within subgroup; invalid replicates omitted and counted"
+undefined = "null with reason; unsupported groups have no performance metrics"
+
+[counterfactual]
+mode = "feasibility assessment only"
+mutable = []
+conditionally_mutable = []
+reason = "Discharge care and utilization are historical; no clinically reviewed intervention, time horizon, dependencies or cost function exists."
+prohibit = "identifiers, demographics, outcomes, historical care, medication and treatment changes"
+
+[privacy]
+real_local_records = false
+patient_predictions = false
+identifiers = false
+raw_records = false
+publication = "allowlisted aggregate JSON and one protocol-fixed synthetic example; ignored local artifacts only"
+
+[synthetic_example]
+admission_type_id = "1"
+admission_source_id = "1"
+time_in_hospital = "3"
+num_lab_procedures = "40"
+num_procedures = "1"
+num_medications = "12"
+number_outpatient = "0"
+number_emergency = "0"
+number_inpatient = "1"
+number_diagnoses = "5"
+max_glu_serum = "None"
+A1Cresult = "None"
+diabetesMed = "Yes"

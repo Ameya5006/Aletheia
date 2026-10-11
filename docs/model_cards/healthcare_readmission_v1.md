@@ -101,8 +101,87 @@ therefore does not represent all admissions. The split is patient-disjoint but
 not hospital-disjoint. Class imbalance and prevalence affect average precision,
 precision, calibration and usefulness. The local joblib file is executable
 serialization and must be loaded only after checksum, protocol and software
-checks from this project; untrusted user files are prohibited. No subgroup
-fairness, explanation, causal or prospective assessment is part of this card.
+checks from this project; untrusted user files are prohibited. The post-selection
+audit below adds bounded explanation/subgroup evidence. No causal, prospective,
+clinical or fairness-certification assessment is established.
+
+## Macro Milestone 3 post-selection audit
+
+The unchanged model was audited once under a tested, frozen protocol:
+`configs/audit/healthcare_audit_v1.toml`, [ADR 0007](../decisions/0007-healthcare-explanation-responsible-audit.md).
+The protocol preceded outcomes; a separate exclusive claim preceded the new
+holdout subgroup prediction. The original model evaluation and claim remain
+unchanged. No fitting, calibration fitting, model selection or threshold tuning
+occurred. The complete audit records are ignored local evidence under
+`artifacts/healthcare-audit-v1/`; read-only `audit inspect` verifies bindings
+and the publication privacy schema.
+
+Global and local explanations use paired permutation Monte Carlo interventional
+Shapley paths of the **complete calibrated probability**, not base tree scores.
+The frozen mapping is `sigmoid(1.046740791844 * logit(clipped_base_probability)
++ 0.093210594239)`. These fitted parameters differ from the diagnostic held-out
+calibration regression reported earlier. Thirteen original fields are players;
+43 fitted transformed columns retain source lineage. The fixed background is
+64 training encounters; each baseline is the mean probability of sampled path
+references. Three seeded samples of 128 training encounters with 32 paired
+permutation orders give repeated-sample descriptive global importance.
+
+Largest mean absolute contributions: prior inpatient visits 0.032975
+(repeat range 0.028624–0.036702), hospital stay 0.007839 and diagnosis count
+0.005413. Units are probability change; associations are not clinical causes.
+Repeat ranges are not confidence intervals or generalization estimates.
+The published local case is synthetic, with probability 0.127821691881,
+baseline 0.108475507333 and contributions summing to 0.019346184548.
+Real local values and patient prediction vectors are not published. Marginal
+reference combinations can be unlikely for correlated clinical fields, and
+finite path sampling limits exactness.
+
+Recording stability used 16 training cases × five +/-1 lab/procedure count
+perturbations within observed ranges. Mean top-3 overlap was 0.95, minimum 1/3;
+mean absolute-rank correlation 0.945536; mean normalized attribution L1 change
+0.077479, maximum 0.516299. Three comparisons fell below registered overlap
+2/3 and five exceeded L1 0.25. Mean absolute probability change was 0.002753,
+maximum 0.033485, with zero 0.5 crossings. These descriptive thresholds are not
+clinical standards. This probes limited recording sensitivity, not interventions
+or general robustness, and has no clinician validation.
+
+Race, gender and original age bands remained audit-only. Support required 200
+encounters, 100 patients, 20 positives and 20 negatives. Fifteen of 21 subgroup
+slots qualified; Asian, unknown/missing gender, the two youngest age bands and
+missing age were withheld. Missing race had 410 encounters/40 positives.
+Each supported group has counts, prevalence, AP, ROC-AUC, Brier, recall,
+specificity, FPR, FNR and positive prediction rate, with 200-repetition
+patient-cluster 95% intervals. Exact counts below 20 are suppressed.
+
+Female ROC-AUC was 0.629115 [0.608449, 0.648161], Male 0.650909
+[0.632397, 0.673503]; AfricanAmerican AP 0.221488 [0.166015, 0.291205],
+Caucasian AP 0.195458 [0.176630, 0.215708]. Age [30-40) ROC-AUC was
+0.795981 [0.729181, 0.849195], [90-100) 0.587109 [0.514392, 0.660598].
+These are separate subgroup estimates with overlapping source/case-mix limits;
+no adjusted disparity significance test or discrimination claim was made.
+Supported-group recall at 0.5 ranged from zero to 0.068966; many groups had
+no alerts. Specificity ranged 0.993856–1, FPR 0–0.006144, FNR 0.931034–1,
+and positive prediction rate 0–0.013550. This reinforces the existing threshold
+limitation. Empirical [0,0] intervals for zero observed events cannot prove a
+true population rate of zero. Historical ascertainment, missingness and limited
+support prohibit fairness certification.
+
+Counterfactual outcome: `no_defensible_recourse` and `no_feasible_scenario`.
+Discharge care/history cannot be rewritten as recourse; there are no clinically
+reviewed mutable/conditionally mutable fields, no defensible cost function,
+no search and no candidates. Medication/treatment recommendations are prohibited.
+This is the authorized feasibility assessment, not implemented clinical recourse.
+
+Canonical audit protocol SHA-256:
+`fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f`.
+Results SHA-256:
+`2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
+The manifest additionally binds config/software/seeds/code/tests, data/split,
+original model records, timestamps and the claim. Original model checksum
+remains `8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`.
+Local exclusive publication is not physical WORM or formal differential privacy.
+The project report contains all subgroup point estimates and study/defence notes;
+the handoff records exact verification. External supervisor review is pending.
 
 ## Reproduction and evidence
 

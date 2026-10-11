@@ -1,432 +1,375 @@
-# CURRENT TASK
+# CURRENT TASK — Macro Milestone 3: Explainability and Responsible-AI Audit
 
-## Macro Milestone 2 — Leakage-Safe Healthcare Modelling, Calibration, and Locked Holdout Evaluation
+## Status
 
-## Supervisor Decision
+AUTHORIZED FOR IMPLEMENTATION.
 
-Macro Milestone 1 passed external review at commit:
+This task begins only after the committed and pushed Macro Milestone 2 calibrated healthcare model.
 
-`9073c4531bcd01f70050450425c2e25b8b508abb`
-
-This task authorizes healthcare modelling only under the protocol below.
-
-Do not begin XAI, counterfactual generation, fairness measurement, similar-case retrieval, MLflow services, API, UI, database, Docker, CI/CD, deployment or monitoring.
-
-## Required Starting State
-
-Before editing:
+Starting repository requirements:
 
 - branch must be `main`;
-- `HEAD` and local `origin/main` must both equal  `9073c4531bcd01f70050450425c2e25b8b508abb`;
-- Git status may contain only the user modification to `docs/CURRENT_TASK.md`;
-- `stash@{0}: wip: credit research core before healthcare realignment` must remain present;
-- do not apply, pop, drop or modify the stash;
-- no raw data, generated artifact, cache or temporary output may appear in Git status.
+- local `HEAD` must equal `origin/main`;
+- the committed starting point should be the Macro Milestone 2 commit beginning with `49a1a8c`;
+- the working tree may contain only the user-owned modification to `docs/CURRENT_TASK.md`;
+- the existing stash must remain untouched.
 
-Stop if these conditions do not hold.
+If the starting state differs, stop before editing and report the discrepancy.
 
 ## Objective
 
-Build a reproducible healthcare modelling pipeline that:
+Implement Aletheia’s first complete, reproducible and technically defensible Explainable AI and Responsible-AI audit layer for the frozen healthcare readmission model.
 
-1. uses only the verified healthcare training partition for development;
-2. preserves patient groups in every validation fold;
-3. fits preprocessing only on fold-training rows;
-4. compares a dummy baseline, regularized logistic regression and bounded nonlinear tree models;
-5. performs bounded hyperparameter selection using nested patient-group-aware CV;
-6. evaluates uncalibrated and sigmoid-calibrated probabilities without leakage;
-7. freezes the selected model and calibration protocol before accessing the locked holdout;
-8. evaluates the locked holdout exactly once;
-9. reports discrimination, calibration, classification and uncertainty evidence;
-10. creates a reproducible manifest, checksum-bound trusted-local model artifact and model card;
-11. updates the report with complete interview, viva, failure and recovery material.
+This milestone must establish:
 
-This is an educational research result, not clinical validation.
+1. global model explanations;
+2. local prediction explanations;
+3. explanation stability analysis;
+4. subgroup fairness evaluation;
+5. a bounded counterfactual/scenario-analysis prototype;
+6. immutable, reproducible audit evidence;
+7. documentation sufficient for interviews, viva preparation and technical defence.
 
-## Non-Negotiable Data Boundary
+Do not begin the application backend, frontend, LLM/RAG layer, database, deployment or MLOps milestones.
 
-Use the existing:
+## Mandatory preparation
 
-- UCI 296 source identity;
-- eligible 99,343-encounter cohort;
-- frozen 13-predictor policy;
-- `readmitted_30d` target;
-- `patient_nbr` grouping;
-- locked 79,808/19,535 train/holdout partition;
-- split membership checksum;
-- existing feature, target and split versions.
+Before editing:
 
-Do not alter the frozen dataset, target, cohort, feature roles or split lock.
+1. Read `AGENTS.md` completely.
+2. Read this file completely.
+3. Read:
+   - `README.md`;
+   - `docs/ARCHITECTURE.md`;
+   - `docs/EXECUTION_PLAN.md`;
+   - `docs/PROJECT_REPORT.md`;
+   - `docs/SUPERVISOR_HANDOFF.md`;
+   - `docs/HEALTHCARE_DATASET_AUDIT.md`;
+   - `docs/model_cards/healthcare_readmission_v1.md`;
+   - healthcare-related ADRs;
+   - healthcare dataset, feature, split and experiment configurations.
+4. Inspect the healthcare foundation, modelling, evaluation and experiment implementations.
+5. Inspect the complete healthcare test suite.
+6. Inspect the preserved Macro Milestone 2 run, manifest, model-selection record and holdout-evaluation record.
+7. Verify hashes, configuration bindings, model identity and split identity before using any artifact.
+8. Inspect official documentation for any new dependency before adding it.
 
-The 13-feature policy is the conservative baseline policy, not a claim that richer clinically reviewed policies could not perform better.
+Repository evidence takes priority over documentation claims.
 
-## Holdout Protection
+## Methodology gate
 
-The locked holdout must not influence:
+Before calculating audit results, create and test versioned audit protocols covering:
 
-- model candidates;
-- hyperparameters;
-- preprocessing;
-- calibration method;
-- feature selection;
-- model selection;
-- threshold selection;
-- stopping decisions;
-- retry decisions.
+- explanation method and reference/background data;
+- global and local explanation semantics;
+- model-output scale being explained;
+- sampling strategy and random seeds;
+- stability perturbations and comparison metrics;
+- protected/audit-only attributes;
+- subgroup inclusion and minimum-support rules;
+- uncertainty estimation;
+- counterfactual mutability and feasibility constraints;
+- privacy and artifact-publication rules.
 
-Implement a programmatic evaluation guard.
+Do not inspect final audit outcomes before the protocol is frozen.
 
-Before any held-out prediction:
+If the selected explanation method cannot validly explain the calibrated healthcare pipeline, stop and document the methodological blocker. Do not silently explain a different estimator while presenting it as the calibrated model.
 
-1. complete all training-only nested-CV results;
-2. select the winning protocol using only training evidence;
-3. create and persist an immutable selection record;
-4. verify dataset, feature-policy, target and split identities;
-5. verify the selected protocol checksum;
-6. refuse evaluation if the holdout has already been evaluated for that experiment identity.
+If the base estimator and calibrated probability layer require different explanations, distinguish clearly between:
 
-Perform one held-out evaluation only after these conditions pass.
+- features influencing the underlying model score; and
+- the calibration layer converting scores into probabilities.
 
-Do not rerun the holdout merely because its result is disappointing.
+## Global explanations
 
-## Cross-Validation Protocol
+Implement reproducible global explanation evidence for the frozen selected model.
 
-Use deterministic patient-group-aware splitting.
+At minimum:
 
-Required outer evaluation:
+- calculate a defensible global feature-importance or attribution summary;
+- retain human-readable source-feature mappings after preprocessing;
+- distinguish categorical encodings from original clinical fields;
+- document the explained output and attribution baseline;
+- include uncertainty or repeated-sample stability where feasible;
+- verify that audit-only, excluded, identifier and target fields never enter the prediction feature matrix;
+- do not describe association as causation.
 
-- `StratifiedGroupKFold`;
-- five folds;
-- shuffle enabled;
-- seed 42;
-- every patient entirely contained in one fold;
-- both classes required in every validation fold.
+Prefer SHAP when it is valid and computationally practical, but do not force SHAP if the calibrated pipeline is unsupported or the resulting interpretation would be misleading. A documented, tested model-agnostic alternative is acceptable.
 
-Required inner selection:
+## Local explanations
 
-- `StratifiedGroupKFold`;
-- three folds;
-- deterministic seed derived from the frozen experiment seed;
-- only the outer-training partition may enter inner selection.
+Implement local explanations for individual predictions.
 
-Tests must prove patient disjointness for every inner and outer fold.
+Each local explanation must include:
 
-If the installed scikit-learn API cannot implement this exactly, stop and document the incompatibility rather than silently substituting row-level splitting.
+- model and dataset identity;
+- prediction probability;
+- explanation method and output scale;
+- influential features with direction and magnitude where supported;
+- original human-readable feature values;
+- limitations and non-causal wording;
+- explicit indication that the output is educational research evidence and not medical advice.
 
-## Preprocessing
+Tests must verify deterministic behaviour under fixed configuration and correct mapping from transformed features back to source fields.
 
-Build preprocessing from the frozen semantic types:
+Do not publish raw patient records or directly identifying values.
 
-- eight quantitative predictors;
-- five categorical predictors;
-- explicit missing/unknown handling;
-- categorical codes treated as categorical, never continuous quantities;
-- one-hot encoding with unknown-category refusal or an explicitly documented safe policy;
-- numeric transformation/scaling selected and documented;
-- all learned preprocessing fitted only within the relevant training fold;
-- stable raw-to-transformed feature mapping;
-- identifiers, target, audit-only and excluded fields must never enter the model matrix.
+## Explanation stability
 
-Do not fit any data-derived transformation on the complete training partition before cross-validation.
+Implement stability analysis showing whether explanations remain reasonably consistent under controlled, clinically plausible perturbations.
 
-## Candidate Models
+The protocol must define:
 
-At minimum compare:
+- which fields may be perturbed;
+- perturbation ranges or categories;
+- which fields must remain immutable;
+- number of repetitions;
+- fixed random seeds;
+- comparison metrics such as rank correlation, top-k overlap or attribution-distance measures;
+- interpretation thresholds without pretending they are universal clinical standards.
 
-1. `DummyClassifier` using the training prior;
-2. regularized Logistic Regression;
-3. Random Forest;
-4. Histogram Gradient Boosting, if compatible with the approved preprocessing and laptop limits.
+Report instability honestly. Do not tune the model after observing stability results.
 
-Use bounded, versioned hyperparameter grids. Keep the search small enough for the 8 GB Windows laptop but large enough to compare meaningful regularization, class weighting and model complexity.
+## Fairness audit
 
-Do not use:
+Use race, gender and age only as audit attributes unless an already-approved contract states otherwise. They must not silently become prediction features.
 
-- deep learning;
-- unbounded AutoML;
-- SMOTE or synthetic oversampling;
-- arbitrary feature elimination;
-- the locked holdout for early stopping;
-- the old credit WIP stash as implementation.
+Evaluate the frozen model across defensible subgroups using appropriate metrics, including where support permits:
 
-Every stochastic estimator must use an explicit seed.
-
-If Histogram Gradient Boosting cannot consume the chosen transformed representation safely, document and test a separate compatible fold-local transformer or exclude it with evidence. Do not densify an unexpectedly large matrix without a memory check.
-
-## Model Selection
-
-Primary selection metric:
-
-- average precision.
-
-Required secondary metrics:
-
-- ROC-AUC;
-- balanced accuracy;
-- adverse/positive recall;
-- specificity;
-- precision;
-- F1;
-- log loss;
-- Brier score.
-
-Record:
-
-- per-fold values;
-- mean;
-- standard deviation;
-- training-versus-validation evidence;
-- class support;
-- fit and prediction time;
-- convergence warnings;
-- selected hyperparameters.
-
-Use ROC-AUC, Brier score and log loss as documented tie-breakers/guards. Do not select a worse-calibrated model solely for a negligible average-precision improvement without documenting the trade-off.
-
-Accuracy must not be used as the primary metric.
-
-## Calibration
-
-Evaluate raw and sigmoid-calibrated probability outputs using only training groups.
-
-Calibration must be trained using precomputed patient-disjoint folds. Record:
-
-- Brier score;
-- log loss;
-- calibration curve data;
-- calibration intercept and slope where valid;
-- discrimination before and after calibration.
-
-Do not use the locked holdout to select whether calibration is applied.
-
-Treat threshold `0.5` as descriptive only. Do not claim it is a clinically approved decision threshold.
-
-## Final Training and Holdout Evaluation
-
-After freezing the selection record:
-
-1. fit the selected preprocessing/model/calibration protocol using only the full training partition and patient-group-aware calibration folds;
-2. save a trusted-local artifact under an ignored artifact directory;
-3. record its SHA-256, Python/package versions and exact protocol identity;
-4. reject loading artifacts whose checksum or recorded versions do not match;
-5. generate held-out probabilities exactly once;
-6. publish one immutable evaluation record.
-
-Held-out reporting must include:
-
-- ROC-AUC;
+- sample and positive counts;
+- prevalence;
 - average precision;
-- balanced accuracy;
-- recall;
+- ROC-AUC;
+- Brier score or calibration evidence;
+- sensitivity/recall;
 - specificity;
-- precision;
-- F1;
-- log loss;
-- Brier score;
-- calibration evidence;
-- confusion matrix at descriptive threshold 0.5;
-- class and patient counts.
+- false-positive rate;
+- false-negative rate;
+- positive prediction rate.
 
-Compute 95% uncertainty intervals by seeded patient-cluster bootstrap so repeated encounters from one patient remain together. Document bootstrap repetitions and seed.
+Requirements:
 
-Do not report only encounter-level bootstrap intervals.
+- handle undefined metrics explicitly;
+- enforce minimum-support rules;
+- report uncertainty intervals where feasible;
+- distinguish observed performance differences from discrimination or causality;
+- document missingness and historical-data limitations;
+- do not claim legal, clinical or ethical fairness certification.
 
-Do not inspect individual held-out explanations, fairness groups or counterfactuals in this milestone.
+A guarded post-selection audit of the locked holdout is permitted only if it is pre-registered, performed once, append-only, and cannot influence model selection or hyperparameters. Record the access and prove that the model remains frozen.
 
-## Experiment and Artifact Contract
+## Counterfactual or scenario analysis
 
-Create a versioned experiment configuration containing:
+Implement only a bounded research prototype if defensible.
 
-- dataset identity and raw hash;
-- cohort version;
-- feature-policy version;
-- target version;
-- split version and membership checksum;
-- CV methods, folds and seeds;
-- preprocessing specification;
-- candidate models and bounded grids;
-- calibration protocol;
-- primary/secondary metrics;
-- selection rule;
-- bootstrap protocol;
-- software versions.
+Requirements:
 
-Create immutable manifests for:
+- distinguish counterfactual explanation from clinical recommendation;
+- classify fields as immutable, conditionally mutable or excluded;
+- prohibit changes to identifiers, demographics, outcomes and clinically impossible fields;
+- avoid recommending medication or treatment changes;
+- enforce valid categorical domains and observed constraints;
+- report when no feasible scenario is found;
+- label generated scenarios as model-sensitivity evidence, not guaranteed real-world interventions.
 
-- training-only nested-CV evidence;
-- frozen model selection;
-- final fitted artifact identity;
-- one-time held-out evaluation.
+If clinically meaningful counterfactuals cannot be justified from repository evidence, implement and document a feasibility assessment instead of fabricating recourse.
 
-Generated models and run outputs must remain ignored and must not appear in Git status.
+## Artifacts and reproducibility
 
-Never load an untrusted user-supplied pickle/joblib artifact. If joblib is used, document that it is restricted to checksum-verified project-generated local artifacts.
+Create versioned configuration and immutable audit evidence.
 
-## Required Documentation
+Artifacts must contain:
 
-Update:
+- dataset, split, model, protocol and configuration hashes;
+- software versions;
+- random seeds;
+- timestamps;
+- method metadata;
+- aggregate results;
+- explicit holdout-access status;
+- limitations.
+
+Do not publish:
+
+- raw healthcare data;
+- row-level identifying data;
+- unrestricted patient-level predictions;
+- secrets;
+- caches;
+- temporary outputs;
+- downloaded archives.
+
+Publication must refuse overwriting an existing immutable audit run.
+
+## Tests
+
+Add meaningful unit and integration tests covering:
+
+- feature-name mapping;
+- global explanation reproducibility;
+- local explanation structure and determinism;
+- forbidden-feature exclusion;
+- calibrated-versus-base-estimator semantics;
+- stability calculations;
+- fairness subgroup calculations;
+- minimum-support and undefined-metric handling;
+- counterfactual constraint enforcement;
+- infeasible-scenario handling;
+- artifact hashes and manifest bindings;
+- overwrite refusal;
+- holdout audit guard;
+- no raw or patient-identifying data in published evidence.
+
+Tests must verify actual behaviour rather than merely asserting that files exist.
+
+Do not rerun expensive model selection or retrain the model unless repository evidence proves it is technically unavoidable. If unavoidable, stop and explain before doing so.
+
+## Documentation
+
+Update truthfully:
 
 - `README.md`;
 - `docs/ARCHITECTURE.md`;
 - `docs/EXECUTION_PLAN.md`;
 - `docs/PROJECT_REPORT.md`;
-- `docs/SUPERVISOR_HANDOFF.md`.
+- `docs/SUPERVISOR_HANDOFF.md`;
+- the healthcare model card;
+- relevant ADRs.
 
-Create:
+Create a new ADR for the explanation and responsible-audit protocol.
 
-- one ADR for the healthcare modelling, calibration and holdout protocol;
-- one healthcare model card.
+`docs/PROJECT_REPORT.md` must become a study and defence guide for this milestone. Explain:
 
-`PROJECT_REPORT.md` must explain:
+- what each XAI/fairness/stability/counterfactual component does;
+- why it exists;
+- how data flows through it;
+- which model output is explained;
+- global versus local explanations;
+- attribution baselines;
+- feature transformations and source-feature mapping;
+- fairness metrics and their limitations;
+- explanation-stability methodology;
+- counterfactual assumptions and restrictions;
+- alternatives considered;
+- trade-offs;
+- important functions and files;
+- tests;
+- results;
+- interpretation;
+- unresolved limitations;
+- likely interview and viva questions.
 
-- preprocessing and feature meanings;
-- patient-group nested CV;
-- model candidates and hyperparameters;
-- class imbalance;
-- metrics;
-- calibration;
-- selection reasoning;
-- holdout governance;
-- overfitting evidence;
-- uncertainty;
-- exact results;
-- limitations;
-- every problem encountered, failed attempt, cause and fix;
-- important code locations and tests;
-- interview explanations and follow-up questions;
-- why results are not clinical validation.
+Add a clearly structured problem-and-recovery record for every meaningful issue encountered:
 
-Never fabricate a result, bug, metric or experiment.
+- symptom;
+- root cause;
+- investigation;
+- rejected approaches;
+- final resolution;
+- verification;
+- lesson learned.
 
-## Authorized Paths
+Do not fabricate problems, decisions, metrics, results or implementation.
 
-Codex may modify:
+## Authorized paths
 
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/EXECUTION_PLAN.md`
-- `docs/PROJECT_REPORT.md`
-- `docs/SUPERVISOR_HANDOFF.md`
-- `src/aletheia/domains/healthcare/__main__.py`
+Codex may modify existing healthcare ML, experiment, contract, documentation, testing and dependency files only where required by this milestone.
 
 Codex may create:
 
-- `configs/experiments/healthcare_model_v1.toml`
-- `docs/decisions/0006-healthcare-model-selection-protocol.md`
-- `docs/model_cards/healthcare_readmission_v1.md`
-- `src/aletheia/domains/healthcare/modeling.py`
-- `src/aletheia/domains/healthcare/evaluation.py`
-- `src/aletheia/domains/healthcare/experiment.py`
-- `tests/healthcare/test_modeling.py`
-- `tests/healthcare/test_experiment.py`
-- generated ignored artifacts under existing ignored artifact paths
+- versioned audit configuration under `configs/audit/`;
+- healthcare XAI, fairness, stability, counterfactual and audit modules;
+- corresponding healthcare tests;
+- one responsible-AI/XAI ADR;
+- immutable generated audit evidence only in the already-approved ignored artifact location.
 
-Codex may modify another existing source/test file only if strictly required and must stop first to explain why.
+Do not modify unrelated projects, credit-domain implementation, `prompt.txt`, raw data or the existing stash.
 
-Codex must not modify `docs/CURRENT_TASK.md`.
+Do not modify this `docs/CURRENT_TASK.md` file.
 
-No dependency file may change unless an unavoidable incompatibility is found. Stop and report before changing dependencies.
+## Required verification
 
-## Required Verification
+Run and report:
 
-Run:
+1. dependency consistency check;
+2. Ruff lint;
+3. Ruff formatting check;
+4. targeted new unit tests;
+5. targeted healthcare integration tests;
+6. complete offline test suite;
+7. artifact and manifest inspection;
+8. hash/configuration/model/split binding checks;
+9. privacy inspection of published audit evidence;
+10. `git diff --check`;
+11. `git status --short --untracked-files=all`.
 
-1. `python -m pip check`
-2. `python -m ruff check .`
-3. `python -m ruff format --check .`
-4. targeted healthcare modelling tests
-5. complete offline test suite
-6. deterministic repeat of the training-only experiment
-7. manifest/result equality checks
-8. artifact checksum/load refusal tests
-9. holdout one-time-evaluation refusal test
-10. `git diff --check`
-11. `git status --short --untracked-files=all`
+Use repository-safe temporary locations and ensure no cache, raw data, temporary audit output or generated healthcare record appears in Git status.
 
-Use ignored Windows-safe temporary directories.
+## Stop conditions
 
-No raw dataset, cache, model binary, experiment output or temporary file may appear in Git status.
+Stop immediately if:
 
-## Expected Final Git Status
+- starting Git state is inconsistent;
+- frozen model, split or experiment hashes do not match;
+- valid explanation semantics cannot be established;
+- completing the task would require model reselection;
+- holdout access cannot be guarded;
+- counterfactual constraints cannot be defended;
+- a required command fails and the task specifically prohibits a fallback;
+- an unauthorized file appears in status.
 
-Expected modified files:
+Preserve completed valid work and report the blocker precisely.
 
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/CURRENT_TASK.md` — user-owned task replacement only
-- `docs/EXECUTION_PLAN.md`
-- `docs/PROJECT_REPORT.md`
-- `docs/SUPERVISOR_HANDOFF.md`
-- `src/aletheia/domains/healthcare/__main__.py`
-
-Expected created files:
-
-- `configs/experiments/healthcare_model_v1.toml`
-- `docs/decisions/0006-healthcare-model-selection-protocol.md`
-- `docs/model_cards/healthcare_readmission_v1.md`
-- `src/aletheia/domains/healthcare/modeling.py`
-- `src/aletheia/domains/healthcare/evaluation.py`
-- `src/aletheia/domains/healthcare/experiment.py`
-- `tests/healthcare/test_modeling.py`
-- `tests/healthcare/test_experiment.py`
-
-Stop if additional tracked or untracked files are required or appear.
-
-## Final Response
+## Final response
 
 Report:
 
 1. milestone status;
-2. starting commit;
-3. training and held-out population;
-4. preprocessing;
-5. CV design;
-6. candidates and hyperparameters;
-7. calibration protocol;
-8. training-only results;
-9. selection decision;
-10. frozen selection identity;
-11. held-out metrics and patient-cluster confidence intervals;
-12. overfitting analysis;
-13. one-time holdout protection evidence;
-14. artifact and manifest identities;
-15. tests and exact results;
-16. files created;
-17. files modified;
-18. problems encountered and fixes;
-19. limitations;
-20. what the user should understand;
-21. confirmation that XAI/application work did not begin;
-22. confirmation that the stash was untouched;
-23. confirmation that Codex did not commit or push;
-24. exact final Git status;
-25. recommended commit message.
+2. starting commit and repository state;
+3. explanation methods implemented;
+4. global explanation results;
+5. local explanation behaviour;
+6. explanation stability results;
+7. fairness methods and results;
+8. counterfactual/scenario-analysis outcome;
+9. model-output semantics;
+10. holdout-access record;
+11. artifacts and hashes;
+12. tests and exact results;
+13. files created;
+14. files modified;
+15. files intentionally unchanged;
+16. problems encountered and resolutions;
+17. limitations;
+18. what the user should understand for interviews;
+19. confirmation that no later milestone began;
+20. confirmation that Codex did not commit or push;
+21. exact final `git status --short --untracked-files=all`;
+22. recommended commit message.
 
-Recommended commit message:
+If successful, recommend:
 
-`feat: establish calibrated healthcare model`
+`feat: add healthcare XAI and responsible audit`
 
-## Stop Rule
+Do not claim external supervisor approval.
 
-Stop after Macro Milestone 2.
+## Final stop rule
+
+Stop after Macro Milestone 3.
 
 Do not begin:
 
-- XAI explanations;
-- SHAP;
-- counterfactuals;
-- stability;
-- fairness;
-- similar-case retrieval;
-- MLflow service integration;
-- API;
-- frontend;
-- database;
-- Docker;
+- FastAPI product APIs;
+- PostgreSQL application persistence;
+- authentication;
+- React frontend;
+- LLM or RAG integration;
+- MLflow;
+- Docker deployment;
 - CI/CD;
-- deployment;
 - monitoring;
-- code-graph implementation;
-- or another milestone.
+- Kubernetes;
+- cloud infrastructure;
+- or additional model training.
 
 Do not commit or push.
