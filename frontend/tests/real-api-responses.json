@@ -1,0 +1,1668 @@
+{
+  "/health/live": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "status": "alive"
+    }
+  },
+  "/health/ready": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "status": "unready"
+    }
+  },
+  "/models/current": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "domain": "healthcare",
+      "target": "readmitted_30d",
+      "family": "histogram",
+      "calibration": "sigmoid",
+      "feature_policy_version": "healthcare-feature-v1",
+      "threshold": 0.5,
+      "approval_status": "unavailable",
+      "serving_available": false
+    },
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  },
+  "/models/current/card": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "content_markdown": "# Healthcare 30-day readmission model card — experiment v1\n\n## Intended use and status\n\nThis is an educational retrospective model for studying discharge-time\nreadmission prediction and audit discipline. It is not clinically validated,\napproved for care decisions, a treatment recommendation, or a patient-facing\nservice. There is no deployed API or clinical workflow. The fitted artifact is\nlocal and ignored by Git. This card describes the protocol and its measured\nresult; the machine-readable source of truth is the immutable local run under\n`artifacts/healthcare-model-v1/`.\n\n## Data and target\n\nSource: UCI Diabetes 130-US Hospitals for Years 1999–2008, dataset 296, DOI\n10.24432/C5230J, CC BY 4.0. The source raw SHA-256 is\n`0689e7ec031237dc63031b938805c48377748761a3b26acab621567afa24df97`.\nAn observation is one inpatient encounter. Death/hospice discharges are\nexcluded, leaving 99,343 encounters. The positive target is source `<30`\nreadmission; `>30` and `NO` are negative. The prediction point is discharge.\nThe training side has 79,808 encounters from 56,178 patients (9,074 positive);\nthe locked holdout has 19,535 encounters from 13,812 patients (2,240 positive).\nMembership checksum:\n`6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316`.\n\n## Inputs and processing\n\nThe frozen 13-field policy uses eight quantitative fields: time in hospital,\nlab procedure count, procedure count, medication count, prior outpatient,\nemergency and inpatient counts, and diagnosis count. It uses five categorical\nfields: admission type and source codes, maximum glucose serum result, A1C\nresult and diabetes medication flag. Quantitative fields receive fold-fitted\nmedian imputation and standardization. Categorical fields receive constant\nmissing imputation and one-hot encoding; unseen values map to zero indicators.\nIdentifiers, outcome, disposition, sensitive audit fields and excluded fields\nare not model inputs. The 13 fields are a conservative baseline policy, not a\nclaim that no richer clinically reviewed set could improve performance.\n\n## Study design\n\nFive outer and three inner shuffled, seeded `StratifiedGroupKFold` folds keep\npatients disjoint and preprocessing local to training. Inner folds tune bounded\ndummy, L2 Logistic Regression, Random Forest and Histogram Gradient Boosting\ngrids. Outer folds compare raw and sigmoid-calibrated outputs. Sigmoid uses\nout-of-fold predictions from patient-disjoint calibration folds. Average\nprecision is primary; alternatives within 0.005 AP use Brier, ROC-AUC, log\nloss and stable name tie-breakers. The model and calibration method are frozen\nbefore one held-out evaluation. Threshold 0.5 is descriptive, not clinically\nchosen. The holdout uses 500 seeded patient-cluster bootstrap resamples for\n95% intervals. All measurements are encounter-level except that uncertainty\nresamples whole patients.\n\n## Measured result\n\nThe two complete training-only calculations agreed. Outer-fold mean AP was\n0.113698 for the prior dummy, 0.197312 for Logistic Regression, 0.196374 for\nRandom Forest and 0.199591 for Histogram Gradient Boosting. Histogram plus\ngroup-OOF sigmoid had mean Brier 0.097624 and ROC-AUC 0.635554. It won the\npredeclared AP and near-tie Brier rule. Final training-only tuning selected\n15 leaves, 30 iterations and minimum leaf size 40. Forest training AP\n0.235960 versus validation AP 0.196374 suggests more fitting to training\npatients than the chosen histogram (0.215586 versus 0.199591).\n\nThe single holdout evaluation used 19,535 encounters from 13,812 patients,\nincluding 2,240 positives. Intervals below use 500 patient-cluster bootstrap\nreplications, seed 4242; they are not external-validation intervals.\n\n| Metric | Estimate | 95% patient-cluster interval |\n|---|---:|---:|\n| Average precision | 0.202633 | 0.184091–0.221497 |\n| ROC-AUC | 0.639473 | 0.626640–0.653593 |\n| Balanced accuracy | 0.502418 | 0.500125–0.505621 |\n| Recall | 0.005357 | 0.000452–0.012309 |\n| Specificity | 0.999480 | 0.998931–0.999858 |\n| Precision | 0.571429 | 0.200000–0.693429 |\n| F1 | 0.010615 | 0.000902–0.024124 |\n| Log loss | 0.342237 | 0.331423–0.352035 |\n| Brier score | 0.098255 | 0.094170–0.101733 |\n\nThe descriptive 0.5 confusion matrix is TN 17,286, FP 9, FN 2,228 and TP\n12. The model therefore misses almost all positive encounters at this cutoff.\nNo clinical threshold has been chosen. The holdout calibration intercept is\n0.133640 and slope 1.058929; six populated calibration bins are saved in the\nimmutable local evaluation record. These diagnostics do not prove prospective\nor cross-hospital calibration.\n\nFrozen selection SHA-256:\n`85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7`.\nFitted local artifact SHA-256:\n`8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`.\nAn exclusive holdout claim and evaluation record exist. The CLI refuses an\nexisting experiment directory before rerunning any data work.\n\n## Limitations and risks\n\nThe data are historical and lack hospital and encounter dates, so this is\nneither temporal nor external validation. The source does not establish exact\nclinical workflow availability for every field. Unknown categories receive a\nsafe but lossy zero encoding. The cohort excludes some discharge outcomes and\ntherefore does not represent all admissions. The split is patient-disjoint but\nnot hospital-disjoint. Class imbalance and prevalence affect average precision,\nprecision, calibration and usefulness. The local joblib file is executable\nserialization and must be loaded only after checksum, protocol and software\nchecks from this project; untrusted user files are prohibited. The post-selection\naudit below adds bounded explanation/subgroup evidence. No causal, prospective,\nclinical or fairness-certification assessment is established.\n\n## Macro Milestone 3 post-selection audit\n\nThe unchanged model was audited once under a tested, frozen protocol:\n`configs/audit/healthcare_audit_v1.toml`, [ADR 0007](../decisions/0007-healthcare-explanation-responsible-audit.md).\nThe protocol preceded outcomes; a separate exclusive claim preceded the new\nholdout subgroup prediction. The original model evaluation and claim remain\nunchanged. No fitting, calibration fitting, model selection or threshold tuning\noccurred. The complete audit records are ignored local evidence under\n`artifacts/healthcare-audit-v1/`; read-only `audit inspect` verifies bindings\nand the publication privacy schema.\n\nGlobal and local explanations use paired permutation Monte Carlo interventional\nShapley paths of the **complete calibrated probability**, not base tree scores.\nThe frozen mapping is `sigmoid(1.046740791844 * logit(clipped_base_probability)\n+ 0.093210594239)`. These fitted parameters differ from the diagnostic held-out\ncalibration regression reported earlier. Thirteen original fields are players;\n43 fitted transformed columns retain source lineage. The fixed background is\n64 training encounters; each baseline is the mean probability of sampled path\nreferences. Three seeded samples of 128 training encounters with 32 paired\npermutation orders give repeated-sample descriptive global importance.\n\nLargest mean absolute contributions: prior inpatient visits 0.032975\n(repeat range 0.028624–0.036702), hospital stay 0.007839 and diagnosis count\n0.005413. Units are probability change; associations are not clinical causes.\nRepeat ranges are not confidence intervals or generalization estimates.\nThe published local case is synthetic, with probability 0.127821691881,\nbaseline 0.108475507333 and contributions summing to 0.019346184548.\nReal local values and patient prediction vectors are not published. Marginal\nreference combinations can be unlikely for correlated clinical fields, and\nfinite path sampling limits exactness.\n\nRecording stability used 16 training cases × five +/-1 lab/procedure count\nperturbations within observed ranges. Mean top-3 overlap was 0.95, minimum 1/3;\nmean absolute-rank correlation 0.945536; mean normalized attribution L1 change\n0.077479, maximum 0.516299. Three comparisons fell below registered overlap\n2/3 and five exceeded L1 0.25. Mean absolute probability change was 0.002753,\nmaximum 0.033485, with zero 0.5 crossings. These descriptive thresholds are not\nclinical standards. This probes limited recording sensitivity, not interventions\nor general robustness, and has no clinician validation.\n\nRace, gender and original age bands remained audit-only. Support required 200\nencounters, 100 patients, 20 positives and 20 negatives. Fifteen of 21 subgroup\nslots qualified; Asian, unknown/missing gender, the two youngest age bands and\nmissing age were withheld. Missing race had 410 encounters/40 positives.\nEach supported group has counts, prevalence, AP, ROC-AUC, Brier, recall,\nspecificity, FPR, FNR and positive prediction rate, with 200-repetition\npatient-cluster 95% intervals. Exact counts below 20 are suppressed.\n\nFemale ROC-AUC was 0.629115 [0.608449, 0.648161], Male 0.650909\n[0.632397, 0.673503]; AfricanAmerican AP 0.221488 [0.166015, 0.291205],\nCaucasian AP 0.195458 [0.176630, 0.215708]. Age [30-40) ROC-AUC was\n0.795981 [0.729181, 0.849195], [90-100) 0.587109 [0.514392, 0.660598].\nThese are separate subgroup estimates with overlapping source/case-mix limits;\nno adjusted disparity significance test or discrimination claim was made.\nSupported-group recall at 0.5 ranged from zero to 0.068966; many groups had\nno alerts. Specificity ranged 0.993856–1, FPR 0–0.006144, FNR 0.931034–1,\nand positive prediction rate 0–0.013550. This reinforces the existing threshold\nlimitation. Empirical [0,0] intervals for zero observed events cannot prove a\ntrue population rate of zero. Historical ascertainment, missingness and limited\nsupport prohibit fairness certification.\n\nCounterfactual outcome: `no_defensible_recourse` and `no_feasible_scenario`.\nDischarge care/history cannot be rewritten as recourse; there are no clinically\nreviewed mutable/conditionally mutable fields, no defensible cost function,\nno search and no candidates. Medication/treatment recommendations are prohibited.\nThis is the authorized feasibility assessment, not implemented clinical recourse.\n\nCanonical audit protocol SHA-256:\n`fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f`.\nResults SHA-256:\n`2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.\nThe manifest additionally binds config/software/seeds/code/tests, data/split,\noriginal model records, timestamps and the claim. Original model checksum\nremains `8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`.\nLocal exclusive publication is not physical WORM or formal differential privacy.\nThe project report contains all subgroup point estimates and study/defence notes;\nthe handoff records exact verification. External supervisor review is pending.\n\n## Reproduction and evidence\n\nUse `python -m aletheia.domains.healthcare model` from the repository root in\nthe pinned Python environment with the verified source archive in ignored\n`data/raw/healthcare`. The command refuses an existing run directory. Do not\ndelete a completed run and repeat holdout evaluation to improve a result.\nInspect `configs/experiments/healthcare_model_v1.toml`,\n`docs/decisions/0006-healthcare-model-selection-protocol.md`, the ignored\n`nested_cv.json`, `selection.json`, `artifact.json`, `holdout.claim` and\n`holdout.json`, plus `docs/SUPERVISOR_HANDOFF.md` for exact result summaries.\n",
+      "card_sha256": "6daf3e2a4fe9180fe9c7a2d0fe33a2aa2eea8632449b63babce1161615d62ddf",
+      "intended_use": "educational research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    },
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  },
+  "/demo/cases": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": [
+      {
+        "id": "synthetic-discharge-v1",
+        "source": "synthetic",
+        "features": {
+          "A1Cresult": "None",
+          "admission_source_id": "1",
+          "admission_type_id": "1",
+          "diabetesMed": "Yes",
+          "max_glu_serum": "None",
+          "num_lab_procedures": "40",
+          "num_medications": "12",
+          "num_procedures": "1",
+          "number_diagnoses": "5",
+          "number_emergency": "0",
+          "number_inpatient": "1",
+          "number_outpatient": "0",
+          "time_in_hospital": "3"
+        }
+      }
+    ],
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  },
+  "/explanations/global": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "baselines": [0.10781592251342707, 0.1106657500984497, 0.10584255721485765],
+      "features": [
+        {
+          "field": "admission_type_id",
+          "mean_absolute_contribution": 0.0009623550299376098,
+          "repeat_max": 0.0010235385234894873,
+          "repeat_min": 0.0009137601004702861,
+          "repeat_values": [0.0009497664658530561, 0.0010235385234894873, 0.0009137601004702861]
+        },
+        {
+          "field": "admission_source_id",
+          "mean_absolute_contribution": 0.0005428918143932827,
+          "repeat_max": 0.0007628468769361763,
+          "repeat_min": 0.00039500587950117054,
+          "repeat_values": [0.0007628468769361763, 0.00039500587950117054, 0.00047082268674250154]
+        },
+        {
+          "field": "time_in_hospital",
+          "mean_absolute_contribution": 0.007839234781585994,
+          "repeat_max": 0.007900584808838578,
+          "repeat_min": 0.007792843806175275,
+          "repeat_values": [0.007900584808838578, 0.007792843806175275, 0.007824275729744128]
+        },
+        {
+          "field": "num_lab_procedures",
+          "mean_absolute_contribution": 0.0019527206452257622,
+          "repeat_max": 0.0020460509172651148,
+          "repeat_min": 0.0018961058911232526,
+          "repeat_values": [0.0018961058911232526, 0.0019160051272889193, 0.0020460509172651148]
+        },
+        {
+          "field": "num_procedures",
+          "mean_absolute_contribution": 0.0017067610572649384,
+          "repeat_max": 0.0017382519564443197,
+          "repeat_min": 0.0016648310219937073,
+          "repeat_values": [0.0016648310219937073, 0.0017382519564443197, 0.0017172001933567882]
+        },
+        {
+          "field": "num_medications",
+          "mean_absolute_contribution": 0.003592957958584373,
+          "repeat_max": 0.004052981929545188,
+          "repeat_min": 0.0033517685971932642,
+          "repeat_values": [0.0033741233490146667, 0.004052981929545188, 0.0033517685971932642]
+        },
+        {
+          "field": "number_outpatient",
+          "mean_absolute_contribution": 0.0010741987062150079,
+          "repeat_max": 0.0012033638706321584,
+          "repeat_min": 0.0008400496337368541,
+          "repeat_values": [0.0011791826142760118, 0.0008400496337368541, 0.0012033638706321584]
+        },
+        {
+          "field": "number_emergency",
+          "mean_absolute_contribution": 0.002866128556142601,
+          "repeat_max": 0.0030745936804907866,
+          "repeat_min": 0.002490670312251368,
+          "repeat_values": [0.0030745936804907866, 0.002490670312251368, 0.003033121675685647]
+        },
+        {
+          "field": "number_inpatient",
+          "mean_absolute_contribution": 0.032974869218304025,
+          "repeat_max": 0.03670170377522764,
+          "repeat_min": 0.02862413537199357,
+          "repeat_values": [0.03670170377522764, 0.02862413537199357, 0.03359876850769086]
+        },
+        {
+          "field": "number_diagnoses",
+          "mean_absolute_contribution": 0.005413154749152331,
+          "repeat_max": 0.0056589284748571195,
+          "repeat_min": 0.005119148986661867,
+          "repeat_values": [0.0056589284748571195, 0.005461386785938009, 0.005119148986661867]
+        },
+        {
+          "field": "max_glu_serum",
+          "mean_absolute_contribution": 0.00038832202948765854,
+          "repeat_max": 0.0006251651380721594,
+          "repeat_min": 0.00011521857433467724,
+          "repeat_values": [0.0006251651380721594, 0.00011521857433467724, 0.00042458237605613904]
+        },
+        {
+          "field": "A1Cresult",
+          "mean_absolute_contribution": 0.002244848641280993,
+          "repeat_max": 0.00263404698490429,
+          "repeat_min": 0.0018613344844192851,
+          "repeat_values": [0.0022391644545194035, 0.00263404698490429, 0.0018613344844192851]
+        },
+        {
+          "field": "diabetesMed",
+          "mean_absolute_contribution": 0.003951497526246074,
+          "repeat_max": 0.0041359036301564745,
+          "repeat_min": 0.0037468362074420188,
+          "repeat_values": [0.0041359036301564745, 0.00397175274113973, 0.0037468362074420188]
+        }
+      ],
+      "limitations": "Educational research evidence, not medical advice. Associations are not causal. Marginal replacement can create unlikely combinations of correlated fields. Finite paths and a small training reference approximate interventional Shapley values; they do not expose perfect internal reasoning. Repeat ranges are not confidence intervals.",
+      "method": "Monte Carlo interventional Shapley, paired forward/reverse paths",
+      "output": "calibrated probability of readmitted_30d=1",
+      "population": "training encounters; descriptive, not generalization",
+      "sample_size_per_repeat": 128,
+      "seeds": [3102, 3103, 3104]
+    },
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  },
+  "/explanations/local/synthetic-discharge-v1": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "baseline": 0.1084755073326884,
+      "features": [
+        {
+          "contribution": 0.00026204926441777314,
+          "direction": "raises",
+          "field": "admission_type_id",
+          "value": "1"
+        },
+        {
+          "contribution": 0.0013136938114420276,
+          "direction": "raises",
+          "field": "admission_source_id",
+          "value": "1"
+        },
+        {
+          "contribution": 0.0014420404525209286,
+          "direction": "raises",
+          "field": "time_in_hospital",
+          "value": "3"
+        },
+        {
+          "contribution": 0.0016584570574720001,
+          "direction": "raises",
+          "field": "num_lab_procedures",
+          "value": "40"
+        },
+        {
+          "contribution": 0.005361225859694485,
+          "direction": "raises",
+          "field": "num_procedures",
+          "value": "1"
+        },
+        {
+          "contribution": -0.0005242398777307783,
+          "direction": "lowers",
+          "field": "num_medications",
+          "value": "12"
+        },
+        {
+          "contribution": -0.00015978131641805724,
+          "direction": "lowers",
+          "field": "number_outpatient",
+          "value": "0"
+        },
+        {
+          "contribution": -0.0008520393863240079,
+          "direction": "lowers",
+          "field": "number_emergency",
+          "value": "0"
+        },
+        {
+          "contribution": 0.016184960385678838,
+          "direction": "raises",
+          "field": "number_inpatient",
+          "value": "1"
+        },
+        {
+          "contribution": -0.008901138329238938,
+          "direction": "lowers",
+          "field": "number_diagnoses",
+          "value": "5"
+        },
+        {
+          "contribution": -0.00015745963690710907,
+          "direction": "lowers",
+          "field": "max_glu_serum",
+          "value": "None"
+        },
+        {
+          "contribution": 0.001645235251310488,
+          "direction": "raises",
+          "field": "A1Cresult",
+          "value": "None"
+        },
+        {
+          "contribution": 0.002073181012295344,
+          "direction": "raises",
+          "field": "diabetesMed",
+          "value": "Yes"
+        }
+      ],
+      "identity": {
+        "dataset": {
+          "cohort_version": "discharge-alive-v1",
+          "dataset_identifier": "uci-diabetes-296-v1",
+          "feature_policy_version": "healthcare-feature-v1",
+          "membership_sha256": "6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316",
+          "raw_sha256": "0689e7ec031237dc63031b938805c48377748761a3b26acab621567afa24df97",
+          "seed": 42,
+          "split_version": "healthcare-group-split-v1",
+          "target_version": "readmitted-lt30-positive-v1",
+          "version": "healthcare-model-v1"
+        },
+        "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+        "selection_sha256": "85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7",
+        "split_lock_sha256": "a3ca2af19215bcf965afecaa75a1c6ec2912f3cf832f2aaec82562ec7855446d"
+      },
+      "limitations": "Educational research evidence, not medical advice. Associations are not causal. Marginal replacement can create unlikely combinations of correlated fields. Finite paths and a small training reference approximate interventional Shapley values; they do not expose perfect internal reasoning.",
+      "method": "Monte Carlo interventional Shapley, paired forward/reverse paths",
+      "output": "calibrated probability of readmitted_30d=1",
+      "probability": 0.1278216918809014
+    },
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  },
+  "/audits/stability": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "above_distance_reference": 5,
+      "all": {
+        "absolute_rank_correlation": {
+          "max": 1,
+          "mean": 0.9455357142857144,
+          "min": 0.6318681318681317,
+          "undefined": 0
+        },
+        "normalized_l1": {
+          "max": 0.5162985930011117,
+          "mean": 0.07747886530171244,
+          "min": 0,
+          "undefined": 0
+        },
+        "top_k_overlap": {
+          "max": 1,
+          "mean": 0.95,
+          "min": 0.3333333333333333,
+          "undefined": 0
+        }
+      },
+      "below_overlap_reference": 3,
+      "boundary_crossings": 0,
+      "bounds": {
+        "num_lab_procedures": [1, 132],
+        "num_procedures": [0, 6]
+      },
+      "comparisons": 80,
+      "crossed_class": {
+        "absolute_rank_correlation": {
+          "max": null,
+          "mean": null,
+          "min": null,
+          "undefined": 0
+        },
+        "normalized_l1": {
+          "max": null,
+          "mean": null,
+          "min": null,
+          "undefined": 0
+        },
+        "top_k_overlap": {
+          "max": null,
+          "mean": null,
+          "min": null,
+          "undefined": 0
+        }
+      },
+      "limitations": "Protocol reference flags are descriptive, not universal clinical standards. Two +/-1 recording fields, small training sample, fixed paths; no causal or broad robustness claim.",
+      "max_absolute_probability_change": 0.033484744422827936,
+      "mean_absolute_probability_change": 0.002752829882971294,
+      "population": "training encounter recording sensitivity, not intervention feasibility",
+      "same_class": {
+        "absolute_rank_correlation": {
+          "max": 1,
+          "mean": 0.9455357142857144,
+          "min": 0.6318681318681317,
+          "undefined": 0
+        },
+        "normalized_l1": {
+          "max": 0.5162985930011117,
+          "mean": 0.07747886530171244,
+          "min": 0,
+          "undefined": 0
+        },
+        "top_k_overlap": {
+          "max": 1,
+          "mean": 0.95,
+          "min": 0.3333333333333333,
+          "undefined": 0
+        }
+      },
+      "unchanged_at_bound": 0
+    },
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  },
+  "/audits/subgroups": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": [
+      {
+        "attribute": "race",
+        "counts": {
+          "encounters": 3631,
+          "negative": 3233,
+          "patients": 2500,
+          "positive": 398
+        },
+        "group": "AfricanAmerican",
+        "metrics": {
+          "average_precision": 0.22148803340576323,
+          "brier_score": 0.09363088667201037,
+          "false_negative_rate": 0.9849246231155779,
+          "false_positive_rate": 0.0009279307145066973,
+          "positive_prediction_rate": 0.0024786560176259984,
+          "prevalence": 0.10961167722390526,
+          "recall": 0.01507537688442211,
+          "roc_auc": 0.642704319618507,
+          "specificity": 0.9990720692854933
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.16601481449374797, 0.29120499515531595],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.08515434837581148, 0.10106736644338589],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [0.9552566692735489, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0.00275170543411562],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0.00027395388876412904, 0.007572998280187882],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.09774180347408737, 0.12079508230964427],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0.04474333072645119],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.6061312546694011, 0.6782996683565647],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [0.9972482945658844, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "race",
+        "counts": {
+          "encounters": 125,
+          "negative": 107,
+          "patients": 104,
+          "positive": "<20"
+        },
+        "group": "Asian",
+        "metrics": null,
+        "reason": "minimum encounter/patient/positive/negative support not met; metrics withheld",
+        "status": "insufficient_support",
+        "uncertainty": null
+      },
+      {
+        "attribute": "race",
+        "counts": {
+          "encounters": 14685,
+          "negative": 12976,
+          "patients": 10362,
+          "positive": 1709
+        },
+        "group": "Caucasian",
+        "metrics": {
+          "average_precision": 0.1954582104064294,
+          "brier_score": 0.09994956467376044,
+          "false_negative_rate": 0.9964891749561147,
+          "false_positive_rate": 0.00046239210850806955,
+          "positive_prediction_rate": 0.0008171603677221655,
+          "prevalence": 0.1163772557030984,
+          "recall": 0.003510825043885313,
+          "roc_auc": 0.6353650192027556,
+          "specificity": 0.9995376078914919
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.1766302883890977, 0.21570809498899077],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.09516344748069666, 0.10506691017716349],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [0.9899291721579352, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0.00007712280420367757, 0.0009912196053398466],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0.00006819841771916485, 0.0020510496914668054],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.11040423572052502, 0.12335953817984538],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0.010070827842064768],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.6189167737414105, 0.6509487608097607],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [0.9990087803946601, 0.9999228771957963],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "race",
+        "counts": {
+          "encounters": 404,
+          "negative": 357,
+          "patients": 301,
+          "positive": 47
+        },
+        "group": "Hispanic",
+        "metrics": {
+          "average_precision": 0.34121085348216745,
+          "brier_score": 0.09469985442790683,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0,
+          "prevalence": 0.11633663366336634,
+          "recall": 0,
+          "roc_auc": 0.6988199535133202,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.1972889604188847, 0.4783891855980124],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.07236134161657445, 0.1181642044068179],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.0835509138381201, 0.1506189751395231],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.5914321076757518, 0.7842133176056231],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "race",
+        "counts": {
+          "encounters": 280,
+          "negative": 252,
+          "patients": 233,
+          "positive": 28
+        },
+        "group": "Other",
+        "metrics": {
+          "average_precision": 0.22353784151537803,
+          "brier_score": 0.08635828813818865,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0,
+          "prevalence": 0.1,
+          "recall": 0,
+          "roc_auc": 0.6531320861678004,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.08777807228210216, 0.33350243515109435],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.05200053926233016, 0.11461398071181757],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.05302530017152659, 0.13793935026056103],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.5190341123985948, 0.7515333235727162],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "race",
+        "counts": {
+          "encounters": 410,
+          "negative": 370,
+          "patients": 362,
+          "positive": 40
+        },
+        "group": "__MISSING__",
+        "metrics": {
+          "average_precision": 0.19862028215176597,
+          "brier_score": 0.08595438848445429,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0,
+          "prevalence": 0.0975609756097561,
+          "recall": 0,
+          "roc_auc": 0.605,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.10094908349516526, 0.3248385954419033],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.06456313512984267, 0.11240055726896529],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.07085821981604377, 0.13163454410674574],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.4851218026585484, 0.6870544704368856],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "gender",
+        "counts": {
+          "encounters": 10343,
+          "negative": 9166,
+          "patients": 7255,
+          "positive": 1177
+        },
+        "group": "Female",
+        "metrics": {
+          "average_precision": 0.19618935789944825,
+          "brier_score": 0.097972689250418,
+          "false_negative_rate": 0.9923534409515717,
+          "false_positive_rate": 0.0006545930613135464,
+          "positive_prediction_rate": 0.0014502562119307744,
+          "prevalence": 0.11379677076283477,
+          "recall": 0.0076465590484282074,
+          "roc_auc": 0.6291151444211004,
+          "specificity": 0.9993454069386865
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.16784692684405442, 0.22264504750444153],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.0930724796232741, 0.10267235818056653],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [0.9796920072551893, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0.00010953839988072922, 0.0014188775181485454],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0.00009709069288327436, 0.0035669028115882994],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.10648535417506341, 0.12020897811691732],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0.020307992744810755],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.6084492553313194, 0.6481612116023026],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [0.9985811224818515, 0.9998904616001193],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "gender",
+        "counts": {
+          "encounters": 9192,
+          "negative": 8129,
+          "patients": 6557,
+          "positive": 1063
+        },
+        "group": "Male",
+        "metrics": {
+          "average_precision": 0.2105090651246123,
+          "brier_score": 0.0985737030490427,
+          "false_negative_rate": 0.9971777986829727,
+          "false_positive_rate": 0.0003690490835280835,
+          "positive_prediction_rate": 0.0006527415143603133,
+          "prevalence": 0.11564403829416885,
+          "recall": 0.0028222013170272815,
+          "roc_auc": 0.6509085562566086,
+          "specificity": 0.9996309509164719
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.18618276436744977, 0.2419610296500418],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.0927299445725601, 0.10356328855178049],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [0.9925609958447629, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0.0008715967849262185],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0.001615882032731615],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.10717132650910219, 0.12333207827678719],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0.007439004155237117],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.6323972050365682, 0.6735031476480217],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [0.9991284032150738, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "gender",
+        "counts": {
+          "encounters": "<20",
+          "negative": "<20",
+          "patients": "<20",
+          "positive": "<20"
+        },
+        "group": "Unknown/Invalid",
+        "metrics": null,
+        "reason": "minimum encounter/patient/positive/negative support not met; metrics withheld",
+        "status": "insufficient_support",
+        "uncertainty": null
+      },
+      {
+        "attribute": "gender",
+        "counts": {
+          "encounters": "<20",
+          "negative": "<20",
+          "patients": "<20",
+          "positive": "<20"
+        },
+        "group": "__MISSING__",
+        "metrics": null,
+        "reason": "minimum encounter/patient/positive/negative support not met; metrics withheld",
+        "status": "insufficient_support",
+        "uncertainty": null
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 39,
+          "negative": 38,
+          "patients": 36,
+          "positive": "<20"
+        },
+        "group": "[0-10)",
+        "metrics": null,
+        "reason": "minimum encounter/patient/positive/negative support not met; metrics withheld",
+        "status": "insufficient_support",
+        "uncertainty": null
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 132,
+          "negative": 125,
+          "patients": 105,
+          "positive": "<20"
+        },
+        "group": "[10-20)",
+        "metrics": null,
+        "reason": "minimum encounter/patient/positive/negative support not met; metrics withheld",
+        "status": "insufficient_support",
+        "uncertainty": null
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 292,
+          "negative": 263,
+          "patients": 224,
+          "positive": 29
+        },
+        "group": "[20-30)",
+        "metrics": {
+          "average_precision": 0.24010435030309626,
+          "brier_score": 0.08459708453316254,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0,
+          "prevalence": 0.09931506849315068,
+          "recall": 0,
+          "roc_auc": 0.7153533499409992,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.1172100403208124, 0.40229504770102775],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.05497922352364457, 0.11776015230234371],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.05966244359597363, 0.14865670110783694],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.5878917029669349, 0.8069450684597694],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 738,
+          "negative": 651,
+          "patients": 534,
+          "positive": 87
+        },
+        "group": "[30-40)",
+        "metrics": {
+          "average_precision": 0.3674501823155679,
+          "brier_score": 0.09177660098099939,
+          "false_negative_rate": 0.9310344827586207,
+          "false_positive_rate": 0.006144393241167445,
+          "positive_prediction_rate": 0.013550135501355014,
+          "prevalence": 0.11788617886178862,
+          "recall": 0.06896551724137931,
+          "roc_auc": 0.7959814255698571,
+          "specificity": 0.9938556067588326
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.20844179248340228, 0.4530164290422169],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.06684888594084902, 0.10936217998430058],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [0.867963224893918, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0.01475145085475695],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0.028389854587999332],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.07783364417071478, 0.14344395377672983],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0.13203677510608208],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.7291805103258997, 0.8491948451204587],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [0.9852485491452431, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 1835,
+          "negative": 1642,
+          "patients": 1336,
+          "positive": 193
+        },
+        "group": "[40-50)",
+        "metrics": {
+          "average_precision": 0.2455663595030988,
+          "brier_score": 0.08891081124211303,
+          "false_negative_rate": 0.9740932642487047,
+          "false_positive_rate": 0.0024360535931789995,
+          "positive_prediction_rate": 0.004904632152588556,
+          "prevalence": 0.10517711171662125,
+          "recall": 0.025906735751295335,
+          "roc_auc": 0.6687724435637066,
+          "specificity": 0.997563946406821
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.1543127783342671, 0.32749366737919056],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.07807491423311363, 0.10320068622083729],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [0.9302325581395349, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0.005351011905478492],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0.012590342266771175],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.08759274553571428, 0.12646971826861125],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0.06976744186046512],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.6097361802406688, 0.7189046959750358],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [0.9946489880945215, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 3386,
+          "negative": 3032,
+          "patients": 2501,
+          "positive": 354
+        },
+        "group": "[50-60)",
+        "metrics": {
+          "average_precision": 0.19485760650792355,
+          "brier_score": 0.09041672365567771,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0,
+          "prevalence": 0.1045481393975192,
+          "recall": 0,
+          "roc_auc": 0.6520993582576807,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.15700648956813718, 0.2400561681316849],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.08076946932426167, 0.10029652188198655],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.09198101196462186, 0.11852174897758452],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.6211131166414322, 0.6882303890395424],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 4426,
+          "negative": 3916,
+          "patients": 3166,
+          "positive": 510
+        },
+        "group": "[60-70)",
+        "metrics": {
+          "average_precision": 0.2007818868311479,
+          "brier_score": 0.09876153360887881,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0.00025536261491321266,
+          "positive_prediction_rate": 0.00022593764121102577,
+          "prevalence": 0.11522819701762313,
+          "recall": 0,
+          "roc_auc": 0.636677081455667,
+          "specificity": 0.9997446373850868
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.16633288681538755, 0.23293805908107476],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.09137063474353742, 0.1058636524170108],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0.0007671757283538833],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0.0006818921064099106],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.10365658003855427, 0.12582485782977537],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.6069576105197464, 0.663773007720691],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [0.9992328242716462, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 4871,
+          "negative": 4324,
+          "patients": 3569,
+          "positive": 547
+        },
+        "group": "[70-80)",
+        "metrics": {
+          "average_precision": 0.17955203206132173,
+          "brier_score": 0.09765823131668791,
+          "false_negative_rate": 0.9981718464351006,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0.00020529665366454526,
+          "prevalence": 0.11229726955450627,
+          "recall": 0.0018281535648994515,
+          "roc_auc": 0.6097314931160971,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.1457312390541688, 0.21661005744848252],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.09056547097634411, 0.10448798124722229],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [0.9945533485074851, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0.0006179835711326503],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.10259239401180414, 0.12151260773345128],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0.005446651492514865],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.5800761032245688, 0.6400519414572041],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 3289,
+          "negative": 2857,
+          "patients": 2294,
+          "positive": 432
+        },
+        "group": "[80-90)",
+        "metrics": {
+          "average_precision": 0.1903849598185894,
+          "brier_score": 0.11238033169578875,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0,
+          "prevalence": 0.1313469139556096,
+          "recall": 0,
+          "roc_auc": 0.6003541496519271,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.16242110234254828, 0.22132439875974416],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.10211255383170176, 0.12340454649411645],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.11801901804915872, 0.14546611778057905],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.5685326655312527, 0.6298055957248624],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": 527,
+          "negative": 447,
+          "patients": 385,
+          "positive": 80
+        },
+        "group": "[90-100)",
+        "metrics": {
+          "average_precision": 0.20709596374165,
+          "brier_score": 0.1284574164555546,
+          "false_negative_rate": 1,
+          "false_positive_rate": 0,
+          "positive_prediction_rate": 0,
+          "prevalence": 0.15180265654648956,
+          "recall": 0,
+          "roc_auc": 0.5871085011185682,
+          "specificity": 1
+        },
+        "reason": null,
+        "status": "supported",
+        "uncertainty": {
+          "average_precision": {
+            "interval": [0.14754550960478993, 0.29202202823950146],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "brier_score": {
+            "interval": [0.1056075380869131, 0.1507398684929589],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_negative_rate": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "false_positive_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "positive_prediction_rate": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "prevalence": {
+            "interval": [0.12086856958248608, 0.18363416188655196],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "recall": {
+            "interval": [0, 0],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "roc_auc": {
+            "interval": [0.5143915076314359, 0.6605981938258326],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          },
+          "specificity": {
+            "interval": [1, 1],
+            "undefined_replicates": 0,
+            "valid_replicates": 200
+          }
+        }
+      },
+      {
+        "attribute": "age",
+        "counts": {
+          "encounters": "<20",
+          "negative": "<20",
+          "patients": "<20",
+          "positive": "<20"
+        },
+        "group": "__MISSING__",
+        "metrics": null,
+        "reason": "minimum encounter/patient/positive/negative support not met; metrics withheld",
+        "status": "insufficient_support",
+        "uncertainty": null
+      }
+    ],
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  },
+  "/counterfactuals/feasibility": {
+    "schema_version": "application-v1",
+    "request_id": "00000000-0000-4000-8000-000000000001",
+    "data": {
+      "assessment": {
+        "conditionally_mutable": [],
+        "distance_cost": null,
+        "distance_reason": "No admissible intervention set; cost would be invented.",
+        "excluded": [
+          "weight",
+          "discharge_disposition_id",
+          "payer_code",
+          "medical_specialty",
+          "diag_1",
+          "diag_2",
+          "diag_3",
+          "metformin",
+          "repaglinide",
+          "nateglinide",
+          "chlorpropamide",
+          "glimepiride",
+          "acetohexamide",
+          "glipizide",
+          "glyburide",
+          "tolbutamide",
+          "pioglitazone",
+          "rosiglitazone",
+          "acarbose",
+          "miglitol",
+          "troglitazone",
+          "tolazamide",
+          "examide",
+          "citoglipton",
+          "insulin",
+          "glyburide-metformin",
+          "glipizide-metformin",
+          "glimepiride-pioglitazone",
+          "metformin-rosiglitazone",
+          "metformin-pioglitazone",
+          "change",
+          "readmitted",
+          "readmitted_30d"
+        ],
+        "immutable": [
+          "admission_type_id",
+          "admission_source_id",
+          "time_in_hospital",
+          "num_lab_procedures",
+          "num_procedures",
+          "num_medications",
+          "number_outpatient",
+          "number_emergency",
+          "number_inpatient",
+          "number_diagnoses",
+          "max_glu_serum",
+          "A1Cresult",
+          "diabetesMed",
+          "race",
+          "gender",
+          "age",
+          "encounter_id",
+          "patient_nbr",
+          "row_key"
+        ],
+        "limitations": "Model sensitivity is not a clinical recommendation or outcome guarantee.",
+        "mutable": [],
+        "reason": "Discharge care and utilization are historical; no clinically reviewed intervention, time horizon, dependencies or cost function exists.",
+        "status": "no_defensible_recourse"
+      },
+      "candidates": [],
+      "search_performed": false,
+      "status": "no_feasible_scenario",
+      "worked_example": "For the fixed synthetic discharge encounter, reducing prior inpatient visits or medication count rewrites history/care. Both changes are forbidden; no scenario is returned."
+    },
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "precomputed_research",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  }
+}

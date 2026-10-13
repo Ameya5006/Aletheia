@@ -2,6 +2,62 @@
 
 Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository contains both data foundations, a credit training-only baseline and a healthcare model experiment with a locked holdout gate. It has no deployed application.
 
+## Frontend setup and execution (Macro Milestone 4 Stage 2)
+
+The Stage 1 backend and Stage 2 React/TypeScript frontend are implemented locally.
+Older roadmap passages below preserve the research-era setup; they do not describe
+the current application delivery status. Deployment and Compose remain Stage 3 work.
+
+Use Node.js 24 or newer and the pinned npm lockfile. From the repository root:
+
+```powershell
+Set-Location frontend
+npm.cmd ci
+Copy-Item .env.example .env.local
+npm.cmd run dev
+```
+
+The development server proxies `/api` to the separately configured Stage 1 API at
+`http://127.0.0.1:8000`. Start that API from the root in the pinned Python environment,
+with its existing approved release, PostgreSQL and identity settings configured:
+`.\.venv\Scripts\python.exe -m uvicorn aletheia.application.api:app_factory --factory --host 127.0.0.1 --port 8000`.
+This command does not import, approve, activate or train a model; follow the existing backend operator
+contract for release setup. Missing dependencies/readiness remain visible in the UI.
+
+`VITE_API_BASE_URL` defaults to `/api/v1`. Organization sign-in requires the public
+`VITE_OIDC_AUTHORITY`, `VITE_OIDC_CLIENT_ID`, `VITE_OIDC_SCOPE` and
+`VITE_OIDC_AUDIENCE` values in `.env.local`; register the frontend origin's
+`/auth/callback` as a code-flow/PKCE callback. Use the backend's trusted issuer,
+access-token profile and audience, with local entitlements. No client secret belongs
+in a `VITE_` variable. Without provider configuration, public evidence is available
+and sign-in explicitly reports unavailable. Access tokens stay in memory; reload
+requires sign-in again. `.env.local` is ignored; `.env.example` contains public placeholders.
+
+Run these checks from `frontend`:
+
+```powershell
+npm.cmd ls --all
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd run format:check
+npm.cmd test
+npm.cmd run build
+npm.cmd run test:browser
+npm.cmd run contract:check
+npm.cmd run licenses
+```
+
+Browser tests use installed Microsoft Edge, one worker and HTTP-boundary test
+fixtures, including a test-only OIDC provider. They start and stop their own Vite
+server on port 4173; no real provider credentials are needed. `contract:check`
+uses the root `.venv` (or `ALETHEIA_PYTHON`) to export the real FastAPI OpenAPI
+and ten public responses from a temporary verified release, without raw data.
+It compares the snapshots rather than updating them silently. `build` produces
+ignored `frontend/dist`; `npm.cmd run preview` previews that build, but requires an
+API proxy or an explicitly configured API URL/CORS because preview has no dev proxy.
+Serve the eventual static build with SPA fallback for deep routes; production
+hosting is outside Stage 2. Runtime code contains no fixture fallback.
+
 ## Why and for whom
 
 A risk score alone does not tell an ML engineer whether a model generalizes, or a human reviewer why a decision deserves attention. Aletheia's intended workflow joins valid model comparison, calibrated probabilities, explanations, constrained alternatives, subgroup checks, similar training cases and durable audit evidence. Intended users are ML engineers, human risk/clinical reviewers, and administrators. The healthcare demonstration is educational and **not a clinical decision support device or treatment recommendation**. It must not process real patient submissions in a public demo.

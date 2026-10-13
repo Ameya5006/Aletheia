@@ -1,5 +1,103 @@
 # Aletheia — Project Report
 
+## Macro Milestone 4 Stage 2 — Frontend application (2026-10-13)
+
+**Current overview and milestone:** the local Stage 1 FastAPI/PostgreSQL/MLflow
+foundation now has a React/TypeScript evidence workbench. Overview, Case Analysis,
+local/global Explanation, Reliability (stability/subgroups/feasibility), Review,
+Audit Trail, Model Card, organization sign-in and read-only administrator release
+views are implemented. Public visitors inspect published evidence; authorized
+users request the fixed synthetic prediction and review its evidence. No patient
+intake, clinical advice, new research experiment or deployment was added. Earlier
+dated sections preserve history rather than the current application status.
+
+**Why now and architecture flow:** Stage 1 established the real serving and
+transaction contracts, so UI work can display their evidence without inventing
+ML behavior. `frontend/src/main.tsx` connects BrowserRouter, SessionProvider and
+the application; `components/Shell.tsx` provides navigation, focus, appearance and
+route loading. Page modules call `api/context.tsx` resources and `api/client.ts`;
+Zod schemas in `api/contracts.ts` validate versioned envelopes/data and required
+evidence identities. Requests carry correlation IDs, bounded cancellation and,
+for private paths, access JWTs. The API remains responsible for authorization,
+calibrated inference, PostgreSQL persistence, idempotency and audit writes. The
+browser computes no model/explanation/fairness results. This implements the
+approved architecture without changing backend modules, schema or public APIs.
+
+**Decisions and trade-offs:** React Router handles a static SPA; local component
+state/context avoids an unnecessary state-management dependency. Zod guards
+runtime JSON because TypeScript alone cannot validate a server response. OIDC
+code flow with PKCE uses `oidc-client-ts`; tokens/user records stay in memory,
+with only transient login state in sessionStorage. Reload therefore requires
+sign-in again. UI role hints do not grant backend permission. Viewer is public;
+Clinical Reviewer maps to `reviewer`, Model-Risk Auditor to `engineer`, and
+administrator permissions remain separate. Without provider configuration the
+sign-in control is explicitly unavailable. A homemade login/token persistence
+scheme was rejected in favor of the approved identity boundary.
+
+**Evidence and request paths:** public health/model/card/case/XAI/stability/
+subgroup/feasibility projections supply actual values and provenance. The fixed
+case is read-only. Contributions explain the complete calibrated probability;
+calibration is not an additive feature, and unavailable raw scores/lineage remain
+explicit. Subgroup support, suppressed counts and uncertainty are preserved;
+no fairness certification is claimed. `no_feasible_scenario` is a valid
+no-search/no-candidate result, never advice. Prediction and review POSTs use a
+stable key/body during uncertain retries; changed revision/version conflicts
+require refresh. Reviews use the actual coded-reason contract, not unsupported
+free-text comments. Audit uses bounded cursor pages and clearly labels filtering
+as applying to the loaded page. Actor roles and full-chain verification are not
+published by Stage 1; the UI reports that limitation instead of inventing them.
+
+**Important problems and recovery:** the interrupted browser suite failed Model
+Card at mobile/tablet. DOM inspection isolated seven inline SHA-256 code strings:
+their right edges were 528.625px on a 375px viewport and 788.625px on 768px.
+`styles/app.css` now wraps inline code without clipping or changing evidence.
+Markdown tables retain local scrolling and gain a named keyboard-focusable
+region. A 566.51 kB (171.15 kB gzip) initial JS chunk produced a build warning;
+lazy loading Model Card/release routes splits the Markdown renderer into a
+159.32 kB (47.80 kB gzip) chunk, leaving 407.38 kB (123.65 kB gzip) initially.
+No warning threshold was raised. Component tests now await deferred rendering.
+Sharing JSON fixtures with Node browser tests required an explicit JSON import
+attribute; review success assertions distinguish success from concurrent loading.
+Windows sandbox restrictions prevented Playwright's server-tree cleanup; the
+owned Vite tree was stopped with approval and later browser runs used permitted
+cleanup. Editing tsconfig during a browser run triggered Vite navigation and
+invalidated one accessibility evaluation; final verification uses stable files.
+The user-authorized accidental repository-local notification hook was confirmed
+and removed with its empty parents; real user configuration was not accessed.
+
+**Verification and resume evidence:** 59 frontend unit/component/client/contract/
+session tests pass in four files. The final browser suite passed **7 tests in
+1.5 minutes with zero retries**. Browser checks cover 11 public routes and seven
+authenticated route states at 375/768/1440px, with WCAG-tagged axe checks, viewport
+and control bounds, keyboard navigation, table focus, review submission, dark
+appearance and reduced motion. Exact final commands/results are in the handoff.
+The real FastAPI export matches OpenAPI and ten public response snapshots; it
+builds a temporary verified release without source data or research execution.
+Dependency consistency, strict TypeScript (including browser tests), ESLint,
+Prettier, build and all 29 direct-dependency licence/version checks pass.
+Python/backend/research files were not changed: preserve the earlier continuation
+suite's **270 passed, 1 deselected, 63 warnings in 867.97s**, rather than repeat it.
+Python pip/Ruff checks were rerun. 113 baseline file hashes remain unchanged
+outside the three authorized documentation updates. No new ML metric is claimed.
+
+**Concept learning and defence:** runtime contracts validate untrusted data;
+idempotency resolves an unknown transaction outcome without duplicating writes;
+route splitting defers code rather than hiding a size warning. Basic viva: why
+cannot TypeScript validate HTTP JSON? Types disappear at runtime. Intermediate:
+why retain a retry key/body? The first request may already have committed.
+Difficult: why cannot a filtered audit page prove chain integrity? Hidden events
+and the trusted checkpoint are unavailable to that browser view. Inspect the
+client, Review page, session provider and both browser specs for worked paths.
+
+**Limitations and advisory next step:** tests use real public FastAPI exports and
+boundary mocks for private UI/identity flows, not a live organization provider or
+deployed end-to-end stack. Automated accessibility checks and screenshots do not
+prove complete assistive-technology coverage; browser execution used Edge only.
+Published metrics remain historical and educational. No browser fixture fallback
+exists in runtime source. Stage 3 Compose/hosting/CI, real-provider validation and
+deployment resource/security gates remain unimplemented. Stop for external Stage 2
+review; the supervisor alone authorizes progression.
+
 ## Macro Milestone 4 Stage 1 — Backend implementation (2026-10-11)
 
 The existing backend foundation was preserved and repaired under the supervisor's

@@ -1,0 +1,114 @@
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { UserManager, WebStorageStateStore, InMemoryWebStorage, type User } from 'oidc-client-ts';
+import { useNavigate } from 'react-router-dom';
+import { ApiContext } from '../api/context';
+import { ApiClient } from '../api/client';
+
+export const ROLE_LABELS: Record<string, string> = {
+  engineer: 'Model-Risk Auditor (engineer)',
+  reviewer: 'Clinical Reviewer',
+  administrator: 'Administrator',
+};
+export type Session = { token?: string; roles: string[]; expired: boolean };
+type Auth = Session & { configured: boolean; signIn: () => Promise<void>; signOut: () => void };
+export const AuthContext = createContext<Auth>({
+  roles: [],
+  expired: false,
+  configured: false,
+  signIn: async () => {},
+  signOut: () => {},
+});
+export const useAuth = () => useContext(AuthContext);
+export function createManager(): UserManager | undefined {
+  const authority = import.meta.env.VITE_OIDC_AUTHORITY;
+  const clientId = import.meta.env.VITE_OIDC_CLIENT_ID;
+  if (!authority || !clientId) return;
+  if (new URL(authority).protocol !== 'https:')
+    throw new Error('An HTTPS OIDC authority is required');
+  return new UserManager({
+    authority,
+    client_id: clientId,
+    redirect_uri: window.location.origin + '/auth/callback',
+    post_logout_redirect_uri: window.location.origin + '/',
+    response_type: 'code',
+    scope: import.meta.env.VITE_OIDC_SCOPE || 'openid profile',
+    extraQueryParams: { audience: import.meta.env.VITE_OIDC_AUDIENCE || 'aletheia-api' },
+    userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }),
+    stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
+    automaticSilentRenew: false,
+    loadUserInfo: true,
+    monitorSession: false,
+  });
+}
+export function sessionFromUser(user: User): Session {
+  // Claims arrive through the configured provider's token/userinfo flow. They are UI
+  // hints only; the API independently validates access JWT and local entitlements.
+  let claims: unknown;
+  try {
+    const segment = user.access_token.split('.')[1];
+    if (segment)
+      claims = (
+        JSON.parse(atob(segment.replaceAll('-', '+').replaceAll('_', '/'))) as { roles?: unknown }
+      ).roles;
+  } catch {
+    /* Unknown claims hide privileged controls; API remains authoritative. */
+  }
+  if (user.expired) return { roles: [], expired: true };
+  return {
+    token: user.access_token,
+    roles: Array.isArray(claims)
+      ? claims.filter((v): v is string => typeof v === 'string' && v in ROLE_LABELS)
+      : [],
+    expired: false,
+  };
+}
+export function SessionProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  const [manager] = useState(createManager);
+  const [session, setSession] = useState<Session>({ roles: [], expired: false });
+  const expire = () => {
+    setSession({ roles: [], expired: true });
+    void manager?.removeUser();
+  };
+  useEffect(() => {
+    if (!manager) return;
+    const expired = () => {
+      setSession({ roles: [], expired: true });
+      void manager.removeUser();
+    };
+    manager.events.addAccessTokenExpired(expired);
+    if (window.location.pathname === '/auth/callback') {
+      void manager
+        .signinRedirectCallback()
+        .then((user) => {
+          setSession(sessionFromUser(user));
+          window.history.replaceState({}, '', '/');
+          navigate('/', { replace: true });
+        })
+        .catch(() => {
+          window.history.replaceState({}, '', '/sign-in');
+          setSession({ roles: [], expired: true });
+          navigate('/sign-in', { replace: true });
+        });
+    }
+    return () => manager.events.removeAccessTokenExpired(expired);
+  }, [manager, navigate]);
+  const api = useMemo(() => new ApiClient(undefined, () => session.token, expire), [session.token]);
+  const auth: Auth = {
+    ...session,
+    configured: Boolean(manager),
+    signIn: async () => {
+      await manager?.signinRedirect();
+    },
+    signOut: () => {
+      setSession({ roles: [], expired: false });
+      void manager?.removeUser();
+      navigate('/sign-in');
+    },
+  };
+  return (
+    <AuthContext.Provider value={auth}>
+      <ApiContext.Provider value={api}>{children}</ApiContext.Provider>
+    </AuthContext.Provider>
+  );
+}
