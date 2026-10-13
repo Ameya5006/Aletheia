@@ -1,12 +1,19 @@
 # Aletheia — System Architecture
 
-## Macro Milestone 4 Stage 0 — Application contract v1
+## Macro Milestone 4 — Local application architecture
 
-**Status: documentation contract prepared for supervisor review; implementation
-is unimplemented and unauthorized by Stage 0.** CURRENT_TASK.md records external
-approval of Macro Milestone 3 at `ff9dce291f63a6d4241360997ef0aff2308597f9`.
-The historical milestone/credit sections below preserve earlier states. This
-section governs the proposed first application; ADR 0008 records its trade-offs.
+**Current status:** Stage 1 FastAPI/PostgreSQL/MLflow, transactional synthetic
+prediction/review/audit and JWT/local-entitlement RBAC are implemented in
+`src/aletheia/application` and `migrations`; Stage 2 React/TypeScript is implemented
+in `frontend`. Real external OIDC-provider integration is unverified. Sign-out
+clears the local session; live OIDC logout remains a Stage 3 verification item.
+Docker Compose, CI/CD, public hosting and production monitoring are unimplemented.
+ADR 0008 and the detailed Stage 0 specification below preserve the approved design;
+its proposed commands/schemas/limits are historical contract text, not additional
+implemented capabilities. The committed API/OpenAPI and frontend routes are the
+implementation source of truth; Stage 1/2 verification is in PROJECT_REPORT.md.
+
+### Historical Stage 0 application contract v1
 
 ### Components, dependency direction and threat boundaries
 
@@ -464,7 +471,7 @@ See [product requirements](PRODUCT_REQUIREMENTS.md) for screen/role journeys,
 choices, [execution plan](EXECUTION_PLAN.md) for gated tests/order, and
 [ADR 0008](decisions/0008-application-mlops-contract.md) for alternatives.
 
-## Macro Milestone 3 research audit boundary
+## Macro Milestone 3 research audit boundary (historical milestone)
 
 The healthcare modular monolith adds `explain.py` (complete calibrated inference,
 source lineage and sampled Shapley paths), `stability.py` (bounded count-recording
@@ -519,7 +526,7 @@ exclusive claim/overwrite refusal. Source and artifact checks reuse existing
 foundation/model boundaries. Similar-case retrieval and all application/MLOps
 work remain outside Macro Milestone 3's authorized task.
 
-## Macro Milestone 2 modelling boundary
+## Macro Milestone 2 modelling boundary (historical milestone)
 
 Healthcare modelling now lives in `modeling.py` (fold-local transforms and candidate
 construction), `evaluation.py` (metrics, calibration diagnostics and patient-cluster
@@ -556,7 +563,7 @@ that evidence and the versioned config before creating the holdout claim.
 Training calculations have no reusable fold checkpoint; an interrupted
 calculation without a complete manifest must restart.
 
-## Macro Milestone 1 architecture decision (retained design)
+## Macro Milestone 1 architecture decision (historical retained design)
 
 The healthcare-primary design remains approved. Its foundation-only implementation
 state below is historical as of Macro Milestone 1; the Macro Milestone 2 and 3

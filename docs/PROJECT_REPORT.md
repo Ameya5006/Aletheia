@@ -1,5 +1,55 @@
 # Aletheia — Project Report
 
+## Stage 2 supervisor repair (2026-10-13)
+
+**Discrepancy and correction:** five current-state documents still described
+FastAPI/PostgreSQL/MLflow, RBAC and React as future work after their local Stage 1/2
+implementation. Updated summaries/roadmap/tool statuses and labelled retained
+Stage 0 and earlier designs historical. No architecture, API or UI behavior changed;
+absent Stage 1 evidence still reads "Not published". The existing report below
+preserves the original implementation and verification history.
+
+**Dependency decision:** npm marks ESLint 9.39.1 unsupported; the official ESLint
+support policy lists v9 as EOL. Registry metadata confirmed compatible exact pins:
+`eslint` 10.12.0, `@eslint/js` 10.0.1, `eslint-plugin-react-hooks` 7.1.1 and `globals`
+17.13.0. `typescript-eslint` 8.71.2 already supports ESLint 10 and remains unchanged.
+Node 24.20.0/npm 12.0.2 were used. npm regenerated the lock; 25 other direct pins
+are unchanged and all 50 changed package entries belong to the lint dependency
+graph. Existing flat configuration passes without editing or suppressing rules.
+
+**Commands/results:** `npm.cmd install --save-dev --save-exact eslint@10.12.0
+@eslint/js@10.0.1 eslint-plugin-react-hooks@7.1.1 globals@17.13.0` succeeded;
+`npm.cmd ci` installed 343 packages/audited 344 with zero vulnerabilities.
+`npm.cmd ls --all`, `run typecheck`, `run lint`, `run format:check`, `test`,
+`run build`, `run contract:check` and `run licenses` all exited 0. Tests: 4 files,
+59 passed in 103.42s. Build: 394 modules, 6.84s; unchanged 407.38 kB initial and
+159.32 kB deferred JS (123.65/47.80 kB gzip); a plugin-timing advisory was printed.
+Contract: real OpenAPI and ten public responses match. Licenses: all 29 direct
+versions/metadata present. Production audit with `--omit=dev --audit-level=high`
+exited 0, zero vulnerabilities. Seven-document checks resolve 60 local links,
+balance all fences and count 14 Mermaid blocks (not rendered); contextual stale
+status review and lint-only lock scope pass. `git diff --check` passes. Exact
+commands, final scope and limitations are in SUPERVISOR_HANDOFF.md.
+
+**Problems/recovery and lesson:** sandbox registry queries failed with EACCES;
+approved outside-sandbox npm queries/install/audit succeeded. An initial patch
+context mismatch and PowerShell Unicode-pipe conversion interrupted doc edits;
+inspection followed by ASCII-safe replacements preserved scope. The initial doc
+check incorrectly sliced summaries before their status text; checking the first
+35 lines resolves that tooling error. Current-state facts, historical contracts
+and verified runtime support must be checked separately; a passing build alone
+does not establish dependency support or accurate documentation.
+
+**Limits and boundary:** real external OIDC-provider integration remains unverified;
+sign-out clears local state only. Live OIDC logout remains a Stage 3 verification
+item. Docker Compose, CI/CD, public hosting and production monitoring remain
+unimplemented. No new ML result, retraining/reselection, holdout access, responsible
+research audit rerun, protected artifact change, stash restoration or Git mutation
+occurred. Browser/Python suites were not rerun for this documentation/lint-only
+repair; their earlier evidence is historical. Stage 3 did not begin. Starting
+main/HEAD/local origin/main were `9a6831205f50643c12a92020a0c4e03879d49904`, with a
+clean tree; the existing stash object remains `c6b91a13bf4338e559dfaad49f850dd719f5ca47`.
+
 ## Macro Milestone 4 Stage 2 — Frontend application (2026-10-13)
 
 **Current overview and milestone:** the local Stage 1 FastAPI/PostgreSQL/MLflow

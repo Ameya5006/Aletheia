@@ -5,8 +5,9 @@ Aletheia is an enterprise-style platform project for reproducible, explainable a
 ## Frontend setup and execution (Macro Milestone 4 Stage 2)
 
 The Stage 1 backend and Stage 2 React/TypeScript frontend are implemented locally.
-Older roadmap passages below preserve the research-era setup; they do not describe
-the current application delivery status. Deployment and Compose remain Stage 3 work.
+Real external OIDC-provider integration is unverified; sign-out clears the local
+session only. Live OIDC logout remains a Stage 3 verification item. Docker Compose,
+CI/CD, public hosting and production monitoring remain unimplemented.
 
 Use Node.js 24 or newer and the pinned npm lockfile. From the repository root:
 
@@ -62,7 +63,7 @@ hosting is outside Stage 2. Runtime code contains no fixture fallback.
 
 A risk score alone does not tell an ML engineer whether a model generalizes, or a human reviewer why a decision deserves attention. Aletheia's intended workflow joins valid model comparison, calibrated probabilities, explanations, constrained alternatives, subgroup checks, similar training cases and durable audit evidence. Intended users are ML engineers, human risk/clinical reviewers, and administrators. The healthcare demonstration is educational and **not a clinical decision support device or treatment recommendation**. It must not process real patient submissions in a public demo.
 
-The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The reviewer application and administrator workflows remain unimplemented: there is no API, UI, database, authentication, MLflow, deployment, CI/CD, monitoring or LLM/RAG layer.
+The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The local FastAPI/PostgreSQL/MLflow backend implements synthetic prediction, review, audit persistence and operator release/entitlement workflows; React presents their API evidence. Real external OIDC-provider integration remains unverified. Deployment, CI/CD, production monitoring and LLM/RAG remain unimplemented.
 
 ## Current capabilities and roadmap
 
@@ -84,9 +85,10 @@ evaluation with patient-cluster intervals; explicit no-recourse feasibility
 assessment; frozen protocols and exclusive audit artifacts. Verification and
 measured results are recorded in the model card, project report and handoff.
 
-**Selected for later milestones:** similar-case retrieval, MLflow registry,
-FastAPI, PostgreSQL, React/TypeScript, Docker/Compose, GitHub Actions, monitoring
-and RBAC. Stage 0 selects local self-hosted MLflow for the first application.
+**Implemented locally in Milestone 4 Stages 1–2:** MLflow import/registry,
+FastAPI, PostgreSQL, JWT/local-entitlement RBAC and React/TypeScript.
+**Unimplemented:** similar-case retrieval, Docker/Compose, GitHub Actions and
+production monitoring.
 **Deferred hosting choices:** DagsHub-hosted MLflow, DVC versus
 source hashes/locks, managed host, optional Hugging Face demo and optional
 OpenRouter narrator. **Rejected:** RunwayML, which has no role in tabular auditing.
@@ -98,9 +100,9 @@ deployable design **committed and externally reviewed**; (2) frozen healthcare
 modelling/calibration **completed**, committed at `49a1a8c`; (3) explanations and audit methods
 **completed and externally approved at `ff9dce291`**; (4) application and MLOps; (5) public delivery
 and operations. Definitions of done are in [the execution plan](docs/EXECUTION_PLAN.md).
-Milestones 4 and 5 remain planned and unimplemented. Only the current task authorizes work; this milestone does not authorize progression.
+Milestone 4 Stages 1–2 are implemented locally; Stage 3 and Milestone 5 remain unimplemented. Only the current task and explicit supervisor repair authorize work; completion does not authorize progression.
 
-**Macro Milestone 4 Stage 0:** documentation-only application contract prepared
+**Historical Macro Milestone 4 Stage 0:** documentation-only application contract prepared
 for supervisor review. The first application will serve verified aggregate
 audit evidence and the fixed synthetic local example, with authenticated live
 inference limited to `synthetic-discharge-v1`. It will accept no patient uploads
@@ -118,16 +120,16 @@ Stage 0 authorizes no implementation, dependencies or service startup.
 
 ```mermaid
 flowchart LR
-  U[Reviewer / engineer] --> UI[React TypeScript planned]
-  UI --> API[FastAPI planned]
+  U[Reviewer / engineer] --> UI[React TypeScript local]
+  UI --> API[FastAPI local]
   API --> CORE[Python ML/XAI core]
   CORE --> HC[Healthcare contract implemented]
   CORE --> CR[Credit benchmark implemented]
-  API --> DB[PostgreSQL planned audit]
-  CORE --> REG[MLflow planned registry]
+  API --> DB[PostgreSQL local audit]
+  OP[Operator frozen import] --> REG[MLflow local registry]
 ```
 
-**Implemented healthcare flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card → unchanged calibrated model with training-only XAI/stability, counterfactual feasibility and one separately guarded subgroup audit → aggregate audit evidence. **Planned prediction flow:** authenticated fixed synthetic case request → role/case/approved-version validation → complete calibrated bundle → probability and saved explanation reference → transactional append-only audit event → response. Delivery code will call the core rather than duplicate preprocessing or policy.
+**Implemented healthcare flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card → unchanged calibrated model with training-only XAI/stability, counterfactual feasibility and one separately guarded subgroup audit → aggregate audit evidence. **Implemented local prediction flow:** authenticated fixed synthetic case request → role/case/approved-version validation → complete calibrated bundle → probability and saved explanation reference → transactional append-only audit event → response. Delivery code calls the core rather than duplicate preprocessing or policy.
 
 ## Healthcare dataset and leakage boundary
 
@@ -143,25 +145,25 @@ Status is explicit. Configuration and artifacts are detailed in [deployment arch
 |---|---|---|
 | Python 3.12, pandas, scikit-learn | Implemented credit baseline and healthcare data/model/calibration/XAI/audit core; CLI produces validated tables, frozen model evidence and aggregate audit records | `pyproject.toml`, `requirements.lock.txt`, versioned TOML; 8 GB laptop limits. Fold-local fit required. Polars is an unneeded alternative. |
 | Healthcare nested-CV runner and local joblib | Implemented research experiment; frozen selection and checksummed model live under ignored `artifacts/healthcare-model-v1` | `configs/experiments/healthcare_model_v1.toml`; trusted local artifact only, never load user-supplied pickle/joblib. The one-time holdout claim prevents reruns. |
-| Local JSON manifests | Implemented for credit and healthcare model/audit evidence; research runners write ignored artifacts | `artifacts/runs`, `artifacts/healthcare-model-v1`, `artifacts/healthcare-audit-v1`; no remote registry/concurrency. MLflow later. |
-| MLflow | Selected for model metrics/artifacts and registry consumed by API | Future `MLFLOW_TRACKING_URI`; secrets and PHI exclusion; service outage blocks promotion. Local manifests are current fallback. |
+| Local JSON manifests | Implemented for credit and healthcare model/audit evidence; research runners write ignored artifacts | `artifacts/runs`, `artifacts/healthcare-model-v1`, `artifacts/healthcare-audit-v1`; research history preserved separately from the local MLflow import. |
+| MLflow | Implemented local frozen import, historical metrics and registry lifecycle | `MLFLOW_TRACKING_URI`; no training/PHI; outage blocks promotion, verified pinned serving can continue. |
 | DagsHub-hosted MLflow | Deferred remote alternative after local self-hosted v1 | Future secret endpoint/credentials, non-sensitive metadata only; cost/retention review. |
 | DVC | Provisional data pointer/version tool for training | Current raw SHA-256 + split lock suffice for UCI; remote storage and cost must be justified before adoption. |
-| FastAPI | Selected typed REST layer calling research use cases | Future registry URI, `DATABASE_URL`, auth issuer/audience; validate and rate-limit. Django REST is heavier. |
-| PostgreSQL | Selected transactional append-only audit/version metadata | Future secret `DATABASE_URL`, migrations/least privilege; audit write failure blocks served decision. SQLite is weaker for concurrent managed use. |
-| React + TypeScript | Selected reviewer browser interface calling API JSON | Future `VITE_API_BASE_URL`; no PHI browser persistence. Next.js adds unneeded server surface. |
+| FastAPI | Implemented local typed REST layer calling research use cases | Registry URI, `DATABASE_URL`, auth issuer/audience; validate and rate-limit. Django REST is heavier. |
+| PostgreSQL | Implemented local transactional append-only audit/version metadata | Secret `DATABASE_URL`, migrations/least privilege; audit write failure blocks served decision. SQLite is weaker for concurrent managed use. |
+| React + TypeScript | Implemented local reviewer browser interface calling API JSON | `VITE_API_BASE_URL`; no PHI browser persistence. Next.js adds unneeded server surface. |
 | Docker + Compose | Selected reproducible API packaging/local stack | Future pinned images, secret injection and health checks; Compose is not public orchestration. Host installs drift. |
 | GitHub Actions | Selected CI tests/build/deploy gate and future code dependency graph artifact | Future protected environments/OIDC; no raw data on runners. Local checks remain fallback. |
 | Managed public host | Provisional API/UI and managed PostgreSQL deployment | Vendor, region and cost unresolved; synthetic examples only. Self-hosting costs more operations. |
 | Monitoring/drift | Selected aggregate service/model checks after deployment | Versioned baselines/alerts; drift is not proof of harm. Manual review fallback. |
 | Hugging Face cards | Selected future model/dataset provenance and limitations | No sensitive artifact upload; repository Markdown fallback. Hosted demo provisional and synthetic only. |
 | OpenRouter narrator | Provisional optional prose from computed explanations | Future API key secret; no patient values, hallucination/cost risk. Deterministic templates default. |
-| Authentication/RBAC, immutable audit | Selected role enforcement and append-only prediction/review trail in API/PostgreSQL | Future OIDC/retention/secrets; database admins still require governance. No anonymous real-data serving. |
+| Authentication/RBAC, append-only audit | Implemented JWT/local-entitlement enforcement and prediction/review trail in API/PostgreSQL | External OIDC integration unverified; database admins still require governance. No anonymous real-data serving. |
 | RunwayML | Rejected media generation service | No tabular audit requirement; reconsider only for a real media use case. |
 
 ## Repository map
 
-`src/aletheia/data`, `ml`, `experiments` contain the existing credit pipeline. `src/aletheia/domains/healthcare` contains the foundation, modelling, evaluation, experiment and CLI. `configs/datasets`, `features`, `splits`, `experiments` hold healthcare identities, roles, split lock and modelling protocol; credit configurations remain. `tests/healthcare` contains offline tests; `docs` records audit, architecture, decisions, model card, report and supervisor evidence. Raw data and run artifacts are ignored.
+`src/aletheia/data`, `ml`, `experiments` contain the existing credit pipeline. `src/aletheia/domains/healthcare` contains the foundation, modelling, evaluation, experiment and CLI. `configs/datasets`, `features`, `splits`, `experiments` hold healthcare identities, roles, split lock and modelling protocol; credit configurations remain. `src/aletheia/application`, `migrations`, `tests/application` and `frontend` contain local delivery code and tests. `tests/healthcare` contains offline tests; `docs` records audit, architecture, decisions, model card, report and supervisor evidence. Raw data and run artifacts are ignored.
 
 Healthcare `explain.py`, `stability.py`, `fairness.py`, `counterfactual.py` and
 `audit.py` compose the research audit. Its protocol is
@@ -170,7 +172,7 @@ records the method, alternatives and gates. No new package was installed.
 
 ## Installation and commands
 
-Use Python 3.12 in a virtual environment; no future application dependencies are installed. From the repository root:
+Use Python 3.12 in a virtual environment; the lock includes Stage 1 application dependencies. The commands below preserve historical research setup, not authorization to rerun the completed model or audit. From the repository root:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -184,7 +186,7 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pytest -m "not live_data"
 ```
 
-The archive and CSV go under ignored `data/raw/healthcare`. `acquire` downloads only the official HTTPS archive, verifies byte identity and extracts two approved members. On a local Python TLS certificate failure, obtain the same official URL through a trusted TLS-capable client into that ignored path, then rerun `acquire`; never bypass checksum validation. `verify` checks the frozen lock and prints partition sizes. `lock` creates a new lock only if absent and is for protocol regeneration under approval; it refuses overwrite. `model` is a single-use experiment: it runs training-only evidence twice, freezes selection, then claims and evaluates the holdout once. It refuses an existing run directory; do not delete a completed run to tune against its result. Configuration files are versioned TOML; no credentials are needed now. A later API will use environment-backed secrets; `.env` files stay ignored. The ordinary test suite is synthetic and offline; `live_data` tests are opt-in.
+The archive and CSV go under ignored `data/raw/healthcare`. `acquire` downloads only the official HTTPS archive, verifies byte identity and extracts two approved members. On a local Python TLS certificate failure, obtain the same official URL through a trusted TLS-capable client into that ignored path, then rerun `acquire`; never bypass checksum validation. `verify` checks the frozen lock and prints partition sizes. `lock` creates a new lock only if absent and is for protocol regeneration under approval; it refuses overwrite. `model` is a single-use experiment: it runs training-only evidence twice, freezes selection, then claims and evaluates the holdout once. It refuses an existing run directory; do not delete a completed run to tune against its result. Configuration files are versioned TOML; no credentials are needed now. The local API uses environment-backed secrets; `.env` files stay ignored. The ordinary test suite is synthetic and offline; `live_data` tests are opt-in.
 
 The audit uses the preserved model and raw CSV; it never trains. Before the first
 audit, run the protocol tests, then these commands in the pinned environment:
@@ -216,6 +218,6 @@ software licence should be checked before reuse; dataset reuse follows
 **CC BY 4.0** with UCI/Strack attribution. This is not medical advice.
 
 Read [product requirements](docs/PRODUCT_REQUIREMENTS.md), [dataset audit](docs/HEALTHCARE_DATASET_AUDIT.md), [architecture](docs/ARCHITECTURE.md), [deployment design](docs/DEPLOYMENT_ARCHITECTURE.md), [execution plan](docs/EXECUTION_PLAN.md), [project report](docs/PROJECT_REPORT.md), [credit audit](docs/DATASET_AUDIT.md), [ADRs](docs/decisions), and [supervisor handoff](docs/SUPERVISOR_HANDOFF.md).
-CURRENT_TASK.md records Macro Milestone 3 external approval at `ff9dce291`.
-Macro Milestone 4 Stage 0 prepares the contract only; application implementation
-and deployment remain absent. No implementation or Git mutation is authorized.
+CURRENT_TASK.md records Stage 2; the supervisor's explicit repair bounds this work.
+Local backend/frontend implementation exists; Stage 3 deployment remains absent.
+No subsequent milestone or Git mutation is authorized.

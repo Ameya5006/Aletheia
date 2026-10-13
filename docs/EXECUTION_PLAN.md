@@ -9,14 +9,21 @@ This sequence supersedes the older credit-first phase sequence recorded below. E
 | 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Completed; externally approved at `9073c453` |
 | 2. Healthcare research | Group-aware nested CV, bounded model comparison, sigmoid calibration and one locked holdout evaluation; model card and reproducible manifests | Completed; committed frozen prerequisite at `49a1a8c`; preserved |
 | 3. Explainable audit | Tested frozen protocols; global/local calibrated-output explanations; recording stability; guarded subgroup audit; counterfactual feasibility or defensible bounded scenarios; immutable aggregate evidence and defence guide | Completed; externally approved at `ff9dce291f63a6d4241360997ef0aff2308597f9` per CURRENT_TASK.md |
-| 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved synthetic model serving | Stage 0 documentation contract only; implementation unauthorized |
+| 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved synthetic model serving | Stages 1-2 implemented and locally verified; Stage 3 Compose/release-readiness unimplemented |
 | 5. Public delivery and operations | CI/CD, managed deployment, drift monitoring, code dependency graph and final defence evidence | Planned, not authorized |
 
 Credit remains a secondary benchmark. The older Phase 5 comparator/XAI/counterfactual/stability roadmap and WIP stash are not active implementation instructions. No future application dependencies are installed in milestone 1. See [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) for users and boundaries and [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md) for tooling.
 
-## Macro Milestone 4 gated implementation sequence — planned
+## Macro Milestone 4 gated implementation sequence
 
-Stage 0 freezes [product/screens](PRODUCT_REQUIREMENTS.md),
+Stages 1-2 implement the local FastAPI/PostgreSQL/MLflow backend, JWT/local-entitlement
+RBAC and React/TypeScript frontend; evidence is in PROJECT_REPORT.md. Real external
+OIDC-provider integration is unverified; sign-out clears only the local session.
+Live OIDC logout remains a Stage 3 verification item. Docker Compose, CI/CD, public
+hosting and production monitoring remain unimplemented. This repair does not
+start Stage 3.
+
+Historical Stage 0 froze [product/screens](PRODUCT_REQUIREMENTS.md),
 [API/model/database/auth/security contracts](ARCHITECTURE.md),
 [runtime/artifact storage](DEPLOYMENT_ARCHITECTURE.md) and
 [ADR 0008](decisions/0008-application-mlops-contract.md). Completion means required
@@ -41,7 +48,7 @@ fixtures, never used as the deployed frozen model.
 | 2. React/TypeScript frontend and complete API integration | defined evidence/review screens consume the stable, verified Stage 1 backend; no duplicated ML or patient forms | all route/API/schema integration and component checks; exact model/evidence context; loading/empty/error/conflict and retry states; keyboard/contrast/reduced-motion; role/resource navigation including scoped audit events; safe Markdown and memory token handling |
 | 3. Docker Compose integration and release readiness | non-root images, private DB/MLflow, static proxy, dev/test identity, volumes and explicit migration/bootstrap/import jobs → synthetic E2E and complete security/accessibility/resource verification | measured laptop startup/RAM, health order, restart, migration failure, MLflow/DB outage, graceful shutdown and verified restore; raw data absent from images/volumes and no automatic registration/bootstrap on startup; all unit/API/DB/migration/RBAC/artifact/component/accessibility/E2E/smoke gates below and full offline regression; image/dependency/license scans, reviewed vulnerabilities, unchanged hash inventory, OpenAPI/UI/doc consistency, exact results/limitations and concise final handoff; no clinical/latency/production claims without measurements |
 
-### Required application test matrix — defined, not executed in Stage 0
+### Required application test matrix — Stage 1/2 local evidence, Stage 3 gates pending
 
 | Gate | Meaningful checks and fixture/data boundary |
 |---|---|
@@ -64,11 +71,11 @@ providers. Existing synthetic research tests may execute their established
 fixture fits and guard paths in temporary locations; their success is software
 verification, not a new empirical experiment. Live-data tests stay disabled.
 
-Unresolved implementation gates: compatible package/image versions and 8 GB
-runtime measurements. Public OIDC provider/region/retention/host belongs to later
+Remaining integration gates: container/image compatibility and 8 GB runtime
+measurements. Local Stage 1/2 package verification is recorded in the report. Public OIDC provider/region/retention/host belongs to later
 deployment review. These are explicit verification/deployment choices, not
-missing v1 product/API/schema decisions. Implementation may begin only after
-external Stage 0 review and a new task. Stage 0 ends at the contract.
+missing v1 product/API/schema decisions. Stage 3 requires separate external
+supervisor approval; completed Stage 1/2 work does not authorize progression.
 
 ### Macro Milestone 3 execution and completion evidence (historical)
 
@@ -93,8 +100,8 @@ backend, UI, database, LLM, registry, deployment or further training may begin.
 Everything below records the earlier credit Phase 0–4 state and its proposed
 next steps at that time. References to the "current task", blocked phases or
 Phase 4 review below are historical, not the current healthcare authorization
-or next step. Current work stops at the Macro Milestone 4 Stage 0 contract review
-in the table above; no application implementation is authorized.
+or next step. Current work stops at the authorized Stage 2 repair and external
+review; Stage 3 is not authorized.
 
 ## Status and Authority
 
