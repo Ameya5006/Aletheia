@@ -1,0 +1,90 @@
+services:
+  identity:
+    image: ${COMPOSE_PROJECT_NAME}-backend:stage3
+    profiles: [test, development]
+    user: "10001:10001"
+    entrypoint: [python, /test-support/identity.py]
+    volumes:
+      - ./tests:/test-support:ro
+      - ${SECRET_DIR}:/identity:ro
+    networks:
+      private:
+        aliases: [identity.test]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 32
+    healthcheck:
+      test: [CMD, python, -c, "import ssl,urllib.request; urllib.request.urlopen('https://localhost:8443/health', context=ssl.create_default_context(cafile='/identity/identity_ca'), timeout=2)"]
+      interval: 5s
+      timeout: 10s
+      retries: 12
+  api:
+    environment:
+      DEVELOPMENT_IDENTITY: "true"
+    depends_on:
+      identity: {condition: service_healthy}
+  release-import:
+    environment:
+      DEVELOPMENT_IDENTITY: "true"
+    depends_on:
+      identity: {condition: service_healthy}
+  regression-postgres:
+    image: ${COMPOSE_PROJECT_NAME}-postgres:stage3
+    profiles: [regression]
+    user: "70:70"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes: ["regression-pg:/var/lib/postgresql"]
+    tmpfs: ["/var/run/postgresql:rw,nosuid,size=8m,uid=70,gid=70"]
+    networks: [regression]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1
+    healthcheck:
+      test: [CMD, pg_isready, -U, postgres]
+      interval: 5s
+      retries: 12
+  regression:
+    image: ${COMPOSE_PROJECT_NAME}-regression:stage3
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.regression
+      args:
+        TEST_BACKEND_IMAGE: ${COMPOSE_PROJECT_NAME}-backend:stage3
+    profiles: [regression]
+    user: "10001:10001"
+    entrypoint: [python, /test-support/regression.py]
+    healthcheck: {disable: true}
+    working_dir: /work
+    environment:
+      PYTHONPATH: /work/src
+      PYTHONDONTWRITEBYTECODE: "1"
+      GIT_OPTIONAL_LOCKS: "0"
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /work
+    volumes:
+      - ../artifacts/stage3-verification/test-workspace:/work:ro
+      - ./tests:/test-support:ro
+      - ../artifacts/stage3-verification/regression-diagnostics:/diagnostics
+    tmpfs: ["/tmp:rw,nosuid,size=768m,uid=10001,gid=10001"]
+    networks: [regression]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1536m
+    cpus: 3
+    pids_limit: 128
+    depends_on:
+      regression-postgres: {condition: service_healthy}
+networks:
+  regression: {internal: true}
+volumes:
+  regression-pg:

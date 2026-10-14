@@ -1,0 +1,174 @@
+name: ${COMPOSE_PROJECT_NAME:?explicit project name required}
+
+x-python: &python
+  image: ${COMPOSE_PROJECT_NAME}-backend:stage3
+  build:
+    context: ..
+    dockerfile: deployment/Dockerfile.api
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
+  networks: [private]
+  pids_limit: 128
+  cpus: 1
+  mem_limit: 768m
+  init: true
+  stop_grace_period: 20s
+
+x-settings: &settings
+  APP_ENV: ${APP_ENV:?explicit profile required}
+  APP_RELEASE_ROOT: /release/current
+  APP_RELEASE_SHA256: ${APP_RELEASE_SHA256:?verified release digest required}
+  APP_MODEL_VERSION: ${APP_MODEL_VERSION:?explicit model version required}
+  OIDC_ISSUER: ${OIDC_ISSUER:?trusted issuer required}
+  OIDC_AUDIENCE: ${OIDC_AUDIENCE:?audience required}
+  OIDC_JWKS_URI: ${OIDC_JWKS_URI:?JWKS required}
+  OIDC_MAX_TOKEN_LIFETIME_SECONDS: ${OIDC_MAX_TOKEN_LIFETIME_SECONDS:?token maximum required}
+  PROVIDER_TOKEN_LIFETIME_SECONDS: ${PROVIDER_TOKEN_LIFETIME_SECONDS:?provider lifetime required}
+  BOOTSTRAP_OIDC_ISSUER: ${BOOTSTRAP_OIDC_ISSUER:-}
+  BOOTSTRAP_OIDC_SUB: ${BOOTSTRAP_OIDC_SUB:-}
+  DEPLOYMENT_PIN_PATH: /state/deployment.json
+  MLFLOW_ENDPOINT: '{"scheme":"http","hostname":"mlflow","port":5000}'
+  SSL_CERT_FILE: /usr/local/lib/python3.12/site-packages/certifi/cacert.pem
+
+services:
+  postgres:
+    image: ${COMPOSE_PROJECT_NAME}-postgres:stage3
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.postgres
+    user: "70:70"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      PGDATA: /var/lib/postgresql/18/docker
+    secrets: [postgres_password, owner_password, app_password, mlflow_password]
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-aletheia.sh:ro
+    tmpfs: ["/var/run/postgresql:rw,nosuid,size=8m,uid=70,gid=70"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [private]
+    restart: "on-failure:3"
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+    stop_grace_period: 30s
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  migrate:
+    <<: *python
+    profiles: [operator]
+    command: [migrate]
+    healthcheck: {disable: true}
+    secrets: [owner_db_url]
+    mem_limit: 256m
+    depends_on:
+      postgres: {condition: service_healthy}
+  mlflow:
+    <<: *python
+    command: [mlflow]
+    environment:
+      MLFLOW_SERVER_ENABLE_JOB_EXECUTION: "false"
+    secrets: [mlflow_db_url]
+    volumes: ["registry:/registry"]
+    restart: "on-failure:3"
+    depends_on:
+      postgres: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      start_period: 60s
+      retries: 12
+  release-import:
+    <<: *python
+    profiles: [operator]
+    command: [operator, import-release, --tracking-uri, "http://mlflow:5000"]
+    healthcheck: {disable: true}
+    working_dir: /state
+    environment: *settings
+    secrets:
+      - owner_db_url
+      - operator_token
+      - source: identity_ca
+        target: /usr/local/lib/python3.12/site-packages/certifi/cacert.pem
+    volumes:
+      - release:/release:ro
+      - state:/state
+    depends_on:
+      postgres: {condition: service_healthy}
+      mlflow: {condition: service_healthy}
+  api:
+    <<: *python
+    environment: *settings
+    secrets:
+      - app_db_url
+      - source: identity_ca
+        target: /usr/local/lib/python3.12/site-packages/certifi/cacert.pem
+    volumes:
+      - release:/release:ro
+      - state:/state:ro
+    restart: "on-failure:3"
+    depends_on:
+      postgres: {condition: service_healthy}
+  release-stage:
+    <<: *python
+    profiles: [operator]
+    command: [stage-release]
+    environment:
+      APP_RELEASE_SHA256: ${APP_RELEASE_SHA256}
+    volumes:
+      - ${RELEASE_SOURCE:?byte-preserving verified release required}:/source:ro
+      - release:/release
+    healthcheck: {disable: true}
+  frontend:
+    image: ${COMPOSE_PROJECT_NAME}-frontend:stage3
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.frontend
+      args:
+        VITE_OIDC_AUTHORITY: ${VITE_OIDC_AUTHORITY:-}
+        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-}
+        VITE_OIDC_SCOPE: ${VITE_OIDC_SCOPE:-openid}
+        VITE_OIDC_AUDIENCE: ${OIDC_AUDIENCE}
+    environment:
+      OIDC_CONNECT_SOURCE: ${OIDC_CONNECT_SOURCE:-}
+    user: "101:101"
+    ports: ["127.0.0.1:${LOCAL_PORT:?explicit local port required}:8080"]
+    networks: [private, ingress]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,uid=101,gid=101"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: "on-failure:3"
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 32
+    depends_on:
+      api: {condition: service_started}
+
+networks:
+  private: {internal: true}
+  ingress: {}
+volumes:
+  pgdata:
+  registry:
+  state:
+  release:
+secrets:
+  postgres_password: {file: "${SECRET_DIR:?secret directory required}/postgres_password"}
+  owner_password: {file: "${SECRET_DIR}/owner_password"}
+  app_password: {file: "${SECRET_DIR}/app_password"}
+  mlflow_password: {file: "${SECRET_DIR}/mlflow_password"}
+  owner_db_url: {file: "${SECRET_DIR}/owner_db_url"}
+  app_db_url: {file: "${SECRET_DIR}/app_db_url"}
+  mlflow_db_url: {file: "${SECRET_DIR}/mlflow_db_url"}
+  identity_ca: {file: "${SECRET_DIR}/identity_ca"}
+  operator_token: {file: "${SECRET_DIR}/operator_token"}

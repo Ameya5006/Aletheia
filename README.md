@@ -1,13 +1,116 @@
 # Aletheia — Explainable AI Decision Auditor
 
-Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository contains both data foundations, a credit training-only baseline and a healthcare model experiment with a locked holdout gate. It has no deployed application.
+Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository contains both data foundations, a credit training-only baseline and a healthcare model experiment with a locked holdout gate. It has a local synthetic-only Docker Compose application; no public deployment.
+
+## Stage 3 local Docker deployment
+
+`deployment/compose.yaml` implements a loopback-only frontend/proxy, private
+FastAPI, PostgreSQL and MLflow, persistent volumes and explicit operator jobs.
+Images use digest-pinned Python 3.12.10 (required by the frozen loader), Node
+24.20.0, PostgreSQL 18.6 and unprivileged NGINX 1.30.2, with OS security updates
+at build time. OS updates require a package mirror, so the base/dependency pins
+do not make rebuilt image bytes identical. Record the built image IDs for review.
+Image scans still report backend findings; this is not public release approval.
+The backend builds checksum-pinned SQLite 3.54.0 separately to fix the inherited
+SQLite finding while preserving Python 3.12.10. PostgreSQL starts directly as
+UID 70; its unused root-switch helper is removed. The regression image is test-only.
+Exact verification, measurements and limitations are in
+[SUPERVISOR_HANDOFF.md](docs/SUPERVISOR_HANDOFF.md).
+
+For a **new synthetic test setup** from the repository root, with healthy Docker
+Desktop and sufficient disk space, use the pinned Python environment:
+
+```powershell
+.\.venv\Scripts\python.exe deployment/tests/prepare.py
+$composeArgs = @('compose', '--env-file', 'artifacts/stage3-local/config.env', '-f', 'deployment/compose.yaml', '-f', 'deployment/compose.test.yaml', '--profile', 'test', '--profile', 'operator')
+& docker @composeArgs config --quiet
+& docker @composeArgs build --builder default
+& docker @composeArgs up -d --wait postgres identity mlflow
+& docker @composeArgs run --rm migrate
+& docker @composeArgs run --rm release-stage
+```
+
+On first setup, run the operator actions explicitly before API startup:
+
+```powershell
+& docker @composeArgs run --rm release-import operator bootstrap-initial-administrator
+& docker @composeArgs run --rm release-import operator import-release --tracking-uri http://mlflow:5000
+.\.venv\Scripts\python.exe deployment/tests/prepare.py --tokens
+& docker @composeArgs run --rm release-import operator approve-release --tracking-uri http://mlflow:5000 --token-file /run/secrets/operator_token
+& docker @composeArgs run --rm release-import operator activate-release --tracking-uri http://mlflow:5000 --token-file /run/secrets/operator_token
+& docker @composeArgs run --rm release-import operator grant-role --token-file /run/secrets/operator_token --issuer https://identity.test:8443 --subject synthetic-engineer --role engineer
+& docker @composeArgs run --rm release-import operator grant-role --token-file /run/secrets/operator_token --issuer https://identity.test:8443 --subject synthetic-reviewer --role reviewer
+& docker @composeArgs up -d --wait api frontend
+.\.venv\Scripts\python.exe deployment/tests/verify.py --checks-only
+```
+
+Visit `http://127.0.0.1:18080`. The synthetic JWKS fixture provides API test tokens,
+not an interactive OIDC login. Browser sign-in remains unavailable without a
+real configured provider. Preparation refuses existing setups; refresh only
+short-lived test tokens with `prepare.py --tokens`. The release builder copies
+verified frozen bytes; it never retrains or reserializes the model.
+
+Further checks, each from the root, use only synthetic data:
+
+```powershell
+node deployment/tests/browser.mjs
+.\.venv\Scripts\python.exe deployment/tests/recovery.py
+.\.venv\Scripts\python.exe deployment/tests/restore.py
+.\.venv\Scripts\python.exe deployment/tests/resources.py
+.\.venv\Scripts\python.exe deployment/tests/workspace.py
+& docker @composeArgs --profile regression build --builder default regression
+& docker @composeArgs --profile regression run --rm regression
+.\.venv\Scripts\python.exe deployment/tests/scan.py
+.\.venv\Scripts\python.exe deployment/tests/security.py
+& docker @composeArgs stop
+```
+
+The scanner uses the labelled `aletheia-stage3-scanner-cache` Linux volume for
+cache/archive staging and retains it. Production images get vulnerability/licence
+reports and CycloneDX SBOMs. After a test-image combined scan timed out, that
+image uses vulnerability scanning/SBOM plus direct Debian copyright/licence
+inventory; the original timeout log is retained. No clean security gate is claimed.
+
+The regression image alone adds Git; its read-only workspace contains a detached
+snapshot of the existing HEAD objects/index, without branches, parent history or
+stash. Production images contain neither Git nor that metadata. The default
+runner executes the full offline suite. `--resume-without-registry` resumes
+verification only when all nine `test_registry.py` cases already passed in a
+saved run; report both runs and do not claim a single clean full-suite run.
+
+Run resource sampling separately from regression/scanning. `restore.py` quiesces
+application writers, backs up both databases and registry/state/release volumes,
+then restores to a unique project on loopback port 18081, verifies persisted
+prediction/audit/approval and tests revocation there. It stops that project and
+retains backup files and rehearsal volumes. It refuses overwrites. Backups are
+ignored sensitive operator files and need separate retention/access controls.
+`stop` and normal `down` retain volumes; never use `down -v` on retained data.
+Restart service containers with `up -d --wait postgres identity mlflow api frontend`;
+do not rerun bootstrap, staging, import or activation as startup automation.
+
+For **development/release configuration**, copy `deployment/.env.example` to an
+ignored env file, choose an explicit project/port, configure trusted HTTPS OIDC,
+token lifetimes, release digest/version and secret directory. Mount individual
+`postgres_password`, `owner_password`, `app_password`, `mlflow_password`,
+`owner_db_url`, `app_db_url`, `mlflow_db_url`, `identity_ca` (CA trust bundle) and
+`operator_token` files. URL users are `aletheia_owner`, `aletheia_app` and
+`aletheia_mlflow`; databases are `aletheia_app` and `aletheia_mlflow`. Use strong
+distinct credentials and restrict access to the ignored files. Build a verified
+release with the existing `operator build-release --destination` command, set
+`RELEASE_SOURCE` to its directory and its emitted digest. Use the base Compose
+file with `--profile operator`; set `APP_ENV=development` or `release` explicitly.
+Release rejects test identity. No credential defaults or provider secrets exist
+in Git. `VITE_*` values are public build configuration; changes require rebuilding
+the frontend. Set `OIDC_CONNECT_SOURCE` to the matching HTTPS authority origin.
+Register `/auth/callback` for code flow/PKCE and grant local roles explicitly.
+No real provider or provider logout has been verified. PostgreSQL/MLflow have no
+host ports, and this HTTP-only local proxy deliberately emits no HSTS.
 
 ## Frontend setup and execution (Macro Milestone 4 Stage 2)
 
 The Stage 1 backend and Stage 2 React/TypeScript frontend are implemented locally.
 Real external OIDC-provider integration is unverified; sign-out clears the local
-session only. Live OIDC logout remains a Stage 3 verification item. Docker Compose,
-CI/CD, public hosting and production monitoring remain unimplemented.
+session only. Live OIDC logout remains a Stage 3 verification item. Docker Compose is implemented locally; CI/CD, public hosting and production monitoring remain unimplemented.
 
 Use Node.js 24 or newer and the pinned npm lockfile. From the repository root:
 
@@ -63,7 +166,7 @@ hosting is outside Stage 2. Runtime code contains no fixture fallback.
 
 A risk score alone does not tell an ML engineer whether a model generalizes, or a human reviewer why a decision deserves attention. Aletheia's intended workflow joins valid model comparison, calibrated probabilities, explanations, constrained alternatives, subgroup checks, similar training cases and durable audit evidence. Intended users are ML engineers, human risk/clinical reviewers, and administrators. The healthcare demonstration is educational and **not a clinical decision support device or treatment recommendation**. It must not process real patient submissions in a public demo.
 
-The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The local FastAPI/PostgreSQL/MLflow backend implements synthetic prediction, review, audit persistence and operator release/entitlement workflows; React presents their API evidence. Real external OIDC-provider integration remains unverified. Deployment, CI/CD, production monitoring and LLM/RAG remain unimplemented.
+The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The local FastAPI/PostgreSQL/MLflow backend implements synthetic prediction, review, audit persistence and operator release/entitlement workflows; React presents their API evidence. Real external OIDC-provider integration remains unverified. Local Compose is implemented; public deployment, CI/CD, production monitoring and LLM/RAG remain unimplemented.
 
 ## Current capabilities and roadmap
 
@@ -87,7 +190,7 @@ measured results are recorded in the model card, project report and handoff.
 
 **Implemented locally in Milestone 4 Stages 1–2:** MLflow import/registry,
 FastAPI, PostgreSQL, JWT/local-entitlement RBAC and React/TypeScript.
-**Unimplemented:** similar-case retrieval, Docker/Compose, GitHub Actions and
+**Unimplemented:** similar-case retrieval, GitHub Actions and
 production monitoring.
 **Deferred hosting choices:** DagsHub-hosted MLflow, DVC versus
 source hashes/locks, managed host, optional Hugging Face demo and optional
@@ -100,7 +203,7 @@ deployable design **committed and externally reviewed**; (2) frozen healthcare
 modelling/calibration **completed**, committed at `49a1a8c`; (3) explanations and audit methods
 **completed and externally approved at `ff9dce291`**; (4) application and MLOps; (5) public delivery
 and operations. Definitions of done are in [the execution plan](docs/EXECUTION_PLAN.md).
-Milestone 4 Stages 1–2 are implemented locally; Stage 3 and Milestone 5 remain unimplemented. Only the current task and explicit supervisor repair authorize work; completion does not authorize progression.
+Milestone 4 Stages 1–3 are implemented locally; Milestone 5 remains unimplemented. Only the current task and explicit supervisor repair authorize work; completion does not authorize progression.
 
 **Historical Macro Milestone 4 Stage 0:** documentation-only application contract prepared
 for supervisor review. The first application will serve verified aggregate
@@ -152,7 +255,7 @@ Status is explicit. Configuration and artifacts are detailed in [deployment arch
 | FastAPI | Implemented local typed REST layer calling research use cases | Registry URI, `DATABASE_URL`, auth issuer/audience; validate and rate-limit. Django REST is heavier. |
 | PostgreSQL | Implemented local transactional append-only audit/version metadata | Secret `DATABASE_URL`, migrations/least privilege; audit write failure blocks served decision. SQLite is weaker for concurrent managed use. |
 | React + TypeScript | Implemented local reviewer browser interface calling API JSON | `VITE_API_BASE_URL`; no PHI browser persistence. Next.js adds unneeded server surface. |
-| Docker + Compose | Selected reproducible API packaging/local stack | Future pinned images, secret injection and health checks; Compose is not public orchestration. Host installs drift. |
+| Docker + Compose | Implemented local API/static images and Compose stack | Pinned bases, secret files and health checks; Compose is not public orchestration. Host installs drift. |
 | GitHub Actions | Selected CI tests/build/deploy gate and future code dependency graph artifact | Future protected environments/OIDC; no raw data on runners. Local checks remain fallback. |
 | Managed public host | Provisional API/UI and managed PostgreSQL deployment | Vendor, region and cost unresolved; synthetic examples only. Self-hosting costs more operations. |
 | Monitoring/drift | Selected aggregate service/model checks after deployment | Versioned baselines/alerts; drift is not proof of harm. Manual review fallback. |
@@ -218,6 +321,6 @@ software licence should be checked before reuse; dataset reuse follows
 **CC BY 4.0** with UCI/Strack attribution. This is not medical advice.
 
 Read [product requirements](docs/PRODUCT_REQUIREMENTS.md), [dataset audit](docs/HEALTHCARE_DATASET_AUDIT.md), [architecture](docs/ARCHITECTURE.md), [deployment design](docs/DEPLOYMENT_ARCHITECTURE.md), [execution plan](docs/EXECUTION_PLAN.md), [project report](docs/PROJECT_REPORT.md), [credit audit](docs/DATASET_AUDIT.md), [ADRs](docs/decisions), and [supervisor handoff](docs/SUPERVISOR_HANDOFF.md).
-CURRENT_TASK.md records Stage 2; the supervisor's explicit repair bounds this work.
-Local backend/frontend implementation exists; Stage 3 deployment remains absent.
+CURRENT_TASK.md authorizes Stage 3 only. Local backend/frontend and Compose exist;
+exact acceptance status is recorded in SUPERVISOR_HANDOFF.md.
 No subsequent milestone or Git mutation is authorized.

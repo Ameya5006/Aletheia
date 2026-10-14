@@ -1,5 +1,290 @@
 # Aletheia — Project Report
 
+## Stage 3 release-evidence repair (2026-10-14)
+
+**Current repair status:** focused repair complete. Image/security and
+functional checks pass; one complete isolated container regression exited 0:
+276 collected, 275 passed, zero skipped, one live-data deselected, 63 warnings
+in 2251.04s. Local Stage 3 is defensible for commit and supervisor review;
+this is not approval for public deployment. This section
+supersedes the image/security counts and measurements in the retained checkpoint
+below. No cloud or synthetic-case-builder work was authorized or implemented.
+
+**Decision and implementation:** `deployment/Dockerfile.api` keeps frozen Python
+3.12.10 and every Python pin, but builds upstream SQLite 3.54.0 in a separate
+compiler stage. The download is pinned by SQLite's published SHA3-256; only its
+shared library enters the runtime, replacing vulnerable Debian SQLite. This fixes
+CVE-2025-7458 and the two reported SQLite high findings without retraining or
+changing artifact versions. Moving to another Python/distro or retaining the
+vulnerable library was less suitable; the accepted cost is maintaining a native
+library outside Debian's package inventory. Python linkage and synthetic scoring
+pass; `security.py` supplements the SBOM/licence inventory explicitly rather than
+pretending Trivy detected that library. PostgreSQL removes unused `gosu` because
+Compose already enforces UID 70. Git remains exclusively in the test image.
+
+**Security and deployment context:** backend changes from 2 critical/57 high to
+1 critical/55 high; regression from 2/67 to 1/65. PostgreSQL's gosu critical and
+24 high findings disappear; final scan reports zero findings, as does the
+unchanged frontend. These are scanner results, not vulnerability-free claims.
+The retained critical CVE-2023-45853 concerns MiniZip, which Debian Bookworm does
+not build into this zlib binary; runtime inspection finds neither MiniZip files
+nor its affected exported function. No fixed Bookworm zlib package is reported.
+Residual risk must be reconsidered if MiniZip is introduced. Remaining OS highs
+have no fixed Bookworm version reported. Four pip-vendor highs have upstream
+fixes, but pip 26.2.1 is still the latest released pip; top-level setuptools and
+urllib3 already have fixed pins. Configured services do not run pip on untrusted
+input. Avoid unsupported vendor surgery; monitor a future compatible pip release.
+Non-root execution alone was never a disposition. Local PostgreSQL is verification
+infrastructure; cloud will use managed PostgreSQL. Regression must never deploy.
+Exact advisory/component/version/layer/fix/exposure/disposition records and image
+bindings are in `artifacts/stage3-verification/repair-security-disposition.json`.
+Sources: [Debian SQLite](https://security-tracker.debian.org/tracker/CVE-2025-7458),
+[Debian zlib](https://security-tracker.debian.org/tracker/CVE-2023-45853), and
+[SQLite source/checksum](https://www.sqlite.org/download.html).
+
+**Verified behavior and problems:** six E2E groups, six recovery groups, restored
+databases/three volumes and identical prediction/audit/readiness checks pass on
+final images. Proxy browser checks pass 33 route/viewport cases with zero axe
+violations. All 102 applicable Python pins match. Fresh-container readiness is
+266.360s; healthy restart 74.031s; ten synthetic HTTP requests span 563-2906ms.
+Three idle samples total 595.755/603.010/596.024 MiB; seven workload samples span
+595.846-622.763 MiB. Regression ran concurrently; these are local observations,
+not production latency or peak-load claims. Three-second API/MLflow probes timed
+out during the resource rehearsal, then recovered without weakening budgets;
+the rehearsal exited 0. Root cause of the slower measurement is not established.
+Initial build invocation omitted the overlay's identity profile, and the first
+regression launch used unsupported `run --no-build`; neither collected tests.
+Their logs remain preserved. The security helper's explicit package list caught
+a missing util-linux subpackage; corrected inventory passes without hiding a CVE.
+The first complete repair regression exited 1: 274 passed, one failed, one
+live-data deselected, 60 warnings in 3075.28s. The reconciliation test's MLflow
+metadata GET exceeded the unchanged ten-second deadline; other registry cases
+passed. Concurrent serving/recovery/resource checks and transient health-probe
+timeouts establish scheduling pressure as a plausible contributor, not a proved
+sole cause. The complete rerun uses a new isolated project, three test-only CPU
+cores and stopped serving workloads, preserving every assertion/deadline and
+all volumes. A test-only diagnostics mount retains MLflow logs/cgroup counters
+after runner disposal. The original failure log is retained. The new complete invocation passes
+275 tests with one live-data deselected, zero skipped and 63 warnings in
+2251.04s; exit 0. Acceptance uses this run alone, never combined coverage.
+A perceived stall at 4% was diagnosed live: all nine registry tests had passed,
+PostgreSQL had no blocking PIDs, pytest was runnable, and MLflow health/metadata
+GETs returned 200 in 0.331/0.349s. Its log contains 3,121 HTTP records and 1,451
+artifact GETs from repeated package-integrity checks. Cgroup counters show zero
+CPU throttling/OOM events and 733,487,104-byte peak memory. The MLflow child
+inherited its fixture-start test label; that label is not the live pytest node.
+The run completed without a duplicate invocation, forced termination or timeout
+weakening. Duration and request volume explain why progress must be assessed
+from multiple live signals; they do not prove the first run timeout's sole cause.
+
+**Learning/defence:** an image tag is mutable; config/layer digests bind a scan to
+the actual software. Why can a reported critical remain? Package matching must be
+checked against the affected binary code and permitted request path; retain the
+finding and evidence, rather than suppressing it or relying on UID. What changes
+invalidate that answer? Different image contents, introducing MiniZip, or allowing
+untrusted SQL/tool/archive inputs. Native ABI compatibility also needs runtime
+linkage and integration evidence, not just a successful compiler invocation.
+No ML experiment or metric was added. Real external OIDC, cloud/TLS/CI/monitoring
+and a synthetic case builder remain unimplemented and require later approval.
+
+### Previous Stage 3 verification checkpoint
+
+## Macro Milestone 4 Stage 3 - local deployment verification (2026-10-13 to 2026-10-14)
+
+**Purpose, sequence and implementation:** package the already-tested Stage 1
+API/operator contract and Stage 2 UI before considering any public delivery.
+`deployment/compose.yaml` runs private PostgreSQL, MLflow and FastAPI behind a
+loopback-only non-root NGINX static frontend. Separate application owner/runtime
+and MLflow roles limit database access. Operator-profile migration, release-stage
+and release-import jobs make state-changing actions explicit. Synthetic HTTPS
+JWKS and the isolated PostgreSQL regression network exist only in the test
+overlay. No schema, public API, research method or approved architecture changed.
+Images came first, then synthetic E2E, reversible failures, backup/restore and
+resource/security evidence: each later check requires the previous boundary to
+work. Initial interrupted results are retained as historical evidence below.
+
+**Flow and decisions:** browser -> bounded same-origin proxy -> existing API ->
+verified frozen release -> synthetic inference -> one PostgreSQL transaction
+covering prediction, idempotency and audit -> response. Explicit import copies
+unchanged model bytes into MLflow; approval/activation establish the deployment
+pin. Neither aliases nor service startup authorize a model. Compose was chosen
+over host setup drift or unnecessary Kubernetes. One backend image uses the
+existing complete lock for API, MLflow and jobs, with a derived test-only Git
+image for isolated regression; this avoids
+new dependency resolution but retains test/tool packages and increases size.
+Multi-stage frontend packaging leaves Node/build dependencies out of its runtime.
+Digest-pinned bases plus OS security upgrades were chosen over leaving fixable
+base findings untouched. OS repositories change, so base pins and Python/Node
+locks do not guarantee identical rebuilt image bytes; final IDs identify tested
+images. Python 3.12.10 and frozen-library pins remain unchanged. Reconsider the
+shared backend image or pinned Python only under an approved compatibility task.
+
+**Verified behavior:** saved E2E evidence covers public routes, SPA fallback,
+authenticated fixed-case prediction, SQL persistence, reviewer/audit linkage,
+RBAC, administrator evidence, idempotency and rejection of arbitrary submissions.
+MLflow outage retains approved pinned serving; PostgreSQL/audit failure suppresses
+success, and API outage preserves static UI without fabricated evidence. Recovery
+checks verify an absent-database migration failure, a mismatched release anchor,
+interrupted startup, bounded body/internal routes and graceful persistent restart.
+The accepted healthy-restart measurement is 43.734 seconds. `restore.py` quiesces
+writers, dumps both databases and archives registry/state/release volumes. A
+unique isolated restore verifies file hashes/permissions, the identical saved
+prediction, review audit link and approved readiness; revocation then blocks
+readiness/prediction there. This is a local rehearsal, not remote disaster recovery.
+
+**Problems, fixes and learning:** a three-second test identity probe timed out
+under constrained CPU; Docker health history verified timeout rather than bad
+TLS. Test-only CPU/probe allowances were adjusted, without relaxing authentication.
+Restore initially compared whole tar bytes, then exposed safe extraction changing
+ordinary permissions. The final implementation compares paths/types/content
+hashes/modes and preserves ordinary permissions through a safe path filter;
+special permission bits and unexpected member types are not restored. All failed
+backup attempts remain in ignored evidence. A new unit test proves timestamp
+changes are harmless while byte/permission changes are detected. The migration
+failure probe initially had a harness assignment error; reading its log prevented
+false acceptance. It was corrected and both negative probes now assert the exact
+intended error. Container regression's repeated full MLflow verification is slow;
+its isolated runner allowance increased from one to two of eight engine CPUs.
+Failures, recovery and final evidence remain distinguishable. One-shot jobs now disable the inherited API health probe; a regression process does not serve port 8000, so its exit result is the relevant check.
+
+**Security evidence and limits:** final Trivy 0.75.0 scan/SBOM/licence commands
+completed for all three images. Frontend: zero reported vulnerabilities. Backend:
+57 high/2 critical; PostgreSQL: 24 high/1 critical. Backend critical OS findings
+are CVE-2025-7458 and CVE-2023-45853, with no fixed version reported for the
+installed Debian packages. PostgreSQL's critical CVE-2025-68121 is in the base
+image's Go-built `gosu`, despite running PostgreSQL directly as UID 70. Vendored
+Python packages are also scanned; installed top-level pins must be checked
+separately. These are findings requiring review, not a clean security gate or
+proof of exploitability. SBOM/licence entries support inventory, not legal clearance.
+Release readiness remains subject to supervisor disposition of findings and real
+OIDC integration. HTTP-only local proxy emits no HSTS; TLS hosting, provider
+login/logout, public delivery, CI/CD and monitoring remain unimplemented.
+
+**Concepts and defence:** an image is software; a named volume holds durable
+state; a health probe reports service liveness; application readiness additionally
+checks approval, integrity and database availability. A backup exists only when
+it can be restored and its contents/behavior checked. Basic viva: why does `stop`
+retain predictions? PostgreSQL named volumes persist independently of containers.
+Intermediate: why can MLflow be offline while predictions work? Serving verifies
+the local approved pin rather than promoting an alias. Difficult: why did two
+negative tests need log assertions? Any nonzero exit could otherwise be mistaken
+for the intended failure. Why not claim the model became better? Packaging and
+synthetic integration introduce no new research experiment or clinical evidence.
+
+**Measured boundaries:** fresh containers with cached images/existing approved
+volumes reached application readiness in 49.375 seconds. Three five-container
+idle snapshots used 576.416/587.248/576.754 MiB; the one workload snapshot used
+582.038 MiB. Aggregate CPU was 0.45/95.29/0.41% idle and 88.69% workload
+(100% = one core); health probes cause bursts. Ten sequential synthetic HTTP
+requests took 109-250 ms including authentication, inference and transactional
+audit, not model-only inference. Isolated regression ran concurrently. These
+are laptop measurements, not sustained-load/peak or clinical latency claims.
+Image inspect content sizes were 538,823,213 backend, 31,274,769 frontend and
+123,006,605 PostgreSQL bytes; Docker displayed combined local storage as
+1.87 GB/110 MB/444 MB. Both conventions are retained. Runtime checks verified
+non-root UIDs, ALL capabilities dropped, private ports, release integrity,
+absence of patient identifier columns/logged fields and 102 exact Linux pins.
+The final proxy browser smoke passed 33 route/viewport accessibility checks
+with zero axe violations plus keyboard/dark/reduced-motion checks. Five
+deployment boundary/restore-integrity unit tests passed; full container
+regression's exact final result belongs in the handoff, not an assumed count.
+
+**Container test-environment recovery:** the initial full offline container run
+finished with 263 passed, one failed, ten setup errors, one live-data deselected
+and 63 warnings in 3393.19s. Every failed/error case needed Git for provenance,
+which the minimal production image intentionally lacked. The nine registry cases
+all passed, including six real crash-recovery boundaries. `Dockerfile.regression`
+adds Git only to a test image; `workspace.py` copies 189 existing HEAD objects and
+the index into detached, read-only test metadata, without branches, parent
+history, stash or actual repository mutation. No fake Git executable or invented
+revision is used. Verification resumes with the other tests plus the new backup
+unit test while preserving the nine successful registry cases. The repaired run passed 266 tests, deselected one live-data test and emitted 27
+warnings in 265.58s. With the nine previously passing registry cases, all 275
+current offline tests have passing coverage. Exact results are in the handoff; this is coverage across runs, not a claim of a single
+clean full-container run. The future default command runs the entire suite.
+
+**Scanner recovery:** the combined test-image scan hit a 15-minute layer-analysis
+timeout; the log named Git copyright metadata. A vulnerability-only Windows-cache
+retry also remained slow and was explicitly stopped; both logs are retained.
+Observed memory use was 26.5 MiB and host free disk about 21.7 GB, so exhaustion
+was not observed. A labelled, project-owned Linux cache volume and staged archive
+then completed vulnerability scanning and CycloneDX SBOM generation. A direct
+Debian inventory records 123 package versions, copyright hashes and licence
+headers; the timed-out licence analyser is not reported as successful. Cache/I/O
+was a suspected contributor, not a proved sole root cause. Test image findings:
+67 high/2 critical, alongside inherited/backend findings. All four exported
+config digests and layer inventories match runtime images. The scanner cache
+volume and earlier cache/logs are retained; production images/pins did not change.
+
+**Review evidence:** `artifacts/stage3-verification` contains E2E, recovery,
+restore, proxy-browser and final scanner/SBOM outputs; exact remaining checks and
+measurements are recorded in `SUPERVISOR_HANDOFF.md`. All 158 protected baseline
+hashes, including task bytes and frozen research files, match. No held-out access,
+training/reselection, responsible audit rerun, stash modification, later stage,
+branch/history change, commit or push occurred.
+
+### Historical interrupted Stage 3 checkpoint
+
+**Status at that checkpoint:** incomplete; Docker storage failure blocked container
+verification. Stage 3 follows stable backend/frontend contracts so packaging can
+be checked against actual behavior. Configuration, not a running deployment, is
+now written in `deployment`: multi-stage API/static frontend images, non-root
+proxy, private database/MLflow network, separate database roles and secret files,
+explicit migration/release staging/import jobs, persistent volumes and bounded
+resources/restart policies. No backend/frontend or frozen source file changed.
+
+**Flow/decisions:** proposed browser -> same-origin NGINX -> existing FastAPI ->
+existing approved release/PostgreSQL transactions. Operator explicitly migrates,
+stages verified bytes, bootstraps, imports, approves and activates; startup does
+none of those actions automatically. Python 3.12.10 remains exact because the
+protected loader compares complete runtime versions. All four base images are
+digest-pinned. The existing full dependency lock is retained; no Python/Node pin
+changed. Linux `libgomp1` supplies the existing classifier's OpenMP runtime, not
+a new ML method. Static proxy and one worker avoid additional resident services.
+CSP keeps scripts restricted and permits style attributes for the existing
+probability/contribution bars. Budgets are targets, not measurements. A test-only
+HTTPS JWKS fixture and isolated trust-auth regression database are excluded from
+production images/network. Real external OIDC/logout remains unverified.
+
+**Verified preparation:** existing Stage 1 release builder produced digest
+`9983f7b574fb8e2bfe43df4a12b5900f061bcbef28d9efc3203f4f25ccb83b22`, copying frozen
+bytes without model reserialization. The offline test workspace copies 94
+software/evidence files with byte equality and no raw data. Three deployment
+boundary tests pass. Final Compose config validation passes. Host Python offline
+run: 205 passed, 68 PostgreSQL/MLflow tests skipped, 1 live-data test deselected,
+27 warnings in 110.64s; this does not satisfy database/container acceptance.
+Frontend typecheck/lint/format/build/contract/license/dependency checks pass;
+production npm audit finds zero vulnerabilities. Full exact results and remaining
+gates are in SUPERVISOR_HANDOFF.md. No new research metric is recorded.
+
+**Important problems and recovery evidence:** Docker was initially stopped;
+permission-approved startup exposed a 3.72 GiB Linux engine. Compose's initial
+build booted its own `buildx_buildkit_default` helper; explicitly selecting the
+existing default builder let the build progress, but both paths later failed.
+API wheel download hit a read-only filesystem; frontend/scanner layer commits
+hit containerd I/O errors. Host free disk was 1,196,371,968 bytes on a
+254,500,925,440-byte C: volume. Low space is a possible contributor, not a proven
+root cause. The approved restart remained in starting status with API 500 errors;
+only its confirmed waiting CLI PID was stopped. No Docker data was pruned,
+reset or deleted; the helper's state must be inspected before any later cleanup.
+Scout required account login; the pinned Trivy fallback failed during image pull,
+so neither produced a scan or SBOM. Initial frontend tests had two lazy-page
+timeouts during concurrent checks (root cause unproved); a serial rerun passed all 59 without changing
+code/timeouts, although redirected npm notices produced a PowerShell wrapper
+error. Direct `npm.cmd test -- --maxWorkers=1; exit $LASTEXITCODE` then exited 0:
+59 passed in 45.32s. Lesson/viva: distinguish
+configuration, successful image build, running services and measured acceptance;
+resource failures and skipped tests cannot be reported as completed deployment.
+
+**Limits/next step:** supervisor/user restores disk capacity and Docker storage
+health, then resumes this same Stage 3 task. Container E2E, migrations/registry
+integration, proxy browser/accessibility, outage/revocation/audit failure,
+backup/restore, security scans/SBOM and actual resource/image measurements remain
+unverified; backup/restore tooling still needs implementation. Protected research,
+CURRENT_TASK and stash remain unchanged. No model training/reselection, holdout
+access, responsible audit rerun, public hosting, CI/CD, later feature, commit or
+push occurred. This partial record authorizes no subsequent milestone.
+
 ## Stage 2 supervisor repair (2026-10-13)
 
 **Discrepancy and correction:** five current-state documents still described
@@ -2665,6 +2950,8 @@ not prove calibration? Why can CV standard deviation not diagnose overfitting
 or serve as a confidence interval?
 
 ## Resume Evidence
+
+Current local Stage 3 evidence: three built/scanned images; five serving/test-identity containers; synthetic prediction/review/audit persistence and backup/restore; 33 proxy accessibility checks; five deployment unit tests; measured local startup/resources/HTTP latency. Exact counts, scope and remaining security findings are in the Stage 3 record and handoff above. Earlier research-only statements below are historical and do not describe current application deployment.
 
 Current healthcare evidence: four model families, eight raw/calibrated
 protocols, 79,808 training and 19,535 single held-out encounters, outer best
