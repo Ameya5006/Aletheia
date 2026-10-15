@@ -3,6 +3,7 @@ import { UserManager, WebStorageStateStore, InMemoryWebStorage, type User } from
 import { useNavigate } from 'react-router-dom';
 import { ApiContext } from '../api/context';
 import { ApiClient } from '../api/client';
+import { z } from 'zod';
 
 export const ROLE_LABELS: Record<string, string> = {
   engineer: 'Model-Risk Auditor (engineer)',
@@ -10,7 +11,13 @@ export const ROLE_LABELS: Record<string, string> = {
   administrator: 'Administrator',
 };
 export type Session = { token?: string; roles: string[]; expired: boolean };
-type Auth = Session & { configured: boolean; signIn: () => Promise<void>; signOut: () => void };
+type Auth = Session & {
+  configured: boolean;
+  signIn: () => Promise<void>;
+  signOut: () => void;
+  localAvailable?: boolean;
+  connectLocal?: (token: string) => Promise<void>;
+};
 export const AuthContext = createContext<Auth>({
   roles: [],
   expired: false,
@@ -97,6 +104,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const auth: Auth = {
     ...session,
     configured: Boolean(manager),
+    localAvailable: import.meta.env.VITE_LOCAL_IDENTITY === 'true',
+    connectLocal: async (token) => {
+      if (import.meta.env.VITE_LOCAL_IDENTITY !== 'true')
+        throw new Error('Local identity unavailable');
+      const localApi = new ApiClient(undefined, () => token);
+      const result = await localApi.request('/session', z.object({ roles: z.array(z.string()) }), {
+        private: true,
+      });
+      setSession({ token, roles: result.data.roles, expired: false });
+    },
     signIn: async () => {
       await manager?.signinRedirect();
     },

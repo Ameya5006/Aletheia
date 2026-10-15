@@ -63,7 +63,8 @@ heads = sa.Table(
 EVENT_TYPES = (
     "'initial_administrator_bootstrap','role_granted','role_revoked',"
     "'subject_disabled','prediction_created','review_created',"
-    "'release_approved','release_revoked','release_activated','release_rolled_back'"
+    "'release_approved','release_revoked','release_activated','release_rolled_back',"
+    "'prediction_saved'"
 )
 events = sa.Table(
     "audit_events",
@@ -203,7 +204,9 @@ predictions = sa.Table(
     sa.Column("probability", sa.Double, nullable=False),
     sa.Column("threshold", sa.Double, nullable=False),
     sa.Column("class_at_threshold", sa.Integer, nullable=False),
-    fk("explanation_ref_id", "explanation_references"),
+    fk("explanation_ref_id", "explanation_references", True),
+    sa.Column("inputs", JSONB(none_as_null=True)),
+    sa.Column("result_snapshot", JSONB(none_as_null=True)),
     stamp(),
     fk("audit_event_id", "audit_events", unique=True),
     sa.ForeignKeyConstraint(
@@ -219,7 +222,14 @@ predictions = sa.Table(
         "probability >= 0 AND probability <= 1 AND probability <> 'NaN'::float8"
     ),
     sa.CheckConstraint("threshold = 0.5 AND class_at_threshold IN (0,1)"),
-    sa.CheckConstraint("case_id = 'synthetic-discharge-v1'"),
+    sa.CheckConstraint("case_id IN ('synthetic-discharge-v1','entered-case-v1')"),
+    sa.CheckConstraint(
+        "(case_id='synthetic-discharge-v1' AND inputs IS NULL "
+        "AND result_snapshot IS NULL AND explanation_ref_id IS NOT NULL) OR "
+        "(case_id='entered-case-v1' AND inputs IS NOT NULL "
+        "AND result_snapshot IS NOT NULL AND explanation_ref_id IS NULL "
+        "AND jsonb_typeof(inputs)='object' AND jsonb_typeof(result_snapshot)='object')"
+    ),
     sa.CheckConstraint("input_sha256 ~ '^[0-9a-f]{64}$'"),
 )
 reviews = sa.Table(
@@ -241,6 +251,14 @@ reviews = sa.Table(
     sa.CheckConstraint(
         "reason_code IN ('evidence_reviewed','limitations_noted','identity_issue')"
     ),
+)
+saved = sa.Table(
+    "saved_analyses",
+    metadata,
+    fk("id", "prediction_events", primary_key=True),
+    fk("actor_id", "subjects"),
+    stamp(),
+    fk("audit_event_id", "audit_events", unique=True),
 )
 keys = sa.Table(
     "idempotency_records",
@@ -271,4 +289,4 @@ deployment = sa.Table(
 )
 
 
-IMMUTABLE = (models, releases, explanations, predictions, reviews, events, keys)
+IMMUTABLE = (models, releases, explanations, predictions, reviews, saved, events, keys)

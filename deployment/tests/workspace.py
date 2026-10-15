@@ -1,6 +1,7 @@
 """Copy only tracked software and the ten frozen evidence files for offline tests."""
 
 import hashlib
+import os
 import shutil
 import subprocess
 import zlib
@@ -9,9 +10,14 @@ from pathlib import Path
 from aletheia.application.release import AUDIT_FILES, MODEL_FILES, sha
 
 root = Path.cwd()
-destination = root / "artifacts/stage3-verification/test-workspace"
+destination = root / os.environ.get(
+    "ALETHEIA_WORKSPACE", "artifacts/stage3-verification/test-workspace"
+)
 destination.mkdir(parents=True, exist_ok=True)
 paths = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+paths += subprocess.check_output(
+    ["git", "ls-files", "--others", "--exclude-standard"], text=True
+).splitlines()
 paths = [
     p
     for p in paths

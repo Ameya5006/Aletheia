@@ -1,4 +1,4 @@
-"""Versioned synthetic-only FastAPI adapter. No HTTP operator bootstrap."""
+"""Versioned case intake, frozen inference and review; no HTTP bootstrap."""
 
 import asyncio
 import logging
@@ -20,6 +20,7 @@ from starlette.exceptions import HTTPException
 
 from . import schema as s
 from .auth import ServiceError, TokenVerifier
+from .case_input import AnalysisRequest, field_mapping
 from .config import Settings
 from .release import CASE, VerifiedRelease, safe_file, sha
 from .store import Store, row
@@ -61,6 +62,10 @@ class ReviewRequest(BaseModel):
     decision: Literal["acknowledged", "needs_investigation", "dismissed_demo"]
     reason_code: Literal["evidence_reviewed", "limitations_noted", "identity_issue"]
     expected_revision: int = Field(ge=0)
+
+
+class SaveAnalysisRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
 
 
 def valid_uuid(value):
@@ -119,7 +124,12 @@ def create_app(settings: Settings, release=None, store=None, verifier=None):
         )
 
     def response(
-        request, data, status=200, source="precomputed_research", health=False
+        request,
+        data,
+        status=200,
+        source="precomputed_research",
+        health=False,
+        evidence_context=None,
     ):
         result = {
             "schema_version": "application-v1",
@@ -127,7 +137,7 @@ def create_app(settings: Settings, release=None, store=None, verifier=None):
             "data": data,
         }
         if not health:
-            result["evidence"] = {
+            result["evidence"] = evidence_context or {
                 "domain": "healthcare",
                 "model_version": settings.model_version,
                 "model_sha256": release.protocol["identity"]["model_sha256"],
@@ -277,6 +287,13 @@ def create_app(settings: Settings, release=None, store=None, verifier=None):
         except (SQLAlchemyError, ValueError, ServiceError):
             return False
 
+    @app.get("/api/v1/session")
+    def local_session(request: Request):
+        if settings.app_env == "release" or not settings.development_identity:
+            raise ServiceError(404, "not_found")
+        _, _, roles = private(request)
+        return response(request, {"roles": sorted(roles)})
+
     @app.get("/api/v1/health/live")
     def live(request: Request):
         return response(request, {"status": "alive"}, health=True)
@@ -328,6 +345,118 @@ def create_app(settings: Settings, release=None, store=None, verifier=None):
         return response(
             request, [{"id": CASE, "source": "synthetic", "features": release.case}]
         )
+
+    @app.get("/api/v1/analyses/schema")
+    def analysis_schema(request: Request):
+        private(request)
+        return response(request, field_mapping())
+
+    def analysis_data(conn, identity, value):
+        if not value or not value.get("result_snapshot"):
+            raise ServiceError(404, "not_found")
+        store.accessible(conn, identity, value["id"])
+        saved = row(conn, sa.select(s.saved).where(s.saved.c.id == value["id"]))
+        reviews = list(
+            conn.execute(
+                sa.select(s.reviews)
+                .where(s.reviews.c.prediction_id == value["id"])
+                .order_by(s.reviews.c.created_at, s.reviews.c.id)
+            ).mappings()
+        )
+        return dict(
+            value["result_snapshot"],
+            prediction_id=value["id"],
+            event_id=value["audit_event_id"],
+            input_sha256=value["input_sha256"],
+            created_at=value["created_at"],
+            saved=bool(saved),
+            save_event_id=saved["audit_event_id"] if saved else None,
+            review_state=reviews[-1]["decision"] if reviews else "not_reviewed",
+            review_history=[present(dict(r), True) for r in reviews],
+        )
+
+    def analysis_response(request, identity, value, status=200):
+        with store.engine.begin() as conn:
+            data = analysis_data(conn, identity, value)
+        return response(
+            request, data, status, "case_inference", evidence_context=data["evidence"]
+        )
+
+    @app.post("/api/v1/analyses", status_code=201)
+    def analyze(body: AnalysisRequest, request: Request):
+        identity, actor, _ = private(request, {"engineer", "reviewer", "administrator"})
+        key = valid_uuid(request.headers.get("Idempotency-Key"))
+        if body.model_version != settings.model_version:
+            raise ServiceError(409, "version_conflict")
+        rate(("prediction", actor), 10)
+        if not ready():
+            raise ServiceError(503, "service_unready")
+        if not concurrency.acquire(blocking=False):
+            raise ServiceError(429, "concurrency_limited")
+        try:
+            value = store.command(
+                identity,
+                body.model_dump(),
+                key,
+                request.state.request_id,
+                settings.model_version,
+                release,
+                deadline=request.state.deadline,
+            )
+            metrics["audit_successes"] += 1
+        except Exception:
+            metrics["audit_failures"] += 1
+            raise
+        finally:
+            concurrency.release()
+        return analysis_response(request, identity, value, 201)
+
+    @app.get("/api/v1/analyses")
+    def analyses(request: Request, cursor: str | None = None, limit: int = 20):
+        identity, actor, roles = private(request)
+        if not 1 <= limit <= 100:
+            raise ServiceError(400, "invalid_cursor")
+        with store.engine.begin() as conn:
+            query = sa.select(s.predictions).join(
+                s.saved, s.saved.c.id == s.predictions.c.id
+            )
+            if not roles & {"reviewer", "administrator"}:
+                query = query.where(s.predictions.c.actor_id == actor)
+            if cursor:
+                query = query.where(s.predictions.c.id < valid_uuid(cursor))
+            records = list(
+                conn.execute(
+                    query.order_by(s.predictions.c.id.desc()).limit(limit + 1)
+                ).mappings()
+            )
+            items = [analysis_data(conn, identity, dict(r)) for r in records[:limit]]
+        return response(
+            request,
+            {
+                "items": items,
+                "next_cursor": str(records[limit - 1]["id"])
+                if len(records) > limit
+                else None,
+            },
+        )
+
+    @app.get("/api/v1/analyses/{prediction_id}")
+    def analysis(prediction_id: str, request: Request):
+        identity, _, _ = private(request)
+        with store.engine.begin() as conn:
+            value = store.accessible(conn, identity, valid_uuid(prediction_id))
+        return analysis_response(request, identity, value)
+
+    @app.post("/api/v1/analyses/{prediction_id}/save")
+    def save_analysis(prediction_id: str, body: SaveAnalysisRequest, request: Request):
+        identity, _, _ = private(request)
+        value = store.save_analysis(
+            identity,
+            valid_uuid(prediction_id),
+            request.state.request_id,
+            request.state.deadline,
+        )
+        return analysis_response(request, identity, value)
 
     def project(section):
         def endpoint(request: Request):
@@ -393,7 +522,16 @@ def create_app(settings: Settings, release=None, store=None, verifier=None):
         identity, _, _ = private(request)
         with store.engine.begin() as conn:
             value = store.accessible(conn, identity, valid_uuid(prediction_id))
-        return response(request, present(value), source="synthetic_inference")
+        return response(
+            request,
+            present(value),
+            source="case_inference"
+            if value["result_snapshot"]
+            else "synthetic_inference",
+            evidence_context=value["result_snapshot"]["evidence"]
+            if value["result_snapshot"]
+            else None,
+        )
 
     @app.post("/api/v1/predictions/{prediction_id}/reviews", status_code=201)
     def review(prediction_id: str, body: ReviewRequest, request: Request):
@@ -409,7 +547,17 @@ def create_app(settings: Settings, release=None, store=None, verifier=None):
             valid_uuid(prediction_id),
             request.state.deadline,
         )
-        return response(request, present(result, True), 201, "synthetic_inference")
+        with store.engine.begin() as conn:
+            target = store.accessible(conn, identity, valid_uuid(prediction_id))
+        return response(
+            request,
+            present(result, True),
+            201,
+            "case_inference" if target["result_snapshot"] else "synthetic_inference",
+            evidence_context=target["result_snapshot"]["evidence"]
+            if target["result_snapshot"]
+            else None,
+        )
 
     @app.get("/api/v1/predictions/{prediction_id}/reviews")
     def history(prediction_id: str, request: Request):

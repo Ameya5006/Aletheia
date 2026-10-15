@@ -1,8 +1,66 @@
 # Aletheia — System Architecture
 
+## Current post-Stage-3 interactive case architecture (2026-10-15)
+
+Implemented locally: React/TypeScript static UI and same-origin NGINX proxy,
+private FastAPI, PostgreSQL, MLflow and explicit release/operator jobs in Docker
+Compose. Research code remains independent of application adapters. No cloud,
+CI/CD, public authentication or new dependency was introduced. The historical
+Stage 0 specification below remains a design record, not a second API authority.
+
+The previously fixed-case-only serving path now also accepts one independently
+entered row through `case-input-v1`. Thirteen required source features map to
+typed controls via authenticated metadata, canonicalize to exact source strings,
+then use the same verified frozen 43-column preprocessing/model and external
+sigmoid calibration. Feature names/order must match. No fitting, raw-row loading,
+held-out access, new artifact format or release fallback occurs. All source
+mapping, engineering count bounds and limitations are in PROJECT_REPORT.
+
+| Interface | Boundary / responsibility |
+|---|---|
+| `GET /api/v1/analyses/schema` | Existing JWT/local-entitlement authorization; required controls/options/ranges/conversions |
+| `POST /api/v1/analyses` | Strict versioned row, approved model version, UUID idempotency, rate/concurrency/readiness/deadline controls; immutable result and audit |
+| `GET /api/v1/analyses` | Saved records only; RBAC filtering before UUID-keyset pagination |
+| `GET /api/v1/analyses/{id}` | Authorized stored snapshot plus separate save/review history; no inference |
+| `POST /api/v1/analyses/{id}/save` | Strict empty object; owner-only, repeat-safe append-only save/audit event |
+| `GET /api/v1/session` | Only test/development identity mode; verifies existing signed token and returns effective local roles |
+
+`VerifiedRelease.analyze` supplies prediction/category and a newly labelled
+`case-reference-v1` local probability contrast using the existing paired-path
+algorithm, 32 permutation pairs (64 paths)/seed 3105 and one public protocol reference. It is explicitly
+different from the frozen research background explanation. Signed attributions
+are noncausal and reference-dependent; unlikely marginal hybrids and approximation
+remain limitations. Frozen recording-stability evidence is model-level, with no
+per-case score and no validation claim for this new contrast. No LLM participates.
+Results bind model SHA-256, application release SHA-256, model version and frozen
+audit-evidence SHA-256; each response also carries prediction/audit IDs/timestamp.
+
+Migration `0004_case_input` adds nullable canonical-input/result-snapshot JSONB to
+`prediction_events`, permits `entered-case-v1` and nullable legacy explanation
+references, and introduces append-only `saved_analyses`. SQL NULL handling keeps
+legacy rows valid. Runtime has SELECT/INSERT, not history UPDATE/DELETE. Triggers
+validate save/audit links in both directions; original audit validation still
+governs every earlier event type. Prediction, audit and idempotency commit in one
+transaction. Run records already exist for audit/retry integrity; Save adds user
+history membership. Review events/revisions never rewrite model snapshots.
+Historical migration/catalog tests target 0003; a separate old-row forward test
+verifies 0004. No existing research migration or evidence is rewritten.
+
+Frontend routes `/new-analysis`, `/analyses`, `/analyses/:id` implement empty
+entry, save/history/reopen and explicit load-to-new-form. Reset clears browser
+state only; edited reruns create new IDs. Legacy prediction/review views redirect
+to the stored entered-case evidence. Engineers retain owner scope and reviewers/
+administrators retain existing read/review scope; Save remains owner-only.
+The optional `/local-session` UI requires build flag `VITE_LOCAL_IDENTITY=true`
+(default false); the API requires test/development identity mode separately.
+Existing provisioned tokens stay in memory, never browser persistence. No issuer,
+password storage, registration or parallel authentication exists. Login, Signup,
+real external OIDC and any later restricted cloud rollout remain future scope.
+
+
 ## Macro Milestone 4 — Local application architecture
 
-**Current status:** Stage 1 FastAPI/PostgreSQL/MLflow, transactional synthetic
+**Historical Stage 1/2 checkpoint:** Stage 1 FastAPI/PostgreSQL/MLflow, transactional synthetic
 prediction/review/audit and JWT/local-entitlement RBAC are implemented in
 `src/aletheia/application` and `migrations`; Stage 2 React/TypeScript is implemented
 in `frontend`. Real external OIDC-provider integration is unverified. Sign-out

@@ -97,7 +97,7 @@ function ReviewForm() {
     <>
       <PageHeading
         title="Review"
-        description="Record a considered demonstration-evidence decision against a persisted prediction."
+        description="Record a considered evidence decision against a persisted prediction."
       />
       {!auth.token ? (
         <Notice>
@@ -105,7 +105,7 @@ function ReviewForm() {
         </Notice>
       ) : !id ? (
         <Panel title="Select a persisted prediction">
-          <p>Create an audited prediction in Case Analysis, or open an authorized prediction ID.</p>
+          <p>Run a new analysis, open Analysis History, or enter an authorized prediction ID.</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -124,7 +124,7 @@ function ReviewForm() {
             <button className="button primary">Open review</button>
           </form>
           <p>
-            <Link to="/demo">Create audited prediction →</Link>
+            <Link to="/new-analysis">New Analysis →</Link>
           </p>
         </Panel>
       ) : (
@@ -149,7 +149,7 @@ function ReviewForm() {
                 <p className="mono small">{prediction.value.data.prediction_id}</p>
                 <p>
                   Model {prediction.value.evidence?.model_version} · explanation reference{' '}
-                  {prediction.value.data.explanation_ref}
+                  {prediction.value.data.explanation_ref ?? 'Stored with this analysis'}
                 </p>
                 <form
                   onSubmit={(e) => {
@@ -175,7 +175,16 @@ function ReviewForm() {
                           />
                           {label}
                         </label>
-                        <Link to={path!}>Inspect →</Link>
+                        <Link
+                          to={
+                            label === 'Prediction and explanation' &&
+                            prediction.value?.data.case_id === 'entered-case-v1'
+                              ? '/analyses/' + prediction.value?.data.prediction_id
+                              : path!
+                          }
+                        >
+                          Inspect →
+                        </Link>
                       </div>
                     ))}
                     <fieldset>

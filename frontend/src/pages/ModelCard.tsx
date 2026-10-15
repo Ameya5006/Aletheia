@@ -6,7 +6,14 @@ import { useResource } from '../api/context';
 import { cardSchema, modelSchema, pageSchema, versionSchema } from '../api/contracts';
 import { useAuth } from '../auth/session';
 import { PageHeading } from '../components/Shell';
-import { fieldLabel, Notice, Panel, Provenance, ResourceState } from '../components/ui';
+import {
+  displayText,
+  fieldLabel,
+  Notice,
+  Panel,
+  Provenance,
+  ResourceState,
+} from '../components/ui';
 const versionsPage = pageSchema(versionSchema);
 export function ModelCard() {
   const card = useResource('/models/current/card', cardSchema);
@@ -61,7 +68,7 @@ export function ModelCard() {
       )}
       {card.value && (
         <article className="model-document">
-          <Notice>{card.value.data.limitations}</Notice>
+          <Notice>{displayText(card.value.data.limitations)}</Notice>
           <Markdown
             remarkPlugins={[remarkGfm]}
             skipHtml
@@ -87,7 +94,7 @@ export function ModelCard() {
               ),
             }}
           >
-            {card.value.data.content_markdown}
+            {displayText(card.value.data.content_markdown)}
           </Markdown>
           <p className="mono small">Published card SHA-256: {card.value.data.card_sha256}</p>
         </article>
@@ -158,7 +165,7 @@ export function ReleaseEvidence() {
                   .map(([key, v]) => (
                     <div key={key}>
                       <dt>{fieldLabel(key)}</dt>
-                      <dd className="mono">{String(v)}</dd>
+                      <dd className="mono">{displayText(String(v))}</dd>
                     </div>
                   ))}
               </dl>

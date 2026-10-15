@@ -74,6 +74,14 @@ for (const width of [375, 768, 1440]) {
         }
         await page.screenshot({ path: `test-results/model-card-${width}.png`, fullPage: true });
       }
+      await page.locator('details').evaluateAll((items) =>
+        items.forEach((item) => {
+          (item as HTMLDetailsElement).open = true;
+        }),
+      );
+      await expect(page.locator('body')).not.toContainText(
+        /synthetic|demonstration|dismissed_demo|\bdemo\b/i,
+      );
       await page.addScriptTag({ content: axeSource });
       const violations = await page.evaluate(async () => {
         const runner = (
@@ -94,19 +102,22 @@ for (const width of [375, 768, 1440]) {
       expect(violations, `${path} at ${width}px`).toEqual([]);
     }
     await page.goto('/');
-    await expect(page.getByText('12.78', { exact: false })).toBeVisible();
+    await expect(page.getByText(/No analysis is selected/)).toBeVisible();
+    await expect(page.getByText('12.78', { exact: false })).toHaveCount(0);
     if (width < 768) {
       await page.getByRole('button', { name: 'Open navigation' }).click();
       await expect(page.locator('#mobile-menu')).toBeVisible();
-      await page.locator('#mobile-menu').getByRole('link', { name: 'Case Analysis' }).focus();
+      await page.locator('#mobile-menu').getByRole('link', { name: 'New Analysis' }).focus();
       await page.keyboard.press('Escape');
       await expect(page.getByRole('button', { name: 'Open navigation' })).toBeFocused();
       await page.getByRole('button', { name: 'Open navigation' }).click();
-      await page.locator('#mobile-menu').getByRole('link', { name: 'Case Analysis' }).click();
+      await page.locator('#mobile-menu').getByRole('link', { name: 'New Analysis' }).click();
     } else {
       await page.getByRole('button', { name: 'Collapse sidebar' }).click();
-      await expect(page.getByRole('link', { name: 'Case Analysis' })).toBeVisible();
-      await page.getByRole('link', { name: 'Case Analysis' }).click();
+      await expect(
+        page.locator('.sidebar').getByRole('link', { name: 'New Analysis' }),
+      ).toBeVisible();
+      await page.locator('.sidebar').getByRole('link', { name: 'New Analysis' }).click();
     }
     await expect(page.getByRole('main')).toBeFocused();
     await page.screenshot({ path: `test-results/case-${width}.png`, fullPage: true });

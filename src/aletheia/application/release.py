@@ -207,6 +207,75 @@ class VerifiedRelease:
         frame = pd.DataFrame([self.case], columns=self.features)
         return float(probability(self.bundle, frame)[0])
 
+    def analyze(self, inputs):
+        """New inputs, frozen pipeline; no research data or fitting on this path."""
+        from types import SimpleNamespace
+
+        from threadpoolctl import threadpool_limits
+
+        from aletheia.domains.healthcare.explain import local_explanation
+
+        from .case_input import LABELS, CaseInput
+
+        if not isinstance(inputs, CaseInput):
+            raise ReleaseError("validated case required")
+        if (
+            list(inputs.raw()) != self.features
+            or list(self.bundle["model"].feature_names_in_) != self.features
+        ):
+            raise ReleaseError("model input signature mismatch")
+        frame = pd.DataFrame([inputs.raw()], columns=self.features)
+        reference = pd.DataFrame([self.case], columns=self.features)
+        config = dict(self.protocol["config"]["explanation"])
+        config["method"] = "Paired permutation reference contrast (case-reference-v1)"
+        contracts = SimpleNamespace(features={"roles": {"prediction": self.features}})
+        with threadpool_limits(limits=1):
+            explanation = local_explanation(
+                contracts,
+                self.bundle,
+                frame,
+                reference,
+                config,
+                self.protocol["identity"],
+            )
+        explanation["reference_scope"] = (
+            "Published protocol case; one reference, not a training-population baseline"
+        )
+        explanation["reference_inputs"] = self.case
+        explanation["limitations"] = (
+            "Reference-dependent model contrast, not causality or clinical advice. "
+            "Uses the published protocol case rather than the frozen research study's "
+            "patient background. Marginal hybrids may be unlikely; finite paths "
+            "approximate contributions. This is not the original research "
+            "local explanation."
+        )
+        for feature in explanation["features"]:
+            feature["label"] = LABELS[feature["field"]]
+        score = explanation["probability"]
+        return {
+            "schema_version": "case-result-v1",
+            "inputs": inputs.raw(),
+            "probability": score,
+            "positive_class": 1,
+            "threshold": 0.5,
+            "class_at_threshold": int(score >= 0.5),
+            "category": "At or above the descriptive threshold"
+            if score >= 0.5
+            else "Below the descriptive threshold",
+            "release_sha256": self.digest,
+            "model_sha256": self.protocol["identity"]["model_sha256"],
+            "evidence_sha256": self.manifest["files"][
+                "artifacts/healthcare-audit-v1/results.json"
+            ],
+            "explanation": explanation,
+            "stability": {
+                "scope": "model_level",
+                "per_case_score": None,
+                "evidence": self.audit["stability"],
+            },
+            "limitations": self.audit["limitations"],
+        }
+
 
 def build_release(repository: Path, destination: Path) -> str:
     """Only the configured repository's approved roots; no arbitrary artifact URI."""

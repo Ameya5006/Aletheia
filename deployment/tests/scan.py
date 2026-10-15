@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tarfile
@@ -18,6 +19,8 @@ IMAGES = {
     "postgres": "aletheia-stage3-test-postgres:stage3",
     "regression": "aletheia-stage3-test-regression:stage3",
 }
+for name in IMAGES:
+    IMAGES[name] = os.environ.get("ALETHEIA_" + name.upper() + "_IMAGE", IMAGES[name])
 
 
 def regression_licenses():
@@ -169,6 +172,10 @@ def run():
     ]
     summary = {}
     for name, image in IMAGES.items():
+        if "--only-frontend" in sys.argv and name != "frontend":
+            continue
+        if "--production-changed" in sys.argv and name not in {"backend", "frontend"}:
+            continue
         if "--only-regression" in sys.argv and name != "regression":
             continue
         if "--only-changed" in sys.argv and name == "frontend":
@@ -259,7 +266,8 @@ if old.is_dir() and not (target/'db').exists():
                 counts[severity] = counts.get(severity, 0) + 1
         summary[name] = counts
         print(name, counts, flush=True)
-    regression_licenses()
+    if "--production-changed" not in sys.argv:
+        regression_licenses()
     summarize()
 
 

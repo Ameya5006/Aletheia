@@ -144,7 +144,6 @@ for (const width of [375, 768, 1440]) {
       await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
     } else await expect(page.getByText('Organization session')).toBeVisible();
     for (const path of [
-      '/demo',
       `/predictions/${predictionId}`,
       `/predictions/${predictionId}/review`,
       '/audit-history',
@@ -185,6 +184,14 @@ for (const width of [375, 768, 1440]) {
       expect(clipped, path).toEqual([]);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
+      );
+      await page.locator('details').evaluateAll((items) =>
+        items.forEach((item) => {
+          (item as HTMLDetailsElement).open = true;
+        }),
+      );
+      await expect(page.locator('body')).not.toContainText(
+        /synthetic|demonstration|dismissed_demo|\bdemo\b/i,
       );
       await page.addScriptTag({ content: axeSource });
       const violations = await page.evaluate(async () =>

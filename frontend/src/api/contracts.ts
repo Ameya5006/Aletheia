@@ -16,7 +16,7 @@ export const evidenceSchema = z.object({
   research_revision: z.string(),
   educational_only: z.literal(true),
   not_medical_advice: z.literal(true),
-  source: z.enum(['precomputed_research', 'synthetic_inference']),
+  source: z.enum(['precomputed_research', 'synthetic_inference', 'case_inference']),
   limitations: z.string(),
 });
 export type Evidence = z.infer<typeof evidenceSchema>;
@@ -159,13 +159,13 @@ export const cardSchema = z.object({
 });
 export const predictionSchema = z.object({
   prediction_id: uuid,
-  case_id: z.literal(CASE_ID),
+  case_id: z.enum([CASE_ID, 'entered-case-v1']),
   input_sha256: hash,
   probability,
   threshold: probability,
   class_at_threshold: z.union([z.literal(0), z.literal(1)]),
   positive_class: z.literal(1),
-  explanation_ref: uuid,
+  explanation_ref: uuid.nullable(),
   event_id: uuid,
   created_at: z.string(),
 });

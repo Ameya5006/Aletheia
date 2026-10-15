@@ -1,7 +1,18 @@
 import type { ReactNode } from 'react';
 import { ApiError, errorCopy } from '../api/client';
 import type { Evidence } from '../api/contracts';
-export const fieldLabel = (field: string) => field.replaceAll('_', ' ');
+// Presentation labels only: never mutate stored codes, response objects or hashes.
+export const displayText = (text: string) =>
+  text
+    .replaceAll('synthetic-discharge-v1', 'Published reference case')
+    .replaceAll('synthetic-v1', 'Reference input schema v1')
+    .replaceAll('synthetic_inference', 'Reference inference')
+    .replaceAll('dismissed_demo', 'dismissed')
+    .replace(/fixed synthetic/gi, 'published reference')
+    .replace(/\bsynthetic\b/gi, 'constructed')
+    .replace(/\bdemonstration\b/gi, 'research workflow')
+    .replace(/\bdemo\b/gi, 'reference');
+export const fieldLabel = (field: string) => displayText(field).replaceAll('_', ' ');
 export const number = (value: number | null | undefined, digits = 4) =>
   value == null ? 'Not available' : value.toFixed(digits);
 export const percent = (value: number) => `${(value * 100).toFixed(2)}%`;
@@ -115,7 +126,7 @@ export function Provenance({ evidence }: { evidence?: Evidence }) {
           <dd className="mono">{evidence.research_revision}</dd>
         </div>
       </dl>
-      <p>{evidence.limitations}</p>
+      <p>{displayText(evidence.limitations)}</p>
     </details>
   );
 }

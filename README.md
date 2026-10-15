@@ -1,8 +1,61 @@
 # Aletheia — Explainable AI Decision Auditor
 
-Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository contains both data foundations, a credit training-only baseline and a healthcare model experiment with a locked holdout gate. It has a local synthetic-only Docker Compose application; no public deployment.
+Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository contains both data foundations, a credit training-only baseline and a healthcare model experiment with a locked holdout gate. It has a local Docker Compose application with authorized manual case entry, immutable results and saved analysis history; no public deployment.
 
-## Stage 3 local Docker deployment
+## Interactive case workflow â€” local supervisor review
+
+The authenticated **Overview** shows a neutral "No analysis is selected" state
+with **New Analysis** and **Analysis History** links, without a preloaded case or
+probability. The authorized workflow starts with an empty **New Analysis** form. Connect
+an existing provisioned local identity, enter all 13 required fields, then choose
+**Run Analysis**. The frozen model supplies probability/category and version-bound
+explanation evidence. Choose **Save Analysis**, open **Analysis History**, and
+reopen the immutable result. **Load inputs into New Analysis** makes an editable
+copy; changing values and running again creates new prediction/audit identifiers.
+**Reset Form** clears unsaved browser state and cannot delete saved records.
+Running already records an immutable audit snapshot; Save controls history
+membership. No preloaded case or dataset row is required.
+
+Use only the supported encounter fields; do not enter names, account numbers,
+patient identifiers or other PII. The complete mapping and count-bound rationale
+are in [PROJECT_REPORT.md](docs/PROJECT_REPORT.md). `None` in result categories
+means not measured. Count ceilings are computation bounds, not clinical ranges.
+Attributions compare with one explicitly disclosed protocol reference and are
+noncausal; frozen stability describes model-level research, not the entered case.
+No LLM generates predictions or explanation values.
+
+The milestone's existing isolated review stack uses
+`artifacts/interactive-verification/resume-20261015b/local/config.env`, project
+`aletheia-interactive-20261015b`, and `http://127.0.0.1:18081`. Its frontend was
+built with `VITE_LOCAL_IDENTITY=true`; the flag defaults false in other builds.
+The backend local-session endpoint separately requires test/development identity
+mode. Refresh the existing short-lived provisioned tokens from the repository
+root without recreating databases, releases or Stage 3 evidence:
+
+```powershell
+$interactiveComposeArgs = @('compose', '--env-file', 'artifacts/interactive-verification/resume-20261015b/local/config.env', '-f', 'deployment/compose.yaml', '-f', 'deployment/compose.test.yaml', '-f', 'artifacts/interactive-verification/resume-20261015b/override.json', '--profile', 'test', '--profile', 'operator')
+& docker @interactiveComposeArgs up -d --wait postgres identity mlflow api frontend
+.\.venv\Scripts\python.exe deployment/tests/interactive_stack.py tokens
+```
+
+Open `/local-session` and supply the provisioned engineer token from the ignored
+`local/secrets/engineer_token` file in that evidence directory. The token stays
+in memory; refresh/sign-out requires reconnecting. The server still verifies its
+signature, expiry, audience and current local role grants. This is the existing
+local provisioned-identity mechanism, not Login, Signup, password management or
+real external OIDC; those remain deferred. Keep any later cloud deployment
+private/access-restricted until production authentication is approved.
+
+Verification used healthy Docker Desktop desktop-linux 29.8.2 after the engine
+update, a fresh Compose project, focused tests, real browser/axe checks, fresh
+changed-image scans/SBOM/licences and one complete offline regression. Exact
+results and security limitations are in
+[SUPERVISOR_HANDOFF.md](docs/SUPERVISOR_HANDOFF.md). Historical Stage 3 setup/
+restore recipes below are for separate setups; do not rerun preparation into
+retained evidence or mistake restore containers for this milestone stack.
+
+
+## Historical Stage 3 local Docker deployment
 
 `deployment/compose.yaml` implements a loopback-only frontend/proxy, private
 FastAPI, PostgreSQL and MLflow, persistent volumes and explicit operator jobs.
@@ -166,7 +219,7 @@ hosting is outside Stage 2. Runtime code contains no fixture fallback.
 
 A risk score alone does not tell an ML engineer whether a model generalizes, or a human reviewer why a decision deserves attention. Aletheia's intended workflow joins valid model comparison, calibrated probabilities, explanations, constrained alternatives, subgroup checks, similar training cases and durable audit evidence. Intended users are ML engineers, human risk/clinical reviewers, and administrators. The healthcare demonstration is educational and **not a clinical decision support device or treatment recommendation**. It must not process real patient submissions in a public demo.
 
-The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The local FastAPI/PostgreSQL/MLflow backend implements synthetic prediction, review, audit persistence and operator release/entitlement workflows; React presents their API evidence. Real external OIDC-provider integration remains unverified. Local Compose is implemented; public deployment, CI/CD, production monitoring and LLM/RAG remain unimplemented.
+The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The FastAPI/PostgreSQL/MLflow backend and React UI support independently entered cases, saved immutable analyses, review/audit persistence and operator release/entitlement workflows, alongside the earlier protocol-case route. Real external OIDC-provider integration remains deferred. Local Compose is implemented; public deployment, CI/CD, production monitoring and LLM/RAG remain unimplemented.
 
 ## Current capabilities and roadmap
 
@@ -232,7 +285,7 @@ flowchart LR
   OP[Operator frozen import] --> REG[MLflow local registry]
 ```
 
-**Implemented healthcare flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card → unchanged calibrated model with training-only XAI/stability, counterfactual feasibility and one separately guarded subgroup audit → aggregate audit evidence. **Implemented local prediction flow:** authenticated fixed synthetic case request → role/case/approved-version validation → complete calibrated bundle → probability and saved explanation reference → transactional append-only audit event → response. Delivery code calls the core rather than duplicate preprocessing or policy.
+**Implemented healthcare research flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card → unchanged calibrated model with training-only XAI/stability, counterfactual feasibility and one separately guarded subgroup audit → aggregate audit evidence. **Implemented local prediction flow:** authenticated complete case input → strict schema and approved-version validation → canonical source strings → frozen preprocessing/model/calibrator → probability and disclosed reference contrast → atomic immutable snapshot/audit/idempotency record → response → optional Save marker → scoped history/reopen. Delivery code calls the core without fitting or duplicating preprocessing. The earlier fixed protocol-case route remains compatible.
 
 ## Healthcare dataset and leakage boundary
 

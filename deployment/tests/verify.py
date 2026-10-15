@@ -1,6 +1,7 @@
 """Bounded real Compose E2E; synthetic IDs only, no research runners or raw data."""
 
 import json
+import os
 import subprocess
 import time
 import uuid
@@ -9,8 +10,8 @@ from pathlib import Path
 import httpx
 
 ROOT = Path(__file__).resolve().parents[2]
-LOCAL = ROOT / "artifacts/stage3-local"
-EVIDENCE = ROOT / "artifacts/stage3-verification"
+LOCAL = ROOT / os.environ.get("ALETHEIA_LOCAL", "artifacts/stage3-local")
+EVIDENCE = ROOT / os.environ.get("ALETHEIA_EVIDENCE", "artifacts/stage3-verification")
 COMPOSE = [
     "docker",
     "compose",

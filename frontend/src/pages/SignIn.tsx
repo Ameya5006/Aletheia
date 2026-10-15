@@ -13,7 +13,7 @@ export function SignIn() {
       </div>
       <div className="eyebrow">EXPLAINABLE AI / ACCOUNTABLE DECISIONS</div>
       <h1>{auth.expired ? 'Your session has expired' : 'Clarity at every decision.'}</h1>
-      <p>A decision-auditing workspace for the fixed healthcare research demonstration.</p>
+      <p>A decision-auditing workspace for case analysis and healthcare model evidence.</p>
       {!auth.configured && (
         <p className="notice">
           Organization sign-in is not configured in this environment. Public research evidence

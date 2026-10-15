@@ -4,6 +4,7 @@ import { useResource } from '../api/context';
 import { stabilitySchema, subgroupsSchema, feasibilitySchema } from '../api/contracts';
 import { PageHeading } from '../components/Shell';
 import {
+  displayText,
   fieldLabel,
   Metric,
   number,
@@ -209,7 +210,7 @@ export function Reliability({
           <span className="chip">Valid feasibility result</span>
           <h2>History is not an intervention.</h2>
           <p>{f.assessment.reason}</p>
-          <p>{f.worked_example}</p>
+          <p>{displayText(f.worked_example)}</p>
           <div className="two-columns">
             <div>
               <h3>Admissible changes</h3>

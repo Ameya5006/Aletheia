@@ -400,7 +400,9 @@ def test_bootstrap_migration_and_conflicting_subject(db):
         owner.bootstrap(ISSUER, "synthetic-admin")
     assert exc.value.status == 503
     with owner.engine.begin() as conn:
-        conn.execute(sa.text("UPDATE alembic_version SET version_num='0003_integrity'"))
+        conn.execute(
+            sa.text("UPDATE alembic_version SET version_num='0004_case_input'")
+        )
         conn.execute(
             s.subjects.insert().values(issuer=ISSUER, sub="conflicting-subject")
         )
@@ -504,7 +506,7 @@ def catalog_digest(value):
 
 
 @pytest.mark.parametrize(
-    "stepped", [False, True], ids=["empty-to-head", "0001-to-head"]
+    "stepped", [False, True], ids=["empty-to-0003", "0001-to-0003"]
 )
 def test_migrations_reproduce_frozen_contract_with_changed_live_schema(
     monkeypatch, stepped
@@ -546,7 +548,7 @@ def test_migrations_reproduce_frozen_contract_with_changed_live_schema(
                     ).scalar()
                     is None
                 )
-        command.upgrade(config, "head")
+        command.upgrade(config, "0003_integrity")
         with engine.connect() as conn:
             assert (
                 conn.execute(

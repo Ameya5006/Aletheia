@@ -12,11 +12,17 @@ const ReleaseEvidence = lazy(() =>
   import('./pages/ModelCard').then((m) => ({ default: m.ReleaseEvidence })),
 );
 import { SignIn } from './pages/SignIn';
+import { NewAnalysis, SavedAnalysis, AnalysisHistory } from './pages/Analyses';
+import { LocalSession } from './pages/LocalSession';
 export function App() {
   return (
     <Routes>
       <Route element={<Shell />}>
         <Route index element={<Overview />} />
+        <Route path="new-analysis" element={<NewAnalysis />} />
+        <Route path="analyses" element={<AnalysisHistory />} />
+        <Route path="analyses/:id" element={<SavedAnalysis />} />
+        <Route path="local-session" element={<LocalSession />} />
         <Route path="demo" element={<CaseAnalysis />} />
         <Route path="predictions/:id" element={<CaseAnalysis />} />
         <Route path="predictions/:id/review" element={<ReviewPage />} />

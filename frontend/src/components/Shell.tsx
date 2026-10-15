@@ -3,7 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ROLE_LABELS, useAuth } from '../auth/session';
 const links = [
   ['/', 'Overview', '◫'],
-  ['/demo', 'Case Analysis', '◇'],
+  ['/new-analysis', 'New Analysis', '+'],
+  ['/analyses', 'Analysis History', '↗'],
   ['/evidence/local', 'Explanation', '≋'],
   ['/evidence/stability', 'Reliability', '◎'],
   ['/review', 'Review', '✓'],
@@ -74,9 +75,9 @@ export function Shell() {
         <div className="nav-label">WORKSPACE</div>
         {nav}
         <div className="sidebar-note">
-          Fixed synthetic case
+          Approved frozen model
           <br />
-          <small>No patient data collected</small>
+          <small>Case data without identifiers</small>
         </div>
         <div className="sidebar-bottom">
           <strong>{auth.token ? 'Organization session' : 'Viewer · public evidence'}</strong>
@@ -99,7 +100,7 @@ export function Shell() {
             Workspace <span aria-hidden="true">›</span>{' '}
             <strong>{links.find(([p]) => p === location.pathname)?.[1] ?? 'Evidence'}</strong>
           </div>
-          <span className="chip">Synthetic demonstration</span>
+          <span className="chip">Research workspace</span>
           <button
             className="icon-button mobile-toggle"
             ref={menuButton}

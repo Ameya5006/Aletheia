@@ -1,0 +1,599 @@
+{
+  "mapping": {
+    "schema_version": "case-input-v1",
+    "fields": [
+      {
+        "field": "admission_type_id",
+        "label": "Admission type",
+        "required": true,
+        "control": "select",
+        "options": [
+          {
+            "value": "1",
+            "label": "Emergency"
+          },
+          {
+            "value": "2",
+            "label": "Urgent"
+          },
+          {
+            "value": "3",
+            "label": "Elective"
+          },
+          {
+            "value": "4",
+            "label": "Newborn"
+          },
+          {
+            "value": "5",
+            "label": "Not Available"
+          },
+          {
+            "value": "6",
+            "label": "NULL (source category)"
+          },
+          {
+            "value": "7",
+            "label": "Trauma Center"
+          },
+          {
+            "value": "8",
+            "label": "Not Mapped"
+          }
+        ],
+        "minimum": null,
+        "maximum": null,
+        "unit": "category",
+        "conversion": "Selected option to exact source category",
+        "help": "Required; use the recorded encounter value."
+      },
+      {
+        "field": "admission_source_id",
+        "label": "Admission source",
+        "required": true,
+        "control": "select",
+        "options": [
+          {
+            "value": "1",
+            "label": "Physician Referral"
+          },
+          {
+            "value": "2",
+            "label": "Clinic Referral"
+          },
+          {
+            "value": "3",
+            "label": "HMO Referral"
+          },
+          {
+            "value": "4",
+            "label": "Transfer from a hospital"
+          },
+          {
+            "value": "5",
+            "label": "Transfer from a Skilled Nursing Facility"
+          },
+          {
+            "value": "6",
+            "label": "Transfer from another health care facility"
+          },
+          {
+            "value": "7",
+            "label": "Emergency Room"
+          },
+          {
+            "value": "8",
+            "label": "Court/Law Enforcement"
+          },
+          {
+            "value": "9",
+            "label": "Not Available (9)"
+          },
+          {
+            "value": "10",
+            "label": "Transfer from critical access hospital"
+          },
+          {
+            "value": "11",
+            "label": "Normal Delivery"
+          },
+          {
+            "value": "12",
+            "label": "Premature Delivery"
+          },
+          {
+            "value": "13",
+            "label": "Sick Baby"
+          },
+          {
+            "value": "14",
+            "label": "Extramural Birth"
+          },
+          {
+            "value": "15",
+            "label": "Not Available (15)"
+          },
+          {
+            "value": "17",
+            "label": "NULL (source category)"
+          },
+          {
+            "value": "18",
+            "label": "Transfer from another home health agency"
+          },
+          {
+            "value": "19",
+            "label": "Readmission to same home health agency"
+          },
+          {
+            "value": "20",
+            "label": "Not Mapped"
+          },
+          {
+            "value": "21",
+            "label": "Unknown/Invalid"
+          },
+          {
+            "value": "22",
+            "label": "Transfer from same-facility inpatient care"
+          },
+          {
+            "value": "23",
+            "label": "Born inside this hospital"
+          },
+          {
+            "value": "24",
+            "label": "Born outside this hospital"
+          },
+          {
+            "value": "25",
+            "label": "Transfer from ambulatory surgery center"
+          },
+          {
+            "value": "26",
+            "label": "Transfer from hospice"
+          }
+        ],
+        "minimum": null,
+        "maximum": null,
+        "unit": "category",
+        "conversion": "Selected option to exact source category",
+        "help": "Required; use the recorded encounter value."
+      },
+      {
+        "field": "time_in_hospital",
+        "label": "Time in hospital",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 1,
+        "maximum": 14,
+        "unit": "days",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required; use the recorded encounter value."
+      },
+      {
+        "field": "num_lab_procedures",
+        "label": "Laboratory procedures",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 1,
+        "maximum": 2147483647,
+        "unit": "count",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required whole number. Count ceiling is a computation limit, not a clinical range."
+      },
+      {
+        "field": "num_procedures",
+        "label": "Procedures",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 0,
+        "maximum": 2147483647,
+        "unit": "count",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required whole number. Count ceiling is a computation limit, not a clinical range."
+      },
+      {
+        "field": "num_medications",
+        "label": "Distinct medications",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 1,
+        "maximum": 2147483647,
+        "unit": "count",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required whole number. Count ceiling is a computation limit, not a clinical range."
+      },
+      {
+        "field": "number_outpatient",
+        "label": "Outpatient visits in the preceding year",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 0,
+        "maximum": 2147483647,
+        "unit": "count",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required whole number. Count ceiling is a computation limit, not a clinical range."
+      },
+      {
+        "field": "number_emergency",
+        "label": "Emergency visits in the preceding year",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 0,
+        "maximum": 2147483647,
+        "unit": "count",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required whole number. Count ceiling is a computation limit, not a clinical range."
+      },
+      {
+        "field": "number_inpatient",
+        "label": "Inpatient visits in the preceding year",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 0,
+        "maximum": 2147483647,
+        "unit": "count",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required whole number. Count ceiling is a computation limit, not a clinical range."
+      },
+      {
+        "field": "number_diagnoses",
+        "label": "Diagnoses",
+        "required": true,
+        "control": "number",
+        "options": [],
+        "minimum": 1,
+        "maximum": 2147483647,
+        "unit": "count",
+        "conversion": "Base-10 integer to source string",
+        "help": "Required whole number. Count ceiling is a computation limit, not a clinical range."
+      },
+      {
+        "field": "max_glu_serum",
+        "label": "Maximum glucose result",
+        "required": true,
+        "control": "select",
+        "options": [
+          {
+            "value": "None",
+            "label": "Not measured"
+          },
+          {
+            "value": "Norm",
+            "label": "Normal (source category)"
+          },
+          {
+            "value": ">200",
+            "label": "Above 200 (source category)"
+          },
+          {
+            "value": ">300",
+            "label": "Above 300 (source category)"
+          }
+        ],
+        "minimum": null,
+        "maximum": null,
+        "unit": "category",
+        "conversion": "Selected option to exact source category",
+        "help": "Required; use the recorded encounter value."
+      },
+      {
+        "field": "A1Cresult",
+        "label": "A1C result",
+        "required": true,
+        "control": "select",
+        "options": [
+          {
+            "value": "None",
+            "label": "Not measured"
+          },
+          {
+            "value": "Norm",
+            "label": "Normal (source category)"
+          },
+          {
+            "value": ">7",
+            "label": "Above 7%"
+          },
+          {
+            "value": ">8",
+            "label": "Above 8%"
+          }
+        ],
+        "minimum": null,
+        "maximum": null,
+        "unit": "category",
+        "conversion": "Selected option to exact source category",
+        "help": "Required; use the recorded encounter value."
+      },
+      {
+        "field": "diabetesMed",
+        "label": "Diabetes medication prescribed",
+        "required": true,
+        "control": "select",
+        "options": [
+          {
+            "value": "Yes",
+            "label": "Yes"
+          },
+          {
+            "value": "No",
+            "label": "No"
+          }
+        ],
+        "minimum": null,
+        "maximum": null,
+        "unit": "category",
+        "conversion": "Selected option to exact source category",
+        "help": "Required; use the recorded encounter value."
+      }
+    ]
+  },
+  "result": {
+    "schema_version": "case-result-v1",
+    "inputs": {
+      "admission_type_id": "1",
+      "admission_source_id": "1",
+      "time_in_hospital": "3",
+      "num_lab_procedures": "40",
+      "num_procedures": "1",
+      "num_medications": "12",
+      "number_outpatient": "0",
+      "number_emergency": "0",
+      "number_inpatient": "4",
+      "number_diagnoses": "5",
+      "max_glu_serum": "None",
+      "A1Cresult": "None",
+      "diabetesMed": "Yes"
+    },
+    "probability": 0.23085593739625732,
+    "positive_class": 1,
+    "threshold": 0.5,
+    "class_at_threshold": 0,
+    "category": "Below the descriptive threshold",
+    "release_sha256": "d4c4f7ee1a990d5a5ba1d92e4611cc2f7824bb32a5ceba410a25334fa7aa997a",
+    "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+    "evidence_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+    "explanation": {
+      "identity": {
+        "dataset": {
+          "cohort_version": "discharge-alive-v1",
+          "dataset_identifier": "uci-diabetes-296-v1",
+          "feature_policy_version": "healthcare-feature-v1",
+          "membership_sha256": "6879c9e652887c4a8b59797dd2260ad79795958fb3eebff1b22c3fe33b075316",
+          "raw_sha256": "0689e7ec031237dc63031b938805c48377748761a3b26acab621567afa24df97",
+          "seed": 42,
+          "split_version": "healthcare-group-split-v1",
+          "target_version": "readmitted-lt30-positive-v1",
+          "version": "healthcare-model-v1"
+        },
+        "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+        "selection_sha256": "85db5e79faacc80d9818b235c4e8338be0aeb10fbcf89da2f3bc56e87172e9a7",
+        "split_lock_sha256": "a3ca2af19215bcf965afecaa75a1c6ec2912f3cf832f2aaec82562ec7855446d"
+      },
+      "method": "Paired permutation reference contrast (case-reference-v1)",
+      "output": "calibrated probability of readmitted_30d=1",
+      "baseline": 0.1278216918809014,
+      "probability": 0.23085593739625732,
+      "features": [
+        {
+          "field": "admission_type_id",
+          "value": "1",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Admission type"
+        },
+        {
+          "field": "admission_source_id",
+          "value": "1",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Admission source"
+        },
+        {
+          "field": "time_in_hospital",
+          "value": "3",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Time in hospital"
+        },
+        {
+          "field": "num_lab_procedures",
+          "value": "40",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Laboratory procedures"
+        },
+        {
+          "field": "num_procedures",
+          "value": "1",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Procedures"
+        },
+        {
+          "field": "num_medications",
+          "value": "12",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Distinct medications"
+        },
+        {
+          "field": "number_outpatient",
+          "value": "0",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Outpatient visits in the preceding year"
+        },
+        {
+          "field": "number_emergency",
+          "value": "0",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Emergency visits in the preceding year"
+        },
+        {
+          "field": "number_inpatient",
+          "value": "4",
+          "contribution": 0.10303424551535588,
+          "direction": "raises",
+          "label": "Inpatient visits in the preceding year"
+        },
+        {
+          "field": "number_diagnoses",
+          "value": "5",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Diagnoses"
+        },
+        {
+          "field": "max_glu_serum",
+          "value": "None",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Maximum glucose result"
+        },
+        {
+          "field": "A1Cresult",
+          "value": "None",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "A1C result"
+        },
+        {
+          "field": "diabetesMed",
+          "value": "Yes",
+          "contribution": 0.0,
+          "direction": "zero",
+          "label": "Diabetes medication prescribed"
+        }
+      ],
+      "limitations": "Reference-dependent model contrast, not causality or clinical advice. Uses the published protocol case rather than the frozen research study's patient background. Marginal hybrids may be unlikely; finite paths approximate contributions. This is not the original research local explanation.",
+      "reference_scope": "Published protocol case; one reference, not a training-population baseline",
+      "reference_inputs": {
+        "A1Cresult": "None",
+        "admission_source_id": "1",
+        "admission_type_id": "1",
+        "diabetesMed": "Yes",
+        "max_glu_serum": "None",
+        "num_lab_procedures": "40",
+        "num_medications": "12",
+        "num_procedures": "1",
+        "number_diagnoses": "5",
+        "number_emergency": "0",
+        "number_inpatient": "1",
+        "number_outpatient": "0",
+        "time_in_hospital": "3"
+      }
+    },
+    "stability": {
+      "scope": "model_level",
+      "per_case_score": null,
+      "evidence": {
+        "above_distance_reference": 5,
+        "all": {
+          "absolute_rank_correlation": {
+            "max": 1.0,
+            "mean": 0.9455357142857144,
+            "min": 0.6318681318681317,
+            "undefined": 0
+          },
+          "normalized_l1": {
+            "max": 0.5162985930011117,
+            "mean": 0.07747886530171244,
+            "min": 0.0,
+            "undefined": 0
+          },
+          "top_k_overlap": {
+            "max": 1.0,
+            "mean": 0.95,
+            "min": 0.3333333333333333,
+            "undefined": 0
+          }
+        },
+        "below_overlap_reference": 3,
+        "boundary_crossings": 0,
+        "bounds": {
+          "num_lab_procedures": [1, 132],
+          "num_procedures": [0, 6]
+        },
+        "comparisons": 80,
+        "crossed_class": {
+          "absolute_rank_correlation": {
+            "max": null,
+            "mean": null,
+            "min": null,
+            "undefined": 0
+          },
+          "normalized_l1": {
+            "max": null,
+            "mean": null,
+            "min": null,
+            "undefined": 0
+          },
+          "top_k_overlap": {
+            "max": null,
+            "mean": null,
+            "min": null,
+            "undefined": 0
+          }
+        },
+        "limitations": "Protocol reference flags are descriptive, not universal clinical standards. Two +/-1 recording fields, small training sample, fixed paths; no causal or broad robustness claim.",
+        "max_absolute_probability_change": 0.033484744422827936,
+        "mean_absolute_probability_change": 0.002752829882971294,
+        "population": "training encounter recording sensitivity, not intervention feasibility",
+        "same_class": {
+          "absolute_rank_correlation": {
+            "max": 1.0,
+            "mean": 0.9455357142857144,
+            "min": 0.6318681318681317,
+            "undefined": 0
+          },
+          "normalized_l1": {
+            "max": 0.5162985930011117,
+            "mean": 0.07747886530171244,
+            "min": 0.0,
+            "undefined": 0
+          },
+          "top_k_overlap": {
+            "max": 1.0,
+            "mean": 0.95,
+            "min": 0.3333333333333333,
+            "undefined": 0
+          }
+        },
+        "unchanged_at_bound": 0
+      }
+    },
+    "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy.",
+    "model_version": "1",
+    "prediction_id": "4ef534fa-50f3-4e12-a83b-e5bf1ac91c58",
+    "event_id": "16a0d489-a124-4657-a41d-b5a2a3495de4",
+    "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "created_at": "2026-10-15T00:00:00Z",
+    "saved": false,
+    "save_event_id": null,
+    "review_state": "not_reviewed",
+    "review_history": [],
+    "evidence": {
+      "domain": "healthcare",
+      "model_version": "1",
+      "model_sha256": "8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a",
+      "audit_protocol_sha256": "fae9acd4c95da774faa1e20a84129146faeeeef1ac866d809ac95df77a7aa04f",
+      "audit_results_sha256": "2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8",
+      "research_revision": "49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb",
+      "educational_only": true,
+      "not_medical_advice": true,
+      "source": "case_inference",
+      "limitations": "Educational historical research only. No medical advice, causality, discrimination finding or fairness certification. Training-only XAI/stability and a single holdout subgroup audit; no model or threshold tuning. Aggregate release is not formal differential privacy."
+    }
+  }
+}

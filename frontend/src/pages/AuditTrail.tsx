@@ -4,7 +4,14 @@ import { useResource } from '../api/context';
 import { eventSchema, pageSchema } from '../api/contracts';
 import { useAuth } from '../auth/session';
 import { PageHeading } from '../components/Shell';
-import { fieldLabel, Notice, Panel, Provenance, ResourceState } from '../components/ui';
+import {
+  displayText,
+  fieldLabel,
+  Notice,
+  Panel,
+  Provenance,
+  ResourceState,
+} from '../components/ui';
 const eventPage = pageSchema(eventSchema);
 export function AuditTrail() {
   const auth = useAuth();
@@ -135,8 +142,8 @@ export function AuditTrail() {
                 </div>
               </dl>
               <details open>
-                <summary>Backend event payload</summary>
-                <pre>{JSON.stringify(detail.value.data.payload, null, 2)}</pre>
+                <summary>Readable event payload (presentation labels)</summary>
+                <pre>{displayText(JSON.stringify(detail.value.data.payload, null, 2))}</pre>
               </details>
             </Panel>
           )}

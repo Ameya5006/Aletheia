@@ -1,3 +1,4 @@
+import '../src/pages/ModelCard';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
@@ -84,17 +85,47 @@ function setup(path = '/', roles: string[] = [], override?: typeof fetch) {
   return { transport, user: userEvent.setup(), auth };
 }
 describe('evidence workbench', () => {
-  it('renders backend overview and navigates with keyboard focus', async () => {
-    const { user } = setup();
-    expect(await screen.findByText('12.78', { exact: false })).toBeVisible();
-    expect(screen.getByText('approved')).toBeVisible();
-    await user.click(screen.getByRole('link', { name: 'Case Analysis' }));
-    expect(await screen.findByRole('heading', { name: 'Case Analysis', level: 1 })).toBeVisible();
-    expect(screen.getByRole('main')).toHaveFocus();
+  it('opens an empty authenticated overview without requesting a reference case', async () => {
+    const { user, transport } = setup('/', ['engineer']);
+    expect(await screen.findByText('approved')).toBeVisible();
+    expect(screen.getByText(/No analysis is selected/)).toBeVisible();
+    expect(screen.queryByText('12.78', { exact: false })).not.toBeInTheDocument();
+    expect(screen.queryByText(/30-day readmission probability/)).not.toBeInTheDocument();
     expect(
-      await screen.findByText('Inputs are fixed on the server and cannot be edited.'),
-    ).toBeVisible();
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+      transport.mock.calls.some(([url]) => /explanations|demo|predictions/.test(String(url))),
+    ).toBe(false);
+    expect(
+      screen
+        .getAllByRole('link', { name: 'Analysis History' })
+        .every((link) => link.getAttribute('href') === '/analyses'),
+    ).toBe(true);
+    await user.click(screen.getAllByRole('link', { name: 'New Analysis' })[0]!);
+    expect(await screen.findByRole('heading', { name: 'New Analysis', level: 1 })).toBeVisible();
+    expect(screen.getByRole('main')).toHaveFocus();
+  });
+  it.each([
+    '/',
+    '/sign-in',
+    '/evidence/local',
+    '/evidence/global',
+    '/evidence/stability',
+    '/evidence/subgroups',
+    '/evidence/feasibility',
+    '/model-card',
+    '/review',
+    `/predictions/${predictionId}`,
+    `/predictions/${predictionId}/review`,
+    `/audit-history/${eventId}`,
+  ])('keeps product terminology neutral on %s, including expanded metadata', async (path) => {
+    setup(path, ['reviewer']);
+    if (path === '/model-card') await screen.findByText(/Published card SHA/);
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument(), {
+      timeout: 5000,
+    });
+    expect((await screen.findAllByRole('heading', { level: 1 })).length).toBeGreaterThan(0);
+    expect(document.body.textContent).not.toMatch(
+      /synthetic|demonstration|dismissed_demo|\bdemo\b/i,
+    );
   });
   it('renders signed explanation, baseline and noncausal calibration semantics', async () => {
     setup('/evidence/local');
@@ -175,37 +206,19 @@ describe('evidence workbench', () => {
     expect((await screen.findAllByRole('alert'))[0]).toHaveTextContent('No substitute results');
     expect(screen.queryByText('12.78', { exact: false })).not.toBeInTheDocument();
   });
-  it('disables prediction on audit identity mismatch', async () => {
-    setup('/demo', ['engineer'], async (url) => {
-      if (String(url).endsWith('/demo/cases')) {
-        const raw = structuredClone(publicResponses['/demo/cases']) as {
-          evidence: { audit_results_sha256: string };
-        };
-        raw.evidence.audit_results_sha256 = 'f'.repeat(64);
-        return jsonResponse(raw);
-      }
-      return undefined as unknown as Response;
-    });
-    await screen.findByText('40');
-    expect(screen.getByRole('button', { name: 'Create audited prediction' })).toBeDisabled();
+  it('redirects the legacy unselected case route to manual input without creating a prediction', async () => {
+    const { transport } = setup('/demo', ['engineer']);
+    expect(await screen.findByRole('heading', { name: 'New Analysis', level: 1 })).toBeVisible();
+    expect(transport.mock.calls.some(([, opts]) => opts?.method === 'POST')).toBe(false);
   });
-  it('persists a prediction then shows its timestamp and audit reference', async () => {
-    const { user, transport } = setup('/demo', ['engineer']);
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Create audited prediction' })).toBeEnabled(),
-    );
-    await user.click(screen.getByRole('button', { name: 'Create audited prediction' }));
+  it('reads an archived prediction with its timestamp and audit reference', async () => {
+    const { transport } = setup('/predictions/' + predictionId, ['engineer']);
     expect(await screen.findByText(prediction.created_at)).toBeVisible();
     expect(screen.getByRole('link', { name: /Prediction audit event/ })).toHaveAttribute(
       'href',
       '/audit-history/' + eventId,
     );
-    const call = transport.mock.calls.find(([, opts]) => opts?.method === 'POST');
-    expect(JSON.parse(String(call?.[1]?.body))).toEqual({
-      schema_version: 'application-v1',
-      case_id: 'synthetic-discharge-v1',
-      model_version: '1',
-    });
+    expect(transport.mock.calls.some(([, opts]) => opts?.method === 'POST')).toBe(false);
   });
 });
 describe('reviews and audit', () => {

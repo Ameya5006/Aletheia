@@ -1,5 +1,377 @@
 # Aletheia — Project Report
 
+## Supervisor UI acceptance repair (2026-10-15)
+
+This repair follows the interactive workflow milestone below. Its previous
+verification did not establish acceptance of the Overview: an old component test
+actually expected the preloaded 12.78% reference result. The supervisor correctly
+identified that result and remaining product copy as acceptance blockers. The
+historical test counts below remain historical; they do not validate this repair.
+
+### What changed, why now, and alternatives
+
+`frontend/src/pages/Overview.tsx` now says **No analysis is selected**, offers New
+Analysis and Analysis History, and fetches only model/readiness metadata. It
+neither fetches nor presents a case, prediction or attribution. This remains
+truthful even when saved history exists. Automatically selecting a most recent
+record would add selection and ownership behavior; the neutral state meets the
+current task with less scope. The manual form still begins empty. Without this
+repair, users could mistake a published reference result for their own analysis.
+
+The legacy unselected case route redirects to New Analysis. `CaseAnalysis.tsx`
+can still read an explicitly selected archived prediction without recalculation;
+entered-case records use the existing analysis page. The sidebar no longer
+promotes the legacy fixed-case creation screen. Sign-in and review guidance use
+neutral case-analysis language.
+
+`components/ui.tsx` centralizes presentation labels for historical protocol words.
+Provenance, model-card text, reliability worked-example text, readable audit
+payloads and review/history labels apply that formatter. Stored/API identifiers,
+review enums, model-card source bytes, hashes, numeric outputs and audit records
+are unchanged. The audit disclosure explicitly says it shows presentation labels.
+This is a display boundary, not an evidence rewrite. A raw-byte search still finds
+11 internal protocol/schema/compatibility/formatter occurrences in the generated
+bundle; these were inspected rather than deleted. Source AST tests and rendered
+route tests cover visible text, including expanded metadata. Test fixtures retain
+their legitimate internal terminology and exact bytes, and remain excluded from
+production imports and the frontend Docker context.
+
+No module boundary, public API, schema, RBAC policy, frozen model, preprocessing,
+explanation method, persistence or audit semantics changed in this repair. No
+ML experiment, dependency, data access or new research claim was introduced.
+The original 13-field mapping and prediction path below remain authoritative.
+
+### Verification and evidence
+
+Fresh evidence is ignored under
+`artifacts/interactive-verification/ui-repair-20261015/`; the entire earlier
+`resume-20261015b` verification tree is preserved. Docker Desktop's updated
+`desktop-linux` engine is 29.8.2. Only the changed frontend was rebuilt and
+recreated in `aletheia-interactive-20261015b`; old Stage 3/restore stacks were not
+used as the review environment. The new frontend image index is
+`sha256:7845f8c0f1ec7897c65c373da9af490c37c55119d60985f2534da2b26e1af185`,
+with scanned config
+`sha256:0ba668fa91b5dc2233e7ea3d5e8b724973052016dba03247d6232547e9f57807`.
+Its exported layers match the runtime image. Fresh Trivy scan found no reported
+vulnerabilities; fresh SBOM and licence inventory contain 103 licence entries.
+This is not a claim of production safety. Existing backend 1 critical/55 high
+and test-image 1 critical/65 high findings remain disclosed for unchanged digests.
+
+| Final check | Actual result |
+|---|---|
+| Focused Vitest app/product-copy selection | 38 passed, 2 files, 36.86s, exit 0 |
+| Complete `npm.cmd test -- --maxWorkers=1` (one invocation) | 80 passed, 6 files, 46.92s; wrapper 50.084s, exit 0 |
+| Playwright workbench + authenticated boundary suites | 7 passed, 4.1m; wrapper 260.297s, exit 0 |
+| Playwright real interactive suite against port 18081 | 1 passed, 20.0s; wrapper 21.813s, exit 0 |
+| Real-journey accessibility | 18 state/viewport checks at 375/768/1440px, zero violations |
+| Real persistence assertions | New/rerun identifiers differ, original immutable, Reset preserves history |
+| Ruff check + format check on changed `deployment/tests/scan.py` | Passed |
+| Compose validation; changed frontend build/serve/scan/SBOM/licences | Passed |
+
+The final static command results are recorded individually in
+`final-static-results.json`: typecheck, lint, formatting, production build,
+OpenAPI compatibility and direct dependency licences all exited 0. The final
+build used 397 modules; OpenAPI plus 10 public responses match, and 29 direct
+dependency licence entries were checked. The scan helper's added
+`--only-frontend` option was directly exercised and checked with Ruff; no old
+Python regression result is claimed for that changed helper.
+
+CURRENT_TASK requires one complete applicable offline regression after focused
+gates. The changed frontend received the complete 80-test run above. The prior
+Python regression remains 304 collected, 303 passed, 0 failed, 0 skipped,
+1 live-data test deselected, 63 warnings, 3378.28s, exit 0, one invocation of
+`docker compose ... --profile regression run --rm regression` (exact argument
+array is in `python-regression-reuse.json`). All 104 bound input files match and
+the unchanged test-image config/rootfs binding was verified. This evidence is
+reused only for unchanged Python scope; it does not validate changed frontend
+code or the scan option. Unchanged PostgreSQL, restore and recovery verification
+was not repeated, following the task's evidence-reuse/efficiency rules.
+
+### Important Problems Encountered - acceptance and verification repair
+
+The main defect was a mismatch between product intent and a happy-path test:
+the Overview test preserved a reference probability rather than requiring an
+empty user context. The new test asserts the empty state, links, absence of the
+reference probability and absence of reference-case requests. Static copy tests
+plus rendered-route tests prevent checking only one visible heading while
+missing expanded provenance or model-card text.
+
+Focused test attempts exposed cold lazy model-card loading and an ambiguous
+heading query. Preloading the real lazy module and allowing its legitimate
+multiple headings fixed test setup without increasing timeouts. Browser tests
+then exposed duplicate New Analysis links after adding the Overview CTA; desktop
+navigation now scopes its locator to the sidebar. A Windows npm/Vite cleanup
+chain also lingered across a user interruption; its reported 2.9h was not browser
+performance. A direct owned-node harness now stops only its own Vite process in
+`finally`; the final boundary suites exit cleanly.
+
+The first real-browser attempt did not await successful session connection.
+An explicit HTTP-200 wait fixes that race. A subsequent inference returned HTTP
+504, while the UI retained input and offered safe retry. Its root cause was not
+established; readiness and container inspection showed no restart. The test now
+asserts HTTP 201 before reading response data. A fresh serial run passed without
+changing application limits or restarting the backend. Failure logs are retained;
+short-lived local credentials remain ignored and are not documentation evidence.
+
+### Concepts Learned Through This Project - truthful presentation
+
+A reference result is evidence about a published example, not a user's active
+analysis. Overview state must reflect that distinction. Presentation labels can
+be clearer than historical wire enums while preserving those enums and numeric
+values at the API/storage boundary. Tests should assert the product requirement,
+not simply reproduce the implementation they happen to receive.
+
+### Project Defence and Interview Preparation - repair follow-ups
+
+- **Basic: Why is Overview empty?** No analysis is selected; a user must enter
+  values or explicitly open permitted saved history.
+- **Intermediate: Did changing labels change the evidence?** No. Formatting acts
+  on displayed strings; source bytes, hashes, stored payloads and numbers remain.
+- **Difficult: Why not repeat the old Python regression?** Its complete bound
+  inputs and image are unchanged. We verified those bindings and reran all
+  affected frontend regression, browser, static and image checks instead.
+
+Final protection checks found no unexplained edits: 1,338 baseline files checked,
+924 original protected artifacts unchanged, all 1,148 preceding milestone evidence
+files unchanged, and all three frontend fixture files byte-identical. The task
+SHA-256, branch/HEAD/upstream, 0/0 divergence and stash are preserved.
+
+The remaining scope is external supervisor review. Login, Signup, real external
+OIDC, public deployment and clinical/commercial validation remain deferred.
+
+
+## Interactive case input and prediction workflow (2026-10-15)
+
+**Current milestone:** an authorized user can enter all 13 approved raw features,
+run the frozen calibrated model, inspect a version-bound result, save it, reopen
+it and load its inputs for a new run. Reset clears unsaved browser state. No
+preloaded case is needed. 304 collected; 303 passed, 1 deselected, 63 warnings in 3378.28s (0:56:18); 0 failed, 0 skipped; exit 0 (one invocation). Supervisor review is required;
+no next milestone, commit, push or public deployment is authorized.
+
+### Purpose, sequencing and decisions
+
+Stage 3 established local serving, release approval, database integrity and
+identity verification. This milestone adds independent case input around those
+boundaries. Replacing the fixed protocol-case request without strict mapping
+would risk silently changing the fitted model's meaning. Inspection, mapping,
+focused contract/transaction tests and UI checks therefore preceded image
+security verification and the one complete offline regression.
+
+The modular monolith, React/TypeScript, FastAPI, PostgreSQL, MLflow, frozen
+joblib bundle and existing dependencies remain. No dependency was introduced.
+The alternative of loading rows or fixtures into the form was rejected because
+the user must supply an independent row. CSV, arbitrary columns, PII, training,
+reselection and held-out access remain excluded. Form controls start empty;
+loading a saved result is an explicit user action. The test-only
+`frontend/tests/case-fixtures.json` is imported by component tests, never product
+code. Docker excludes frontend tests/browser tests; a 50-file production asset
+check found no fixture filename or fixture prediction/audit identifiers.
+
+**Authoritative schema and field mapping.** `case-input-v1` requires an explicit
+model version and all fields below; unknown properties, missing values, numeric
+strings, booleans, fractions, NaN/infinity and invalid categories are rejected.
+Sources are the bound feature-role configuration, fitted feature signature,
+dataset documentation and UCI `IDS_mapping.csv` administrative metadata. No
+patient row was opened to establish the mapping. Every field is required.
+
+| User-facing field | Raw feature | Control and accepted values | Conversion / unit |
+|---|---|---|---|
+| Admission type | `admission_type_id` | Select codes `1,2,3,4,5,6,7,8` with source labels | Exact selected code string; category |
+| Admission source | `admission_source_id` | Select codes `1..15,17..26`; 16 excluded | Exact selected code string; category |
+| Time in hospital | `time_in_hospital` | Integer 1..14 | Base-10 string; days |
+| Laboratory procedures | `num_lab_procedures` | Integer 1..2147483647 | Base-10 string; count |
+| Procedures | `num_procedures` | Integer 0..2147483647 | Base-10 string; count |
+| Distinct medications | `num_medications` | Integer 1..2147483647 | Base-10 string; count |
+| Outpatient visits in the preceding year | `number_outpatient` | Integer 0..2147483647 | Base-10 string; visits |
+| Emergency visits in the preceding year | `number_emergency` | Integer 0..2147483647 | Base-10 string; visits |
+| Inpatient visits in the preceding year | `number_inpatient` | Integer 0..2147483647 | Base-10 string; visits |
+| Diagnoses | `number_diagnoses` | Integer 1..2147483647 | Base-10 string; count |
+| Maximum glucose result | `max_glu_serum` | Select `None,Norm,>200,>300` | Exact source string; source category |
+| A1C result | `A1Cresult` | Select `None,Norm,>7,>8` | Exact source string; source percent-threshold category |
+| Diabetes medication prescribed | `diabetesMed` | Select `Yes,No` | Exact source string; category |
+
+Complete human-readable administrative option labels are centralized in
+`application/case_input.py` and returned by authenticated `GET /analyses/schema`;
+the UI uses that metadata directly. `None` means not measured, not a default.
+Administrative NULL/unknown labels are actual source categories. The 32-bit
+count ceiling is an explicit computation/transport bound, **not an observed
+training maximum or clinical normal range**. Broad count acceptance does not
+establish generalization at extreme values. Some valid source categories may
+be unseen by the fitted encoder; the original `handle_unknown=ignore` policy
+remains, with no new fitted categories or clinical interpretation.
+
+### Input-to-result flow and architecture
+
+`NewAnalysis` loads protected field metadata and approved serving context, then
+sends a complete typed row plus UUID idempotency key to `POST /api/v1/analyses`.
+The existing JWT verifier and local entitlements authorize it; rate limits,
+readiness, concurrency and deadline controls apply. Strict Pydantic validation
+produces deterministic source strings. `VerifiedRelease.analyze` verifies exact
+feature names/order, builds one independent DataFrame row and calls the loaded
+frozen preprocessing/model/calibrator through the existing probability callable.
+Eight numeric features use fitted median imputation/scaling and five categorical
+features use fitted one-hot encoding (43 transformed features). Required intake
+values mean no meaningful missing value is silently invented. No `fit` occurs.
+
+The model is Histogram Gradient Boosting with the existing external sigmoid
+Logistic Regression calibrator. Target is recorded readmission within 30 days;
+positive class is 1. The existing 0.5 threshold is descriptive, with low recall,
+not a clinical action rule. The response contains probability, threshold,
+category, signed factors, immutable canonical inputs, timestamp, prediction/audit
+IDs, model version, frozen model hash, application release hash and audit-evidence
+hash. No LLM participates. A future optional narrative would require separate
+approval and could not change authoritative values.
+
+**Identity:** model SHA-256
+`8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`;
+new application release
+`65f2302cc9c4795142567296cc6b16143fad5abfe4df7b04152975748c2ec271`;
+audit results
+`2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
+The isolated local registry explicitly imported, approved and activated version
+1. The wrapper changes serving code, not the six model/four audit artifact bytes.
+Loading still verifies the release manifest and runtime compatibility; no fallback
+release is silently substituted.
+
+**Explanation decision:** reuse the tested probability-space paired-permutation
+algorithm with 32 permutation pairs (64 paths) and seed 3105, but label this new output `case-reference-v1`.
+Its single reference is the published protocol case, exposed in the result. It
+is a model-agnostic local contrast against that reference, not the original frozen
+research study's training-background local explanation. Fetching patient
+background rows was rejected because it would expand the data boundary. The
+accepted trade-offs are reference dependence, finite-path approximation and
+potentially unlikely hybrid feature combinations. Signed contributions explain
+changes in model probability; they do not prove causes or feasible interventions.
+Frozen stability remains **model-level research evidence**, with
+`per_case_score: null`; it does not validate the new contrast for an individual.
+Reconsider a richer background only through a separately approved evidence task.
+
+**Persistence decision:** running already creates an immutable prediction/audit
+record, needed for retry safety and traceability; Save appends a marker that makes
+it appear in Analysis History. Unsaved means absent from that history, not absent
+from the audit database. Migration `0004_case_input` adds canonical inputs/result
+JSONB to prediction events and an append-only saved-analysis table; old rows
+remain valid. The original transaction stores output, identity, input hash,
+model/evidence references and idempotency response atomically with audit. A failed
+audit rolls back prediction. Save locks/authorizes the owner and is repeat-safe;
+database grants/triggers reject history mutation and validate save/audit links.
+Reopening reads the stored snapshot without inference. Reviews remain separate
+append-only revisions. Loading inputs creates editable browser state; a successful
+new submission creates new prediction/audit IDs. Reset cannot delete records.
+History uses UUID keyset pagination, not chronological sorting.
+
+**RBAC:** engineers read their own records; reviewers/administrators retain wider
+read/review scope. Saving is owner-only. Legacy prediction/review routes preserve
+their scope and show entered-record evidence correctly. The optional local token
+screen is compiled only with `VITE_LOCAL_IDENTITY=true`; backend `/session` also
+requires test/development identity mode. It verifies existing signed provisioned
+tokens and intersects claims with current database grants. Tokens stay in memory;
+refresh needs reconnection. No password, registration, issuer or parallel auth
+system was added. Login, Signup and real external OIDC remain future scope.
+
+### Important Problems Encountered and recovery
+
+| Problem / symptom | Root cause, repair and verification | Lesson / prevention |
+|---|---|---|
+| Legacy prediction tests failed after adding nullable snapshots | JSONB serialized Python `None` as JSON null, violating SQL-null compatibility; `none_as_null=True` restores old-row semantics. Focused real-PG suites pass. | JSON null and SQL NULL differ; test existing callers and old records. |
+| Calibration oracle failed before the main integration run | The frozen calibrator is a sklearn estimator, not a coefficient tuple; independent sigmoid math now reads its fitted coefficient/intercept. | Inspect actual serialized object shape; do not alter the artifact to satisfy a test. |
+| Historical migration replay/current-head checks disagreed | Explicitly replay historical catalog tests to 0003, update simulated current head to 0004, and test a real 0003 record through 0004. | Preserve historical evidence while adding a separate forward-compatibility test. |
+| Docker unavailable/updated during interrupted work | Resume required engine health and source/diff/protection review; current engine is desktop-linux 29.8.2, previous 29.7.2. Fresh project separates this milestone from old restore containers. | Engine/context and project identity belong in verification evidence. |
+| Host PostgreSQL focused connection stalled | The isolated internal Compose network did not accept host-loopback connections; stopped only the owned test processes and ran focused tests inside that network. | Test through the intended network boundary; the incomplete host run is not a pass. |
+| Frontend lazy-component tests timed out under contention | Serial final run passed 66 tests without relaxing assertions or timeouts; concurrency was implicated, no deeper root cause proved. | Separate resource contention from behavior defects. |
+| An unfinished browser harness imported test helpers incorrectly | Replaced it with a compatibility entrypoint to the real isolated-stack browser runner. The real browser journey passed. | Verify production paths rather than building a second fixture-only application. |
+| Generated OpenAPI snapshots failed formatting | Format only those snapshots, then rerun format/contract checks successfully. | Generated contracts still follow repository formatting. |
+| Complete regression spent substantial time in registry integration | Live fixture logs showed repeated successful local artifact requests and no HTTP 500 responses during observed progress; memory remained below the existing 1.5 GiB limit. The exact cause of elapsed-time differences was not established. Retained the same complete invocation without skipping tests, changing limits or restarting. | Distinguish slow integration work from a stalled process; preserve one complete result rather than combining partial runs. |
+
+The scanner refreshed its database over a slow network before scanning; no cached
+old backend/frontend result was substituted. Original failed/incomplete logs are
+retained under ignored interactive-verification evidence. No model, preprocessing,
+held-out split or research conclusion was repaired or changed.
+
+### Verification and resume evidence
+
+Evidence root: `artifacts/interactive-verification/resume-20261015b`; fresh Compose
+project `aletheia-interactive-20261015b`. All generated secrets/logs/scans/databases
+remain ignored. Unchanged PostgreSQL/test image evidence is reused only after
+exact digest/layer verification; All 914 Stage 3 evidence files and 1079 protected files in total match their starting hashes; zero mismatches. Task hash, HEAD, stash and upstream alignment remain unchanged. New backend
+and frontend have fresh scans, SBOMs and licence inventories. Current scan reports
+backend critical/high/medium/low/unknown 1/55/116/105/1 and frontend zero findings.
+All 122 retained backend/test-image high/critical entries have dispositions;
+native SQLite 3.54.0 linkage/hash/public-domain licence are explicitly supplemented.
+MiniZip absence supports the retained zlib critical disposition; no vulnerability-
+free or public deployment claim. The pip latest-release lookup is historical
+2026-10-14 metadata, not a new lookup. See new security JSON for exact advisory,
+component, installed/fixed versions, layer, exposure and mitigation.
+
+| Executed check | Exact result |
+|---|---|
+| Real-PG focused files `test_case_input.py test_case_workflow.py test_postgres_api.py test_repair_postgres.py`, disposable container, `python -m pytest ... -p no:cacheprovider` | 84 collected/passed; 0 failed/skipped/deselected; 1 warning; 98.75s; exit 0 |
+| Final focused three files (same command, excluding repair file) | 40 collected/passed; 0 failed/skipped/deselected; 1 warning; 38.07s; exit 0 |
+| `pytest tests/deployment -q` with ignored cache | 5 passed; 0 failed/skipped/deselected/warnings; 6.50s; exit 0 |
+| Frontend `npm test -- --maxWorkers=1` | 66 passed in 5 files; 0 failed; 41.22s; exit 0 |
+| `python deployment/tests/interactive_browser.py` | 1 real browser journey passed; 22.0s total; 15 axe state/width checks, zero violations; overflow checks pass; exit 0 |
+| Ruff check / format; `pip check` | All checks pass; 111 Python files formatted; no broken requirements; exit 0; new helper subsequently checked again |
+| Frontend typecheck/lint/format/build/contract/licences/tree | All exit 0; 397 production modules; real OpenAPI and 10 public responses match; 29 direct licence records; consistent dependency tree |
+| `npm audit --omit=dev --audit-level=high --json` | 0 vulnerabilities at every severity; exit 0 |
+| Compose validation; two changed-image builds; migration/stage/import/approve/activate | All exit 0; fresh serving stack healthy before regression |
+| `interactive_stack.py scan` / `security` | Both exit 0; four image/SBOM bindings pass; new changed-image reports and licence inventory |
+| Complete offline regression | 304 collected; 303 passed, 1 deselected, 63 warnings in 3378.28s (0:56:18); 0 failed, 0 skipped; exit 0 (one invocation) |
+
+Focused runs overlap and are not summed into a full-suite count. The single full
+invocation and runner details are recorded in the current supervisor handoff.
+Warnings include Starlette/httpx deprecation, MLflow type-hint notices, sklearn
+penalty deprecation and the deliberately rejected short-HMAC test fixture; no
+dependency was changed merely to silence them. This milestone adds software checks, **no new ML
+experiment or generalization metric**. Local Compose verification is not cloud,
+load, commercial, financial or clinical validation. Old Stage 3 restore evidence
+is preserved and is not presented as a new schema-0004 restore exercise.
+
+### Concepts learned, Project Defence and Interview Preparation
+
+**Canonicalization and preprocessing parity:** map a typed UI integer such as 4
+to the exact source string `"4"`, preserve category strings and column order,
+then use the fitted transformer. Explain why fitting again at inference would
+change model semantics and why an independent sigmoid oracle is stronger than
+comparing two calls to the same wrapper.
+
+**Immutable snapshots and append-only events:** store the original result once;
+Save and review append state transitions. Explain the transaction boundary,
+idempotency versus a deliberately new run, SQL NULL versus JSON null, and why
+resetting UI state is unrelated to database deletion.
+
+**Reference-dependent attribution:** changing only `number_inpatient` from 1 to 4
+in a software check changes probability from 0.1278216918809014 to
+0.23085593739625732. The one changed feature receives the probability difference;
+all unchanged features receive zero. This is a model contrast, not a patient
+outcome estimate, causal recommendation or validated recourse example. For
+multiple changes, averaged permutation paths allocate model interactions.
+
+**Semester viva â€” Basic:** What are the 13 inputs? See the mapping above. Why
+reject names? They are outside the approved fitted feature schema and privacy
+boundary. Does reopening run the model? No, it reads a stored snapshot.
+
+**Intermediate:** How do retries avoid duplicates? Same canonical body and
+idempotency key reuse the committed response; edited inputs/new runs use a new
+key. What makes the result authoritative? Verified frozen model/calibrator and
+explicit model/release/evidence identities, not a browser fixture or LLM.
+
+**Difficult:** Does model-level stability prove this case explanation is reliable?
+No; it describes the frozen research protocol, not individual validation of the
+new reference contrast. Why retain run records before Save? To bind prediction,
+audit and retry semantics atomically; Save controls membership in user history.
+How does migration preserve old evidence? Leave old migrations/records intact,
+test historical 0003 catalog separately, then test forward migration of a stored
+legacy prediction to 0004.
+
+**Limitations and future work:** historical dataset generalization, descriptive
+low-recall threshold, source categories unseen during fitting, extreme count
+inputs and reference dependence remain. No individual stability score or clinical
+decision is claimed. Login, Signup, external OIDC and optional carefully bounded
+LLM narration need later approval. Useful next work begins with external
+supervisor review; richer explanation research and cloud deployment are separate
+future tasks, not work started here.
+
+
 ## Stage 3 release-evidence repair (2026-10-14)
 
 **Current repair status:** focused repair complete. Image/security and
@@ -1644,6 +2016,8 @@ resolved pre-commit problem. No model or later milestone was started.
 
 ## Project Overview
 
+Current local application: authorized manual entry of 13 model-compatible fields, frozen calibrated prediction and disclosed reference-contrast evidence, immutable prediction/audit records, saved history and reviewer workflows. Login, Signup and real external OIDC remain deferred. See the interactive milestone above.
+
 Aletheia is an Explainable AI (XAI) decision-auditing project for
 structured classification in high-stakes contexts. Hospital readmission risk
 is the primary flagship demonstration: its patient-group-safe data and
@@ -1682,9 +2056,7 @@ Macro Milestone 3 adds the locally verified explanation/stability/subgroup audit
 and no-recourse assessment documented above, externally approved at `ff9dce291`
 as recorded by CURRENT_TASK.md.
 Earlier approved credit phases provide the secondary benchmark,
-including a training-only dummy/Logistic Regression baseline. Neither domain
-has a deployed application; the healthcare result is retrospective educational
-evidence, and credit's training CV is not held-out or production evidence.
+including a training-only dummy/Logistic Regression baseline. Healthcare now has a local Compose application with independent case entry; its research result remains retrospective educational evidence. Credit remains research-only; training CV is not held-out or production evidence.
 
 **Assumptions requiring validation:** the selected data must have a clear
 target, source/licence, data dictionary, sufficient observations/minority-class
@@ -1988,8 +2360,7 @@ foundation, patient-group modelling/evaluation, frozen calibrated inference,
 global/local XAI, recording stability, guarded subgroup audit and fail-closed
 recourse feasibility, with immutable local model/audit records. See
 [ARCHITECTURE.md](ARCHITECTURE.md) and the Macro Milestone 2–3 component/data-flow
-records above. API, UI, database, MLflow, authentication, deployment, CI/CD,
-monitoring, LLM/RAG and later operations remain unimplemented.
+records above. FastAPI, React UI, PostgreSQL, MLflow, JWT/local entitlements and local Compose serving now wrap this research core; see the interactive milestone and current ARCHITECTURE. Real external OIDC, public/cloud deployment, CI/CD, monitoring and LLM/RAG remain unimplemented.
 
 **Historical credit Phase 2–4 architecture:** the following description and its
 future-method statements preserve the secondary benchmark's earlier state.
@@ -2951,15 +3322,16 @@ or serve as a confidence interval?
 
 ## Resume Evidence
 
-Current local Stage 3 evidence: three built/scanned images; five serving/test-identity containers; synthetic prediction/review/audit persistence and backup/restore; 33 proxy accessibility checks; five deployment unit tests; measured local startup/resources/HTTP latency. Exact counts, scope and remaining security findings are in the Stage 3 record and handoff above. Earlier research-only statements below are historical and do not describe current application deployment.
+Current interactive milestone: 13 explicitly mapped inputs, 28 new backend software tests, 66 frontend unit tests, one real browser journey and 15 accessibility state/width checks with zero violations. Complete regression: 304 collected; 303 passed, 1 deselected, 63 warnings in 3378.28s (0:56:18); 0 failed, 0 skipped; exit 0 (one invocation). No new empirical ML experiment. New image identities, security limits and exact checks are recorded above and in the handoff.
+
+Historical Stage 3 snapshot: Current local Stage 3 evidence: three built/scanned images; five serving/test-identity containers; synthetic prediction/review/audit persistence and backup/restore; 33 proxy accessibility checks; five deployment unit tests; measured local startup/resources/HTTP latency. Exact counts, scope and remaining security findings are in the Stage 3 record and handoff above. Earlier research-only statements below are historical and do not describe current application deployment.
 
 Current healthcare evidence: four model families, eight raw/calibrated
 protocols, 79,808 training and 19,535 single held-out encounters, outer best
 mean AP 0.199591, held-out AP 0.202633 and ROC-AUC 0.639473, one sigmoid
 calibration technique, one sampled Shapley method used globally/locally,
 80 recording-sensitivity comparisons, 15 supported subgroup estimates,
-one no-recourse feasibility assessment, and 122 passing offline tests. No
-measured inference latency or deployment exists. These facts support a bounded educational result, not a
+one no-recourse feasibility assessment, and 122 passing offline tests. These research-only facts predate the separately recorded local deployment measurements above. They support a bounded educational result, not a
 clinical-performance resume claim. The figures below are **secondary South
 German Credit benchmark evidence** from earlier phases.
 

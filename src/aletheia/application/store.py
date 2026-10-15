@@ -13,7 +13,7 @@ from . import schema as s
 from .auth import ServiceError
 from .release import CASE, canonical, safe_file, sha
 
-HEAD = "0003_integrity"
+HEAD = "0004_case_input"
 
 
 def row(conn, query):
@@ -581,10 +581,11 @@ class Store:
         prediction_id=None,
         deadline=None,
     ):
+        entered = payload.get("schema_version") == "case-input-v1" and not prediction_id
         route = (
             f"/api/v1/predictions/{prediction_id}/reviews"
             if prediction_id
-            else "/api/v1/predictions"
+            else ("/api/v1/analyses" if entered else "/api/v1/predictions")
         )
         fingerprint = sha(canonical({"payload": payload, "model_version": version}))
         if deadline is None:
@@ -604,7 +605,29 @@ class Store:
             if previous:
                 return previous
         start = time.monotonic()
-        score = None if prediction_id else release.score()
+        snapshot = None
+        if entered:
+            from .case_input import CaseInput
+
+            snapshot = release.analyze(CaseInput.model_validate(payload["inputs"]))
+            snapshot["model_version"] = version
+            snapshot["evidence"] = {
+                "domain": "healthcare",
+                "model_version": version,
+                "model_sha256": release.protocol["identity"]["model_sha256"],
+                "audit_protocol_sha256": release.protocol["protocol_sha256"],
+                "audit_results_sha256": snapshot["evidence_sha256"],
+                "research_revision": release.manifest["research_revision"],
+                "educational_only": True,
+                "not_medical_advice": True,
+                "source": "case_inference",
+                "limitations": release.audit["limitations"],
+            }
+        score = (
+            None
+            if prediction_id
+            else (snapshot["probability"] if entered else release.score())
+        )
         self.check_deadline(deadline)
         if not prediction_id and time.monotonic() - start > 3:
             raise ServiceError(504, "inference_deadline_exceeded")
@@ -674,7 +697,7 @@ class Store:
                         s.explanations.c.kind == "synthetic_local",
                     ),
                 )
-                if explanation is None:
+                if explanation is None and not entered:
                     raise ServiceError(503, "evidence_unavailable")
                 eid = audit(
                     conn,
@@ -683,7 +706,7 @@ class Store:
                     rid,
                     request_id,
                     {
-                        "case_id": CASE,
+                        "case_id": "entered-case-v1" if entered else CASE,
                         "probability": format(score, ".17g"),
                         "model_version": version,
                     },
@@ -693,12 +716,16 @@ class Store:
                         id=rid,
                         actor_id=actor,
                         model_version_id=model["id"],
-                        case_id=CASE,
-                        input_sha256=sha(canonical(release.case)),
+                        case_id="entered-case-v1" if entered else CASE,
+                        input_sha256=sha(
+                            canonical(snapshot["inputs"] if entered else release.case)
+                        ),
                         probability=score,
                         threshold=0.5,
                         class_at_threshold=int(score >= 0.5),
-                        explanation_ref_id=explanation["id"],
+                        explanation_ref_id=None if entered else explanation["id"],
+                        inputs=snapshot["inputs"] if entered else None,
+                        result_snapshot=snapshot,
                         audit_event_id=eid,
                     )
                 )
@@ -731,6 +758,37 @@ class Store:
             )
             self.check_deadline(deadline)
         return result  # Context has committed before any successful result is returned.
+
+    def save_analysis(self, identity, prediction_id, request_id, deadline):
+        with self.engine.begin() as conn:
+            self.transaction_deadline(conn, deadline)
+            lock(conn)
+            actor, _ = self.authorize(conn, identity)
+            prediction = self.accessible(conn, identity, prediction_id)
+            if prediction["case_id"] != "entered-case-v1":
+                raise ServiceError(404, "not_found")
+            if prediction["actor_id"] != actor:
+                raise ServiceError(403, "forbidden")
+            existing = row(
+                conn, sa.select(s.saved).where(s.saved.c.id == prediction_id)
+            )
+            if not existing:
+                eid = audit(
+                    conn,
+                    actor,
+                    "prediction_saved",
+                    prediction_id,
+                    request_id,
+                    {"prediction_id": str(prediction_id)},
+                )
+                conn.execute(
+                    s.saved.insert().values(
+                        id=prediction_id, actor_id=actor, audit_event_id=eid
+                    )
+                )
+            self.authorize(conn, identity)
+            self.check_deadline(deadline)
+        return prediction
 
     @staticmethod
     def check_deadline(deadline):
@@ -780,6 +838,10 @@ class Store:
                     sa.and_(
                         s.events.c.event_type == "review_created",
                         s.events.c.resource_id.in_(sa.select(s.reviews.c.id)),
+                    ),
+                    sa.and_(
+                        s.events.c.event_type == "prediction_saved",
+                        s.events.c.resource_id.in_(sa.select(s.predictions.c.id)),
                     ),
                 )
         return sa.select(s.events).where(condition)
