@@ -113,6 +113,17 @@ and retains `finally` cleanup. Four focused tests first failed, then passed
 revision 5 returned only `{"status": "complete"}`. No inference deadline or
 application behavior changed. Hosted execution of this repair is still pending.
 
+The bounded observer in [run 39272451787](https://github.com/Ameya5006/Aletheia/actions/runs/39272451787)
+reported `ERROR: Could not find a replica for this app`, while the owner read
+the running replica's migration marker. The diagnostic run was cancelled to
+retrieve its log; the operator was stopped and serving images/traffic preserved.
+Static CLI validator inspection shows log access first lists revision replicas,
+and the provider registers `Microsoft.App/containerApps/revisions/replicas/read`.
+That required read was also absent from CI's scoped grants. The existing
+operator-only role now includes this read plus getAuthToken; no new role or
+assignment was created, and the count remains ten. The next hosted run must
+verify replica discovery, migration observation and the remaining deployment.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;

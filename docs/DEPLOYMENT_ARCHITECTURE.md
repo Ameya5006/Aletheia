@@ -42,8 +42,9 @@ are not passwords. The user's one-time exception authorizes only this reviewed
 closure commit/push and the smallest corrections for hosted workflow defects.
 
 The controlled operator additionally needs the registered
-`Microsoft.App/containerApps/getAuthToken/action` for CLI console-log reads.
-`ci-operator-log-role.json` grants that single action only at the operator app
+`Microsoft.App/containerApps/getAuthToken/action` and
+`Microsoft.App/containerApps/revisions/replicas/read` for CLI console-log reads.
+`ci-operator-log-role.json` grants these operations only at the operator app
 assignment scope. It complements the existing logstream data action; API,
 frontend and MLflow do not receive this token action. There are ten CI role
 assignments, no exec/secret-list permission and no long-lived Azure credential.

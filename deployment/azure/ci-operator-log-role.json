@@ -1,8 +1,11 @@
 {
   "Name": "Aletheia CI Controlled Operator Log Token",
   "IsCustom": true,
-  "Description": "Mint a short-lived dev API token only at the assigned release-operator app scope; existing logstream permission controls console-log access. No exec, secret-list, write or delete action.",
-  "Actions": ["Microsoft.App/containerApps/getAuthToken/action"],
+  "Description": "Discover revision replicas and mint a short-lived dev API token only at the assigned release-operator app scope; existing logstream permission controls console logs. No exec, secret-list, write or delete action.",
+  "Actions": [
+    "Microsoft.App/containerApps/getAuthToken/action",
+    "Microsoft.App/containerApps/revisions/replicas/read"
+  ],
   "NotActions": [],
   "DataActions": [],
   "NotDataActions": [],

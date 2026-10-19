@@ -73,6 +73,13 @@ probability reporting; four focused tests pass, lint/format/PowerShell parsing
 pass, and local read-only observation reports completion without raw logs.
 No inference deadline changed. Corrected hosted deployment remains pending.
 
+Run 39272451787's new observer exposed `Could not find a replica for this app`.
+The CLI validator requires `Microsoft.App/containerApps/revisions/replicas/read`,
+which was missing from the CI grants. This read was added only to the existing
+operator-scoped log role (alongside getAuthToken), with no new assignment: ten
+remain. The diagnostic run is cancelled, operator stopped, and serving apps
+unchanged. Hosted discovery/migration/deployment/smoke verification must resume.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.
