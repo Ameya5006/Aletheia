@@ -20,24 +20,26 @@ migration and smoke prediction, and can route traffic back to prior revisions.
 GitHub Actions uses an Entra federated identity credential and narrowly scoped
 RBAC; no long-lived Azure credential is stored in GitHub. The workflow is
 implemented and locally checked, and its migration/smoke commands passed in
-Azure, but the workflow has not yet run on GitHub because commit/push is
-forbidden in this task. Current Cost Management returned a nonzero INR
+Azure. The user's explicit one-time Git exception enabled the first hosted run;
+that run failed before deployment on a Windows/Linux newline comparison and a
+bounded correction is being verified. Current Cost Management returned a nonzero INR
 11.7066685215817 month-to-date pre-tax amount, mostly from the earlier
 Express apps; a numeric zero future forecast is not asserted. The historical
 ingress checkpoints below are preserved for the supervisor.
 
-Before the first hosted run, configure repository Actions variables named
+Repository Actions variables named
 `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` with the
-existing federated application's non-secret identifiers. The workflow reads
-these variables; account identifiers are not embedded in source. Their
-presence in GitHub has not been verified from this environment. The three
+existing federated application's non-secret identifiers are configured and
+verified. Matching encrypted repository settings provide automatic log masking;
+the workflow reads those masked settings. No client secret or certificate is
+stored in GitHub, and account identifiers are not embedded in source. The three
 `deployment/azure/ci-*-role.json` files are role templates: substitute the
 literal `${AZURE_SUBSCRIPTION_ID}` placeholder in process memory before an
 authorized role-definition operation. The existing live roles and federation
 were preserved; template sanitization grants no new permission. This follows
 the task's stricter account-identifier handling rule even though these IDs
-are not passwords. A user commit/push remains subject to the Git authority
-in `AGENTS.md` and `CURRENT_TASK.md`.
+are not passwords. The user's one-time exception authorizes only this reviewed
+closure commit/push and the smallest corrections for hosted workflow defects.
 
 ## 2026-10-18 private-ingress repair audit
 

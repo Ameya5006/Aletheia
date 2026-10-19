@@ -4,6 +4,20 @@
 
 ### Final closure continuation (2026-10-19)
 
+**First hosted run and bounded repair.** Commit
+`aa8c5179704956bc1964fed6e16ca1591678a154` was pushed successfully under the
+explicit one-time exception. [Hosted run 39261782677](https://github.com/Ameya5006/Aletheia/actions/runs/39261782677)
+failed at frozen-input verification before Azure login or deployment. The
+approved manifest hashes Windows CRLF bytes for two text inputs; Linux Git
+checkout uses LF. The checker now accepts only the exact LF-to-CRLF conversion
+against the unchanged approved hash. Three focused regression cases verify LF,
+CRLF and rejection of content changes. Frozen manifests, model and evidence
+bytes remain unchanged. GitHub also echoed job environment identifiers, so the
+same three non-secret IDs were encrypted into repository secret settings for
+automatic log masking. Required repository variables remain configured; no
+Azure client secret, certificate or long-lived Azure credential was added.
+The workflow reads masked settings and continues to use OIDC federation.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;

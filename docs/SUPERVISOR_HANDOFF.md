@@ -10,6 +10,16 @@ closure. Permanent governing files remain unchanged by that exception.
 
 Public URL: https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io
 
+Hosted continuation: reviewed commit `aa8c5179704956bc1964fed6e16ca1591678a154`
+was pushed. [Run 39261782677](https://github.com/Ameya5006/Aletheia/actions/runs/39261782677)
+failed before Azure login/deployment because approved Windows CRLF hashes differ
+from Linux checkout LF bytes. A bounded checker repair preserves all approved
+hashes and accepts only newline conversion; three regression cases pass. The
+three non-secret Azure identifiers now also have encrypted repository settings
+for automatic log masking, and the workflow reads those masked settings. Required
+variables remain configured; no long-lived Azure credential was introduced.
+The corrected hosted execution is still pending.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.
@@ -22,8 +32,9 @@ Public URL: https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerap
   tests in `tests/deployment/test_ci_rollback.py` and included them in the workflow.
 - Removed literal non-secret Azure account identifiers from the pending workflow
   and role templates to follow CURRENT_TASK's handling rule. The workflow reads
-  repository Actions variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and
-  `AZURE_SUBSCRIPTION_ID`. Role JSON templates require in-memory substitution of
+  masked repository settings `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and
+  `AZURE_SUBSCRIPTION_ID`; matching required Actions variables are verified.
+  Role JSON templates require in-memory substitution of
   `${AZURE_SUBSCRIPTION_ID}`. Live identities, permissions and architecture did
   not change. All three required GitHub repository Actions variables were absent,
   were configured through existing authenticated tooling, and were read back to
@@ -170,7 +181,9 @@ Branch `main`; HEAD `07415aaf9eb58b028e2f629d884199016ccbe13f`; live upstream wa
 0 ahead / 0 behind. **12 modified tracked paths, 62 untracked
 paths, zero staged files.** The exact status and reviewed source lists are
 stored as ignored closure evidence. Existing stash remains
-`c6b91a13bf4338e559dfaad49f850dd719f5ca47`. No commit or push occurred.
+`c6b91a13bf4338e559dfaad49f850dd719f5ca47`. This describes the pre-commit review
+snapshot; the authorized commit/push and subsequent hosted attempt are recorded
+at the top of this handoff.
 
 Next action under the user's explicit one-time exception: selectively stage the
 74 reviewed source/documentation paths, verify the index, commit and push main,

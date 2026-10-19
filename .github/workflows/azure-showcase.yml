@@ -21,9 +21,9 @@ jobs:
       contents: read
       id-token: write
     env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ACR_NAME: acraletheiasea1017
       ACR_LOGIN_SERVER: acraletheiasea1017.azurecr.io
     steps:
@@ -46,7 +46,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check -r requirements.lock.txt
           python -m pip install --disable-pip-version-check --no-deps -e .
-          python -m pytest tests/application/test_case_workflow.py tests/application/test_release_auth.py tests/deployment/test_ci_rollback.py -q
+          python -m pytest tests/application/test_case_workflow.py tests/application/test_release_auth.py tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py -q
           python -m ruff check --select F deployment/azure/ci-frozen-check.py deployment/azure/ci-guard.py deployment/azure/ci-smoke.py deployment/azure/ci-secret-scan.py
       - name: Frontend checks
         working-directory: frontend
