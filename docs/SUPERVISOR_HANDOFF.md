@@ -31,6 +31,14 @@ health command (`unknown shorthand flag: 'U' in -U`, exit 125). A one-line doubl
 quote correction preserves the health command; Azure was unchanged. Corrected
 hosted execution is pending.
 
+The fourth [run 39263931188](https://github.com/Ameya5006/Aletheia/actions/runs/39263931188)
+passed runner setup/frozen checks but Azure OIDC returned `AADSTS700213` because
+the trust used a name-only subject. GitHub emits the immutable owner/repository-ID
+subject. Existing authenticated tooling updated the single trust to the exact
+observed main subject after confirming repository IDs; issuer/audience and RBAC
+were preserved. Readback matches `deployment/azure/github-oidc.json`; old trust
+and failure evidence remain preserved. Hosted login must still be rerun.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.

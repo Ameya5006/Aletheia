@@ -41,6 +41,16 @@ reported `unknown shorthand flag: 'U' in -U` (exit 125). Replacing the option's
 single quotes with double quotes preserves the same health check and corrects
 runner argument parsing. The failed log is retained; Azure was unchanged.
 
+The fourth [run 39263931188](https://github.com/Ameya5006/Aletheia/actions/runs/39263931188)
+passed service initialization and frozen checks, then Azure returned
+`AADSTS700213`: its single federated credential used the old name-only subject.
+The actual GitHub assertion uses the documented immutable owner/repository-ID
+format. Authenticated repository metadata confirmed both IDs. The existing
+credential was updated to the exact `main` subject in `github-oidc.json`;
+readback confirmed one credential, unchanged issuer/audience, and no new Azure
+password/certificate or role assignment. The original trust and failed run are
+preserved. See [GitHub's OIDC reference](https://docs.github.com/en/actions/reference/security/oidc).
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;

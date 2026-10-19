@@ -1,7 +1,7 @@
 {
   "name": "github-main",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:Ameya5006/Aletheia:ref:refs/heads/main",
+  "subject": "repo:Ameya5006@178257308/Aletheia@1362574763:ref:refs/heads/main",
   "audiences": ["api://AzureADTokenExchange"],
   "description": "Aletheia manual production workflow on the protected main branch"
 }
