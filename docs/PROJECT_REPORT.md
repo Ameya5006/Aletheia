@@ -1,5 +1,876 @@
 # Aletheia — Project Report
 
+## Current Azure Workload Profiles deployment and CI preparation (2026-10-19)
+
+### Final closure continuation (2026-10-19)
+
+**Completed scope and sequence.** The remaining work reused the completed
+frontend, cloud/browser/persistence, live rollback and isolated backup/restore
+checks. Five backup file sizes and SHA-256 values still match their manifest;
+the preserved restore result reaches `0004_case_input`, the approved active
+release, one registry model, readiness 200 and prediction 201. No new backup,
+restore, cloud prediction, browser journey, persistence restart, live rollback,
+frontend build or frontend vulnerability scan was run. Prettier made only the
+requested layout correction to `frontend/browser/cloud.spec.ts`; the complete
+frontend formatting check now passes.
+
+**Exact deployed-image security evidence.** The existing API image archive was
+validated and reused. Only missing MLflow/operator archives were exported.
+For each image, the effective Azure image, ACR index, linux/amd64 child,
+config hash, exported blobs/layers and scanner ImageID matched. All three
+Trivy 0.75.0 vulnerability/licence and CycloneDX commands exited 0. Findings
+were retained without suppression; command success does not mean a clean scan.
+
+| Image | Critical / High / Medium / Low / Unknown | SBOM components | Licence inventory entries |
+|---|---|---|---|
+| Repaired frontend, preserved verified result | 0 / 0 / 0 / 0 / 0 | 71 | 103 |
+| Current API | 1 / 63 / 112 / 105 / 1 | 240 | 772 |
+| Current MLflow | 1 / 63 / 112 / 105 / 1 | 240 | 772 |
+| Stopped CI/operator | 1 / 63 / 112 / 105 / 1 | 240 | 772 |
+
+The latter three raw scanner SBOMs each contain 239 components and 771 licence
+entries. Separate complete inventories add the already-approved native SQLite
+3.54.0 binary, its actual SHA-256 and public-domain source/licence reference.
+The raw reports remain unchanged. Complete CycloneDX 1.7 files explicitly bind
+the ACR index/child/config and archive hashes, and pass JSON/component-reference
+checks; a separate external JSON-schema validator was not installed or run.
+Every reported finding has a retained disposition in ignored
+`artifacts/azure-preflight/final-closure-20261019/`.
+
+The critical zlib finding concerns MiniZip, which is absent from the inspected
+images, including its affected function; the
+[Debian tracker](https://security-tracker.debian.org/tracker/CVE-2023-45853)
+explains the Bookworm source-package classification. Six findings with upstream
+fixed versions (four HIGH, two MEDIUM) concern pip-vendored msgpack, setuptools
+and urllib3. Runtime checks found top-level setuptools 84.0.0 and urllib3 2.8.0,
+with msgpack present only in pip's vendor tree. Official PyPI metadata still
+reported the installed pip 26.2.1 as latest. The reviewed serving entrypoints do
+not expose user-directed package installation. These bundled copies remain in
+the findings; unsupported vendor surgery was not performed. See
+[pip's vendoring policy](https://pip.pypa.io/en/stable/development/vendoring-policy/).
+Other distribution findings have no fixed Bookworm version reported by this
+scan and remain residual risk, rather than being called non-applicable.
+No unrelated dependency upgrade, image rebuild or redeployment was made.
+
+**A CI rollback defect caught before push.** The script previously captured
+`latestRevisionName`; after a failed deployment this can identify an unhealthy
+candidate while an older revision still serves traffic. A real-shell test
+with controlled Azure/PowerShell command boundaries reproduced two failures
+and one passing case. `deployment/azure/ci-deploy.sh` now captures the single
+revision receiving 100% traffic and refuses migration/update if that snapshot
+is missing or ambiguous. The three regression cases then passed, and all
+eight focused deployment unit tests passed. Read-only Azure queries selected
+the current `api--0000003` and repaired `frontend--0000002`. This is local
+orchestration verification; the completed manual live rollback was not repeated,
+and hosted automated rollback remains unverified. The workflow now includes
+`tests/deployment/test_ci_rollback.py`.
+
+**Protection and credential review.** The 2,193-path audit has 1,744 immutable
+matches, six explicitly authorized edits, four classified mutable credential
+paths and 439 inaccessible generated runtime paths. None of those 439 paths
+is tracked repository input. They remain **unverified**, with no permission or
+content changes; they are not mismatches. The gate requires zero unexplained
+accessible mismatches and passes. The separate frozen-source check covers 32
+tracked inputs, the entrypoint and approved pin. Pre-commit review also removed
+literal Azure account identifiers from the pending workflow/role templates:
+the workflow reads three repository Actions variables, and role templates use
+an explicit subscription placeholder. Live federation and roles were unchanged;
+a fresh read verified one main-branch trust, no application password/certificate
+credentials and nine exact role assignments matching the reviewed actions/scopes.
+The three required GitHub repository Actions variables were initially absent.
+Existing authenticated tooling created them and read them back to verify the
+approved identity, without printing or recording values. Hosted OIDC login
+remains unverified until the real workflow executes.
+
+**Cost and budget correction.** Fresh Cost Management still reports month-to-date
+pre-tax **INR 11.7066685215817**. Spending limit is On. Both group inventories
+and a subscription-wide read contain the same 13 approved group resources;
+all four Express apps remain stopped. The subscription warning budget now
+actually exists: INR 100 monthly with enabled 50%, 80% and 100% notifications,
+each with one configured contact. The earlier budget `RBACAccessDenied` is
+preserved as historical failure, and is no longer an active budget blocker.
+No numeric zero forecast or cash-versus-credit settlement is asserted.
+
+**Evidence-recording lesson.** A preserved frontend scan hash was transcribed
+with 65 characters in the earlier narrative. The unchanged 194,958-byte JSON
+still has its original timestamp and the original tool-reported 64-character
+SHA-256 `78e3cdf93a18350b1d6b6c4da2a9cd38bc56ebdbf74a5b445c8bfa4f9b72d344`.
+The current record corrects the narrative; original scan bytes and failed
+attempts remain preserved. Validate hash length as well as value before
+treating a documentation comparison failure as an evidence-integrity incident.
+
+**Git authority and hosted verification.** The user subsequently granted an
+explicit one-time exception to the no-commit/no-push restrictions for this
+reviewed Azure closure. The governing files themselves were not changed to
+self-authorize. The reviewed implementation is prepared for the requested
+`feat: deploy Aletheia to Azure with secure CI/CD` commit; hosted results will be
+reported only after the actual pushed workflow executes.
+No new ML experiment, retraining, held-out analysis or architecture change
+occurred during these closure checks.
+
+**Frontend image security repair (2026-10-19).** The deployed frontend index
+`sha256:b6a73249020616b236ff3ff2590ad2cd1f11ed9edfce072ac01d10ac8dc023fa`
+had one HIGH (`CVE-2026-77214`) and one MEDIUM (`CVE-2026-102633`)
+Trivy finding in Alpine `libexpat 2.8.5-r0`. Both listed `2.9.0-r0` as fixed.
+The original JSON, SBOM, scan retry failure log and image bindings were copied
+to ignored evidence before changing the Dockerfile. The later retry had failed
+on a Trivy cache lock; that failure does not count as a passing retry. The
+Alpine v3.23 x86_64 package source supplied `2.9.0-r0`, confirmed by a
+successful build and direct runtime inspection.
+
+The first candidate replaced the Dockerfile's existing OS upgrade with only
+the targeted package add. Its scan exposed 34 HIGH, 49 MEDIUM, 25 LOW and two
+UNKNOWN findings in older base packages; that image was neither pushed nor
+deployed. The final change in `deployment/Dockerfile.frontend` keeps the
+existing upgrade and adds one exact `libexpat=2.9.0-r0` package step. The
+distinct final frontend image index is
+`sha256:12176c6a16302f1f4208c7878ead164701c08704ad3620fddc744ada63547416`,
+linux/amd64 child
+`sha256:fe6d6e57d8d9f72ae12031ddd85bcc5d96f2d6136658270068d4f0e34a2c1ed5`,
+config `sha256:964d28ec5ffae6455a878c49fe6e232b7f51cdc86c6856e652ed9fa875977ac7`.
+Archive, local layers, Trivy ImageID and ACR child config matched. Final
+Trivy vulnerability/licence scan and CycloneDX SBOM each exited 0: zero
+reported vulnerabilities, 103 licence entries and 71 SBOM components,
+including `libexpat 2.9.0-r0`. This is a result for the pinned scanner and
+database, not a claim that the software has no vulnerabilities or that every
+licence has legal clearance. Trivy calls the OS `3.23.4` while direct runtime
+`/etc/alpine-release` reads `3.23.6`; the package inventory and digest
+binding were checked separately, and the patch-level discrepancy remains
+unexplained. Exact hashes, sizes, attempts and logs are in ignored
+`artifacts/azure-preflight/frontend-libexpat-20261019/RESULTS.md`.
+
+Only the replacement frontend Container App was updated by final digest.
+`frontend--0000002` became ready at 100% traffic, with previous
+`frontend--0000001` active at 0% as rollback target. The public HTTPS path,
+private API/MLflow isolation (404 direct), readiness, authentication, synthetic
+prediction (`0.16546872246399696`), save/history/reopen, changed rerun,
+immutable original, review, audit and browser reset passed. A previously
+saved row from before this frontend revision and the newly saved row remained
+retrievable through the new revision; creation/save audit events were visible.
+The cloud browser test passed 1/1. Frontend lint, typecheck, 81/81 unit tests,
+production build and the OpenAPI/10-public-response snapshot check passed.
+All 51 runtime static assets and the runtime configuration fields matched
+the preserved baseline; credential-pattern checks found zero matches in the
+candidate assets/metadata and the 73 changed working-tree paths.
+At that earlier frontend-repair checkpoint, `format:check` failed on the existing
+untracked `frontend/browser/cloud.spec.ts`, which this image-only repair left
+untouched. The first authenticated post-deploy request returned 401 because
+the 14-minute local synthetic test tokens had expired; refreshing only those
+ignored tokens with the existing key restored the passing workflow. This
+distinguishes credential freshness from an application regression. No model,
+backend, MLflow, PostgreSQL, architecture, or inference deadline changed.
+The Dockerfile's pre-existing `apk upgrade` still consults a mutable package
+repository, so the exact deployed digest, not a future rebuild of the tag,
+identifies what was tested. The workload deployment helper's frontend digest
+was updated to the verified image so a later invocation cannot restore the
+old vulnerable frontend. Hosted CI is still unverified pending user push.
+
+**Preserved recovery evidence.** The fresh local backup at
+`artifacts/azure-preflight/final-local-backup-20261019T051444Z` contains the
+application and MLflow database dumps plus registry, release and state
+archives. Its manifest records full SHA-256 values and sizes for all five
+files. The earlier isolated restore reached migration `0004_case_input`, the
+same active frozen release, one registered MLflow model, readiness 200 and
+an authenticated prediction 201 with probability `0.16546872246399696`.
+The original expired identity certificate stayed unchanged; a renewed
+certificate was confined to that temporary project. Only the successful
+temporary restore project was removed. The 13 October backup, fresh files
+and original source volumes remain preserved. This frontend repair reused
+that completed verification rather than repeating it.
+
+**Milestone and why it followed the Express audit.** The preserved Express
+environment could not establish genuine private ingress: it stored
+`external:false` yet retained public-style service hostnames. The supervisor
+froze a replacement topology using a Workload Profiles environment with only
+the serverless Consumption profile. The Express environment and its four apps
+remain stopped, with the API and MLflow deny rules retained. The replacement
+reuses the existing Southeast Asia PostgreSQL Flexible Server, Standard ACR,
+pull identity and frozen release; it adds one environment and four Container
+Apps (`frontend`, `api`, `mlflow`, and a stopped, no-ingress release operator).
+No Dedicated profile, custom VNet, NAT, private DNS, load balancer or paid
+monitoring workspace was created. See `docs/ARCHITECTURE.md` for the actual
+request path and `artifacts/azure-preflight/PREFLIGHT.md` for ARM and quota
+evidence.
+
+**Implemented flow and reason.** Browser HTTPS reaches the public frontend;
+its NGINX proxy uses `http://api` within the environment. The API uses
+`http://mlflow`, the approved activated frozen model and the least-privileged
+`aletheia_app` database role over verified PostgreSQL TLS. API and MLflow have
+genuine `.internal.` FQDNs. External requests to their public-style hostnames
+return 404, while frontend-proxied API liveness and readiness return 200.
+The API runs at 1 vCPU/2 GiB, and all three serving apps are configured with
+minimum zero and maximum one replica. Multiple revision mode retains a
+working revision for rollback. This was implemented after private ingress
+was verified because `external:false` alone failed as a security proof in
+Express. A shared application header or deny-all ingress rule would not give
+the frontend a reliable private path.
+
+**Verified result.** An invented case submitted through the real public Azure
+URL returned probability `0.16546872246399696`, model SHA-256
+`8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`,
+release SHA-256 `65f2302cc9c4795142567296cc6b16143fad5abfe4df7b04152975748c2ec271`,
+and evidence SHA-256 `2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
+Authenticated save, history, reopening, changed rerun, immutable original,
+review, audit and browser reset passed. An unauthenticated history request
+returned 401; an engineer request to an administrator route returned 403.
+PostgreSQL remained Ready, PostgreSQL 18/B1ms/32 GiB, TLS required, and
+Alembic reported `0004_case_input (head)` through a controlled no-ingress
+migration revision. Saved predictions and audit rows remained visible after
+an API restart and a measured scale-to-zero cold start. The cold start gave
+two transient 504 responses before readiness returned 200; callers need a
+bounded retry. The fixed inference deadline was not increased. Evidence is
+in `cloud-workflow.json`, `cloud-browser.json`, `cloud-persistence-restart.json`
+and `cloud-persistence-scale-zero.json` under ignored `artifacts/azure-preflight/`.
+The real browser test passed once; focused backend checks passed 35 with five
+PostgreSQL-dependent skips, and frontend unit checks passed 81 in seven files.
+Frozen Python/model inputs were not changed or retrained.
+The original protected-evidence verifier flagged the task-required
+`docs/ARCHITECTURE.md` and `README.md` updates. A separate exact-hash and
+diff-count classification left zero unexplained changes without modifying
+the original manifests. An earlier audit reported reading and verifying the
+439 generated runtime paths that the original Windows check could not access.
+The final frontend repair audit could not reproduce that read access: both
+host and read-only Docker-mount checks returned permission errors for all 439.
+The classified host audit still has zero unexplained changes among accessible
+paths; fresh verification of those generated paths remains incomplete.
+Earlier successful and failed attempts are preserved, and no ACL or evidence
+bytes were changed.
+
+**CI/CD status and decision.** `.github/workflows/azure-showcase.yml` now runs
+focused tests and frozen-input checks before Azure deployment. A GitHub
+federated credential trusts only `Ameya5006/Aletheia` on `refs/heads/main`;
+its service principal has ACR-scoped push/read, identity-operator scope on the
+existing pull identity, deployment validate/what-if permissions in the new
+resource group, a separate subscription-policy read-only permission, and app
+update permissions on the four named existing apps.
+No client secret or long-lived Azure credential is stored in GitHub. The
+workflow builds immutable image digests, validates and previews the existing
+topology, runs migrations in the stopped-by-default no-ingress operator,
+updates only API/frontend by digest, runs a synthetic authenticated smoke
+prediction with an Azure-managed signing-key secret reference, and restores
+the previous traffic revisions if verification fails. The migration and smoke
+commands both passed manually in Azure using the CI backend overlay digest
+`sha256:3f6b5f2fc264d26c57da3d9b87174eae37438c7bfdbc2f0ef22164ddb65ec8dd`;
+the operator was stopped after each run. YAML, Bash, PowerShell, frozen-input
+and static Python checks passed locally. The GitHub workflow itself has **not
+run** because the governing task forbids this agent from committing or pushing;
+federated login and automated rollback are therefore implemented but not
+end-to-end verified by GitHub Actions. The workflow never builds or deploys
+the regression image.
+The repeat synthetic smoke run also scanned its live console-log window for
+private-key, JWT and PostgreSQL-URL patterns and found none; the CLI did not
+retrieve the stopped replica's full historical console log afterward.
+
+**Important problems and lessons.** A cold MLflow import and first approval
+request timed out before their dependencies warmed; a retry after readiness
+succeeded. An early NGINX dynamic DNS resolver returned 502; static
+same-environment `api` resolution at startup fixed the proxy. The secure
+operator update first failed because ARM `listSecrets` required a JSON content
+type, then an accepted PATCH did not change the effective configuration. A
+bounded Bicep validation/what-if/deployment succeeded. PowerShell's
+`Get-Content -Raw` attached file metadata to the signing-key string, causing
+deep JSON serialization to stall; copying to a plain string removed the
+metadata. The signing key stayed in ignored local evidence and Azure secure
+parameters/secret references, and ARM deployment history reports no secure
+value. The failed attempts were retained as evidence. Interview explanation:
+control-plane success, application health, network isolation and persistence
+are separate checks, and a successful write must be followed by effective
+ARM readback and external probes.
+
+**Cost and limits.** The Azure for Students spending limit is On. The
+Consumption-core quota is 100; a read during warm replicas showed 1.75 in
+use. Standard ACR reported 697,631,382 bytes against its 100 GiB limit.
+At the 2026-10-19 Cost Management read, month-to-date pre-tax cost was
+**INR 11.7066685215817**, mostly historical Express Container Apps usage;
+the existing ACR and PostgreSQL rows each reported INR 0 at that read.
+This is reported cost, not a future forecast or a statement about cash versus
+student-credit settlement. Billing can lag. PostgreSQL's sole Azure-services
+firewall rule remains a bounded showcase exception; it accepts other Azure
+origins at the firewall layer, while TLS and least-privilege authentication
+still apply. No real patient data is used. Full GitHub CI execution, automated
+rollback behavior and a numeric future cost forecast remain unverified. A
+manual live rollback to MLflow `mlflow--0000001` passed readiness, followed by
+restoration of `mlflow--0000002`. An attempted API rollback to
+`api--0000002` returned liveness 200 but readiness 503; current
+`api--0000003` was restored and readiness returned 200. That failed attempt
+must remain distinguishable from the successful MLflow rollback.
+The initial task-authorized subscription INR 100 monthly warning budget was attempted
+with 50%, 80% and 100% actual-cost alerts and the signed-in user's email held
+only in process memory. Azure returned `RBACAccessDenied` for the budget PUT;
+`az consumption budget list` then returned `[]`. That attempt lacked
+subscription budget-write authority, so it created no budget or notification.
+This was an external authorization blocker, not a spending-cap failure or a
+reason to broaden application permissions. The final closure read now verifies
+that the budget exists with the three enabled notifications; the earlier
+denial is historical evidence. Microsoft's
+[budget guidance](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/quick-create-budget-bicep)
+states that an Owner or Cost Management Contributor can create budgets, and
+that a budget warns but does not stop resources. The student spending limit
+remains On independently.
+Microsoft's [Azure for Students offer](https://azure.microsoft.com/en-us/free/students/)
+lists one Standard ACR/100 GiB, PG B1ms/32 GiB/750 hours for 12 months, and
+Container Apps monthly allowances. The [Container Apps billing guide](https://learn.microsoft.com/en-us/azure/container-apps/billing)
+states 180,000 vCPU-seconds, 360,000 GiB-seconds and two million requests per
+subscription per month are free. These published grants do not erase the
+nonzero Cost Management result; its precise cause and credit settlement are
+not established by this project.
+
+## Azure private-ingress repair audit (2026-10-18)
+
+**Objective and outcome:** The supervisor authorized one bounded attempt to
+repair private Container Apps ingress in the existing environment. The attempt
+did not reach the required security gate. No app was started, no image or data
+was replaced, and no cloud prediction is claimed. The earlier direct HTTP 200
+from the API's own public-style hostname remains the relevant exposure
+observation; no repeat external request to a running app was made in this
+repair. The four apps remain stopped, with deny-all ingress restrictions on
+API and MLflow.
+
+**What was tested:** First, the effective 2025-07-01 ARM response and Azure CLI
+both showed `external: false` and a hostname without `.internal.` for each
+app. Both were in Single revision mode, with `traffic: null` and no active
+revision reported while stopped. Disabling ingress and re-enabling it with
+`--type internal` on each existing app left the same public-style FQDN.
+Disabling also removed the temporary deny rule, so the rule was immediately
+restored while each app was stopped. A direct 2025-07-01 ARM JSON Merge Patch
+for `external: false` was accepted (HTTP 202) on both apps, with the deny rule
+included. The subsequent ARM GET reported provisioning Succeeded and still
+returned `api.greenpond-767543dc.southeastasia.azurecontainerapps.io` and
+`mlflow.greenpond-767543dc.southeastasia.azurecontainerapps.io`. Neither
+contained `.internal.`. No revisions or persistent resources were deleted.
+
+**Why the configuration cannot advance:** Microsoft's general Container Apps
+guide describes `.internal.` FQDNs and same-environment `http://<APP_NAME>`
+routing, but its Express-specific guide says Express app-to-app traffic uses
+public app URLs and built-in short-name discovery is unsupported. This
+environment also rejected an environment route configuration as an Express
+unsupported resource in the earlier investigation. The control-plane
+observation and Express guide therefore conflict with the proposed standard
+Container Apps repair path. `external: false` alone is insufficient evidence
+of isolation here. The precise platform cause of the mismatch is unproven;
+it may require Azure support or a different, separately approved environment
+topology. In particular, an accepted ARM write is not proof that the intended
+route exists or is private.
+
+**Decision and limitations:** The frontend proxy was not switched to
+`http://api`, and the backend MLflow endpoint was not switched to
+`http://mlflow`, because the current Express environment does not advertise
+short-name discovery and the prerequisite internal FQDN was not obtained.
+Deploying those unverified routes would knowingly break the application or
+weaken its isolation. The deny rules were not removed, and MLflow, API and
+frontend were not started. Authentication, prediction, save/history, audit,
+artifact retrieval, cold-start and CI/CD checks remain pending. The same
+eight Azure resources, PostgreSQL data, image digests and prior evidence are
+preserved. A later decision must either identify an Azure-supported private
+route in this exact no-paid-network environment or explicitly authorize a
+different architecture; this repair does not authorize one.
+
+**Engineering lesson and viva answer:** What does `external: false` prove? It
+proves the desired control-plane field was stored, not that every external
+route was removed. A secure deployment verifies the generated hostname and
+tests reachability from outside and inside the environment. Why was
+`http://api` not deployed? Service discovery is a capability of the specific
+Container Apps environment mode; the general service guide and the Express
+feature matrix differ. Tests must follow the deployed mode rather than assume
+one document applies to every mode. The exact evidence for that historical
+checkpoint is in `docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md`.
+
+## Azure deployment continuation: secured stop at Express ingress (2026-10-18)
+
+**Current status:** The Azure end-to-end milestone is incomplete. The external
+supervisor's bounded showcase decision allowed PostgreSQL's Azure-services
+firewall exception when exact Container Apps outbound IPs remained unavailable.
+That decision supersedes the exact-IP stop described in the historical section
+below. It did not authorize a public backend or MLflow service. The current
+task explicitly stops if either service requires public external ingress.
+
+**What was implemented and why now:** On the existing Southeast Asia resource
+group, a controlled temporary Container App revision performed the one-time
+PostgreSQL bootstrap. Azure Express rejected Secret volumes, so the bootstrap
+was changed to use Azure secret-backed environment references; credentials were
+kept in Azure secret handling and transient process memory. The first metadata
+restore then failed because the MLflow role lacked `CREATE` on its `public`
+schema. A targeted grant and repeatable restore resolved that. The application
+owner received the same schema permission for Alembic. A separate migration
+revision ran `alembic upgrade head`; a subsequent read-only `alembic current`
+reported `0004_case_input (head)`. PostgreSQL was Ready at PG18/B1ms with
+mandatory TLS, seven-day backup and HA disabled. Its only firewall rule was
+the approved Azure-services exception (`0.0.0.0` to `0.0.0.0`), not a broad
+public-internet range. Application-user permission and actual prediction
+persistence were not yet verified.
+
+The existing frontend was updated to proxy `/api/v1/` over certificate-verified
+HTTPS to an API app sized at the previously accepted 1 vCPU/2 GiB. Express
+mounts a fresh `/run`, hiding image-created directories; a small entrypoint
+creates a private directory before dropping to UID 10001 and writing only the
+needed Azure-managed secret there. Both backend and MLflow images were rebuilt
+and pinned by digest. Nginx initially returned 502 because its default upstream
+certificate verification depth was too shallow for Azure's served chain; setting
+depth three fixed it. The public frontend route then returned HTTP 200 for the
+backend liveness endpoint with TLS verification enabled. No real prediction,
+save, history, rerun, reset, audit persistence, cold start, or CI/CD workflow
+was completed, so this is not an operational cloud deployment.
+
+**Security blocker:** Azure reported `external: false` for the API and MLflow
+ingress, but a direct request from outside Azure to the API's own hostname
+returned HTTP 200. Reapplying `--type internal` did not remove that route. A
+deny-all ingress rule returned 403 to both direct callers and the frontend.
+The expected `.internal.` hostname returned 404 from the frontend replica;
+allowing either the environment's ingress IP or the measured frontend egress
+IP still blocked the frontend route. These probes do not establish a private,
+working path, and the measured egress IP is not a stable Azure-reported list.
+The API and MLflow now each have `Deny 0.0.0.0/0` ingress restrictions, and
+frontend, API, MLflow and temporary bootstrap apps are stopped. Their apps,
+secrets, images, PostgreSQL data and logs remain for review. The temporary app
+was retained because its Azure secret references and migration evidence are
+still needed for a safe continuation; it must not be deleted blindly.
+
+**Decision and trade-off:** The four-app topology is preserved rather than
+silently co-hosting services or buying private networking. Express does not
+support sidecars, and a one-container multi-process replacement would change
+the approved private-service and independent-health contracts without sizing
+or failure-behavior evidence. A shared header would guard application requests
+but would not make backend ingress internal. Supervisor review is required for
+a supported free private route or an explicitly revised architecture. No
+model, preprocessing, XAI, or training input changed, so the expensive offline
+regression and prior sizing test were not repeated.
+
+**Interview/viva explanation:** Why was an Azure control-plane `external:false`
+field insufficient? A security property needs an external probe: the direct API
+URL still returned 200. Why retain a failed temporary app? It holds controlled
+Azure secret references and migration evidence; cleanup before a secure
+handoff could remove the only safe recovery path. Why is schema `CREATE`
+different from database ownership? A role can own its database yet lack rights
+on a separately owned `public` schema, causing `pg_restore` or Alembic to fail.
+The relevant implementation is under `deployment/azure/`; review evidence
+for that historical checkpoint is in
+`docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md`. The account's free-service
+allowances are eligibility evidence, not a guaranteed zero bill; current
+month-to-date actual cost and future forecast were not re-established here.
+
+## Azure continuation: incident resolution and partial cloud gate (2026-10-17)
+
+**Current status:** the local sizing and protected-evidence incident described
+below are historical. The supervisor authorized a forensic classification.
+The four changed files were generated, expiring local test tokens, not model
+or immutable project evidence. The original hash manifests were preserved;
+the token bytes were retained in place but were not duplicated. Windows-native
+rehashing found 439 inaccessible ignored pytest/runtime paths, which remain
+**unverified**, and no unexplained mismatches. Four additional changed hashes
+belong to authorized tracked task/source edits. The classified check is
+reproducible with `artifacts/azure-preflight/verify-protected-classified.py`;
+the detailed metadata is in the ignored timestamped incident directory.
+The accepted 1 vCPU/2 GiB backend and browser result was not rerun because its
+bound inputs did not change.
+
+**Why the next gate matters:** the approved public PostgreSQL topology depends
+on a complete, exact list of Azure-reported Container Apps outbound IPs. Each
+address would become one narrow firewall rule, with verified TLS and
+idempotent reconciliation when Azure changes the list. The alternative paid
+VNet/NAT/private-DNS design is prohibited by the current zero-cost task, as
+are broad `0.0.0.0` or “Allow Azure services” rules. An observed source IP
+from one request cannot prove all possible egress addresses.
+
+**Cloud work and result:** live subscription policy rejected UAE North even
+though its service listings and environment quota appeared compatible.
+Southeast Asia was the nearest allowed one-region candidate. A default
+Consumption environment, Standard ACR, registry-scoped AcrPull managed
+identity and 0.25 vCPU/0.5 GiB frontend app were deployed there. The app is
+pinned to an immutable image digest and returned 200 from its Azure-managed
+HTTPS health route. This establishes only static frontend reachability.
+No PostgreSQL server, backend, MLflow app, schema migration, prediction, cloud
+persistence or production CI/CD has been deployed or verified. The account
+remains Azure for Students/Enabled with spending limit On; the active
+account-specific Standard ACR and PostgreSQL B1ms/32 GiB free indicators were
+recorded, while Cost Management's numeric forecast remains unavailable.
+
+**Current hard problem:** the Running external Container App's
+`outboundIpAddresses` property is present but `null` through CLI and multiple
+ARM API versions, including after outbound HTTPS from a live replica. The
+environment has no usable reported egress list either. Without that input,
+the mandated exact-IP PostgreSQL firewall cannot be built or reconciled.
+The delayed read over ten minutes later also returned null, so the explicit
+stop condition in `docs/CURRENT_TASK.md` applies. The stopped database mutation and all Azure resource names,
+image digest, API observations and safe alternatives are recorded in the
+ignored `artifacts/azure-preflight/EGRESS_GATE_20261017.md`. The existing
+frontend endpoint must not be presented as a deployed decision-auditor URL.
+
+**Engineering lesson and viva answer:** provider location support, account
+quota, subscription policy and runtime control-plane data are separate gates.
+An apparently deployable region can fail policy validation, and a working
+HTTPS Container App can still lack the egress metadata required to secure its
+database. For a cost-bound showcase, the correct response is to stop before
+creating a database that needs an unapproved firewall exception. This is a
+deployment/security limitation, not a change to the frozen ML system.
+
+## Azure continuation: local sizing and evidence-integrity stop (2026-10-17)
+
+**Current status:** Azure deployment is incomplete. The supervisor's new
+directive authorized continuing past recoverable preflight issues, so the
+earlier regional quota stop below is historical. Registering the free
+`Microsoft.App` resource provider changed sampled `ManagedEnvironmentCount`
+quotas from 0/0 to 0/1. Central India remains excluded by the directive;
+South India reports subscription-restricted PostgreSQL provisioning; Jio India
+West lacks an ACR location listing. UAE North is the nearest remaining
+single-region candidate with 0/1 App environment quota, a B1ms SKU listing,
+and App/ACR location support. These are candidate checks, not deployed
+capacity. The Azure inventory remained empty at the final read-only query.
+Cost Management's forecast remains unavailable, not zero.
+
+**Why this work followed preflight:** A provider's unregistered state can make
+its quota response misleading for deployment decisions. Registration is a
+free control-plane action and was necessary to distinguish a genuine regional
+limit from an uninitialized provider. South India's PostgreSQL restriction
+then required evaluating the next single-region alternatives before changing
+application architecture. The active Student free meters cover one Standard
+registry, B1ms compute/storage/backup and published Container Apps usage;
+exact regional pricing and environment-level core quota remain unverified.
+
+**Local sizing:** An isolated Docker stack reused the byte-identical approved
+release while generating new test-only identity material. The old development
+identity certificate had expired, so the existing protected stack could not
+serve as a clean current test. The first isolated browser attempt used an old
+frontend image and failed its empty-Overview assertion. With the repaired
+frontend at 0.25 vCPU/0.5 GiB and the backend at the preferred 0.75
+vCPU/1.5 GiB, the first authenticated prediction returned HTTP 504
+`inference_deadline_exceeded`; the fixed deadline was not raised. The allowed
+1 vCPU/2 GiB backend fallback then passed a real browser journey: 13-field
+manual input, prediction, Save, history, reopen, changed rerun, immutable
+original, Reset preserving history, and 18 accessibility state/viewport
+checks with no violations. The passing browser command took 27.547 seconds,
+reported one Playwright test passed, and used distinct prediction IDs. The
+backend/frontend reported no OOM kill or automatic restart. Sampled peaks
+were 178.9 MiB/100.08% CPU and 5.6 MiB/8.44% CPU respectively; sampling
+does not prove absolute peaks. At the fallback plus provisional MLflow
+0.5 vCPU/1 GiB, 1.75 vCPU/3.5 GiB permits 28.57 shared active hours under
+either monthly free compute meter, or 28 hours after a two-hour job reserve.
+This is a planning bound, not measured cloud usage.
+
+**Immutable artifact concept and result:** The local MLflow metadata database
+contained one run and one registered model version; its secrets table had zero
+rows. A reviewed artifact directory was copied into a read-only MLflow image.
+An operator retrieved and verified the same frozen package through that image;
+`docker diff` showed only the mounted secret path. A restart check initially
+failed because MLflow had not yet opened port 5000 after 20 seconds; waiting
+for its health endpoint and rerunning the same verification passed. This
+demonstrates local feasibility of read-only artifact serving, not Azure
+metadata restore, scale-to-zero, or a cloud-ready backend. The frontend was
+also adapted to accept a provisioned token in a release build by validating
+it through the existing protected history endpoint. The API still enforces
+signed claims and database entitlements; unverified browser-decoded roles are
+only display hints. A focused frontend test, typecheck, lint and production
+build passed. Full cloud authentication, CI/CD and deployment remain undone.
+
+**Important problem and hard stop:** The existing token-refresh helper was
+invoked against the protected prior interactive evidence tree. It replaced
+four short-lived `administrator`, `engineer`, `operator` and `reviewer` token
+files. Their SHA-256 values now differ from the preserved manifest. No token
+value was printed, but the original bytes were not saved, so the protected
+record cannot be claimed unchanged. A separate 439 paths under the old Stage 3
+`offline-host` snapshot were inaccessible under Windows ACLs even on a
+read-only retry outside the sandbox; no result is claimed for them. The
+manifest comparison found no missing paths and eight changed paths in all:
+the four tokens and four intentionally edited task/report/handoff/Dockerfile
+paths. This was a governance failure in local test setup: an apparently safe
+refresh helper still wrote into a protected evidence tree. Future sizing
+fixtures must isolate secrets as well as databases and images before any
+helper runs. The current directive makes any protected-file hash mismatch a
+hard stop, so no Azure application resource was provisioned after discovery.
+The mismatch does **not** prove that a secure zero-cost Azure design is
+impossible; the supervisor must decide how to preserve or repair this evidence
+before deployment resumes. See the current ignored preflight record for
+commands and preserved failed attempts. No clinical or cloud success is
+claimed.
+
+**Viva explanation:** Why can registration change a quota result? An
+unregistered provider may report no available allocation even when a region
+is listed as supported; account-specific quota must be rechecked after
+registration. Why did 0.75 CPU fail despite modest sampled memory? The first
+prediction exceeded the fixed end-to-end inference deadline; a low average
+memory sample says nothing about enough CPU within that deadline. Why stop
+after a known token refresh? Evidence integrity is a separate requirement:
+knowing the cause does not make the original protected bytes reappear.
+
+## Azure deployment preflight: regional quota stop (2026-10-17; historical)
+
+The current task authorizes an Azure for Students showcase only inside active
+free allowances. After the supervisor clarified the pre-deployment cost
+forecast rule, all five portal images were reinspected. The replacement
+PostgreSQL image is sanitized and still shows Central India, Burstable
+`Standard_B1ms`, 1 vCore/2 GiB, 32 GiB storage, and green 750-hour/32-GiB
+free indicators. The account panel shows an unused Standard registry unit and
+PostgreSQL compute, data and backup meters. The Student offer remains Enabled
+with spending limit On, and the live Azure inventory is empty. A fresh
+month-to-date Cost Management query returned no rows. The portal's `--`
+forecast is **unavailable before deployment because no usable cost history
+exists**, not a numeric zero forecast; Azure says forecasts can be absent with
+insufficient history and free-service usage may lag one to two days. The
+credit image uses `$`, so its 9,599 balance is not relabelled INR. None of
+these observations is a future bill or permission to use promotional credit.
+
+The decisive new finding is a read-only Central India Container Apps regional
+usage query: `ManagedEnvironmentCount` has current use **0** and limit **0**.
+This is a subscription/region quota, so even the minimum planned environment
+cannot be created under the current quota. `Microsoft.App`,
+`Microsoft.ContainerRegistry` and `Microsoft.OperationalInsights` also return
+`NotRegistered`; the PostgreSQL provider is Registered. Provider metadata lists
+Central India for the proposed resource types, and PostgreSQL's live SKU
+listing includes B1ms, but those facts do not grant registration or capacity.
+The task's provider/quota stop applies before any environment creation. The
+environment-level Consumption-core quota can be checked only after an
+environment exists, so that check was not reached. No registration, quota
+increase, cloud resource, image or application change was made.
+
+**Sizing and cost reasoning:** the source plan proposes frontend 0.25
+vCPU/0.5 GiB and backend 1 vCPU/1.5 GiB, each min 0/max 1. Microsoft's
+[Consumption sizing table](https://learn.microsoft.com/en-us/azure/container-apps/containers#vcpu-and-memory-allocation-requirements)
+does **not** permit the backend's 1/1.5 pair. The smallest published memory
+allocation at 1 vCPU is 2 GiB; this is a candidate, not an approved or tested
+change. The original invalid plan would mathematically allow 40 CPU-bound and
+50 memory-bound common active hours, but cannot be deployed as written. With
+the valid 1/2 candidate, frontend + backend would use 1.25 vCPU/2.5 GiB and
+exhaust either published monthly grant after **40 simultaneous active hours**
+if nothing else ran. Including provisional MLflow (0.5 vCPU/1 GiB) gives
+28.57 hours by either grant; reserving two hours for the proposed migration
+job leaves **28.00 hours**. These are allocation calculations, not measured
+cloud usage or a zero-cost guarantee. The complete conditional matrix,
+including registry, PostgreSQL, logs, monitoring, data transfer, omitted paid
+network resources, DNS and artifact storage, is in the current ignored
+`artifacts/azure-preflight/PREFLIGHT.md`. No `deployment/azure/` implementation
+exists. The planned public PostgreSQL exact-IP/TLS design remains approved in
+principle; the superseded private-network stop remains historical below.
+If all three candidate replicas stayed active for a 31-day month, the proposed
+two-hour job reserve would bring usage to 4,690,800 vCPU-seconds and
+9,381,600 GiB-seconds, far beyond the free grants. Minimum zero and maximum
+one do not cap monthly consumption; bounded operation and monitoring remain
+necessary before a zero-credit deployment claim.
+
+**Problem, recovery and lesson:** the quota check returned a zero environment
+limit despite Central India appearing in provider location metadata. Location
+support and free-service advertising are not a subscription quota allocation.
+Creating first and asking for capacity later would violate the preflight gate,
+so the run stopped. Two initial local JSON projections falsely showed no B1ms,
+and an empty-array PowerShell projection briefly counted one resource; field
+inspection and explicit empty-array handling corrected these, with final
+results of one B1ms listing and zero resources. The 2,190 protected manifest
+paths still match their stored SHA-256 values. No meaningful ML or runtime bug
+occurred. For a viva: **Why did a free-eligible architecture not deploy?**
+Because a free allowance concerns billing, while a regional quota controls
+whether a resource may exist; here that quota is zero. A valid free meter also
+does not make an invalid CPU/memory configuration deployable. The supervisor
+must review this stop, and no quota increase was requested.
+
+## Historical Azure deployment task revision (2026-10-17; before resumed quota check)
+
+### First portal preflight review (historical)
+
+Five fresh Azure portal captures were checked against the approved deployment
+gate. They confirm an active Azure for Students offer with an Upgrade action,
+an unused displayed credit balance expiring 2027-06-26, an unused Standard
+Container Registry unit, and account-level PostgreSQL free meters. The Central
+India PostgreSQL form specifically shows Burstable `Standard_B1ms`, 1 vCore,
+2 GiB RAM, 32 GiB storage, and green indicators for up to 750 compute hours
+and 32 GiB storage. This resolves the earlier missing PostgreSQL portal
+indicator and registry-unit evidence; it does not mean a server was created.
+
+The Cost Management image says no cost was reported for October, but renders
+both actual cost and forecast as `--` and budget as `NONE`. The credit capture
+uses a `$` symbol, whereas the task's historical amount is labelled INR; the
+currency cannot be silently inferred. No image establishes the full
+Container Apps/monitoring allowances, exact resource estimates or regional
+quotas. The PostgreSQL screenshot also contains an account identifier in its
+header, so it must be replaced with a correctly redacted copy before it is
+shared as sanitized evidence. No identifier is reproduced in this report.
+
+**Current result and why this order matters:** the approved public PostgreSQL
+firewall design is still the intended architecture. Implementation and
+provisioning remain stopped under the task's preflight rules because the full
+free-allowance/estimate and quota evidence is incomplete. Starting resources
+first would make it impossible to guarantee the zero-credit boundary before
+costs or unsafe substitutions arise. Read-only checks found the selected
+subscription enabled and the Azure resource inventory empty; 2,190 protected
+manifest entries were unchanged, while the three expected revised task/report/
+handoff documents differ. No new ML experiment, deployment, runtime defect or
+clinical performance result occurred. The engineering lesson is that portal
+free indicators must be matched to the complete resource inventory, and a
+blank cost forecast is unknown rather than zero. See the per-image map in
+`artifacts/azure-preflight/PREFLIGHT.md` and the current supervisor handoff.
+
+**Interview/viva follow-up:** Why did the new screenshots not unblock Azure?
+They establish key account and PostgreSQL entitlements, but do not establish
+every proposed resource's free allowance, region/quota and estimate; one
+capture also needs identifier redaction. How do you distinguish cost evidence?
+An unused free meter is an allowance, a list-price estimate is not a bill,
+and a cost view with `--` has no numeric forecast. No meaningful software bug
+occurred in this evidence-review step.
+
+The current approved task's Section 0 supersedes the DNS-only credit exception
+and the earlier stopped private-network decision recorded below. The approved
+design for this bounded, non-sensitive student showcase is now one public
+PostgreSQL Flexible Server endpoint with TLS certificate/hostname verification,
+one exact firewall rule per currently reported Container Apps outbound IPv4
+address, and an idempotent operator reconciliation command. Azure may change
+those addresses, so connectivity can pause until reconciliation; this is an
+accepted availability limitation, not an automatic self-healing claim. Broad
+Azure-service or internet firewall access remains forbidden. Private DNS,
+customer Container Apps VNet integration and its paid managed networking are
+not authorized.
+
+The revised task also proposes packaging only the approved frozen MLflow
+artifacts into an immutable registry image and storing MLflow metadata in the
+single managed PostgreSQL server. This removes the need for a separately
+charged Azure Files/Blob resource but requires explicit package hash, registry
+digest and cold-start/revision retrieval proof. The local Docker-volume
+implementation has not yet been migrated; no cloud resources, image, URL,
+runtime verification or new ML experiment exist. The earlier stopped records
+remain valid accounts of what was known then, not current deployment decisions.
+
+**Decision and trade-off:** the supervisor selected a lower-cost public
+endpoint with exact-IP defense, verified TLS and credentials over a private VNet
+that brings billed managed IP/load-balancer resources. This saves the planned
+credit but accepts a bounded exposure surface and manual pre-demonstration
+reconciliation after Azure egress-IP changes. Reconsider this design for any
+sensitive or production use, any failure to obtain a finite exact IP list, or
+any need for automatic recovery that cannot be provided inside the free grants.
+
+**Viva question:** Why can a public database endpoint be allowed for this
+showcase? Because the firewall is restricted to the current exact Container
+Apps egress addresses, clients must verify the TLS server identity, credentials
+are least-privilege, and only non-identifiable showcase cases are allowed.
+This is a task-specific constraint, not a general clinical deployment pattern.
+
+**Preflight evidence and limitation:** A corrected read-only Azure Cost
+Management query returned no reported month-to-date cost rows. This does not
+establish a zero future forecast or rule out delayed metering. Published
+free-service limits support a bounded operating estimate, but current portal
+credit/expiry, applicable PostgreSQL free indicators, Standard registry
+benefit and resource estimates still need rechecking before provisioning.
+The approved two-phase approach must obtain a finite exact outbound IPv4 list
+from the actual Container Apps and jobs before creating PostgreSQL firewall
+rules. The reconciliation design limits mutations to a deployment-owned rule
+prefix, uses one address per rule, and preserves unrelated rules. Neither
+cloud connectivity nor this algorithm has been implemented or tested yet.
+
+## Azure deployment preflight continuation: DNS-only exception (2026-10-16)
+
+The user permitted promotional credit for exactly one PostgreSQL Private DNS
+zone, with total planned credit use capped at INR 100/month and zero cash
+payment. This reopened the cost question, but the deployment still stopped
+before resource creation. Azure Resource Manager now confirms the selected
+`Azure for Students` subscription is enabled, its offer is
+`AzureForStudents_2018-01-01`, and its spending limit is **On**. A fresh
+sanitized resource inventory is empty. Central India lists the required
+`Standard_B1ms` PostgreSQL capability at 1 vCore and 2 GiB RAM; a capability
+listing alone does not prove this subscription's free entitlement or quota.
+
+The selected private PostgreSQL route needs a customer VNet for Container Apps
+to reach it. [Microsoft's Container Apps VNet guidance](https://learn.microsoft.com/en-us/azure/container-apps/custom-virtual-networks)
+says that this deployment creates separately billed managed public IP and load
+balancer resources, including with Consumption apps. The authorized DNS zone
+does not cover those resources. The alternative public PostgreSQL endpoint
+still lacks a demonstrated durable, exact Container Apps egress-IP firewall;
+opening access to all Azure services would violate the security boundary.
+There is also no subscription-specific proof that a persistent MLflow artifact
+store is free: the [student offer](https://azure.microsoft.com/en-us/free/students/)
+labels its 5 GB Azure Files entry under Cloud Shell, whose [pricing guidance](https://learn.microsoft.com/en-us/azure/cloud-shell/pricing)
+says underlying storage incurs regular charges. No storage substitute was
+silently adopted.
+
+**Decision and order:** keep the gate closed before writing deployment code or
+provisioning. The network topology must include every Azure-managed supporting
+resource in the cost inventory, even when the VNet itself is free. The option
+of allowing only one DNS charge was considered and accepted by the user, but
+the actual private-network topology exceeds that permission. Reconsider only
+with a verified secure topology and account-specific entitlement/cost proof
+for all other resources, or a newly approved task. The old stopped-preflight
+record below is preserved as the earlier state, including its then-unknown
+spending-limit value; that value is now verified above.
+
+**Verified result:** subscription policy read, B1ms capability lookup and
+empty resource inventory succeeded. No new ML experiment, model or application
+change, held-out access, cloud image, public URL, or Azure resource exists.
+The final SHA-256 recheck found zero mismatches among 2,182 protected
+artifact/evidence files; the two changed documentation files were correctly
+excluded from that protected-file count.
+No deployment cost, security, persistence, cold-start, browser, backup or
+rollback result can be claimed. No meaningful runtime bug occurred. The
+engineering lesson is that a service's free compute allowance does not make
+its network dependencies free. The ignored continuation record is
+`artifacts/azure-preflight/PREFLIGHT.md`.
+
+**Viva/interview question:** Why did a DNS-only cost exception not unblock the
+deployment? Because private PostgreSQL requires Container Apps VNet integration,
+which brings additional billed managed IP/load-balancer resources; the allowed
+zone pays only for name resolution, not that network path.
+
+## Azure free-tier deployment preflight stopped (2026-10-16)
+
+**Status:** the authorized cloud milestone did not pass its mandatory cost and
+security preflight. No Azure resource was created, no cloud image was built or
+pushed, and no Azure URL or cloud verification result exists. The local system
+and frozen model/release/evidence identities remain unchanged. This is a blocked
+milestone, not a deployment result; the external supervisor must review before
+any further implementation or revised scope.
+
+The local architecture is still React/NGINX → FastAPI → PostgreSQL/MLflow with
+provisioned JWT/RBAC, explicit Alembic migration and immutable release
+provisioning. The proposed cloud equivalent needs persistent artifacts and a
+database network boundary before it can expose an HTTPS frontend. This ordering
+matters: deploying a free app first would create pressure to add a billed DNS,
+storage or network resource, or to open PostgreSQL broadly to make it work.
+The task explicitly forbids those substitutions. Azure CLI 2.91.0 confirms the
+selected `Azure for Students` subscription is enabled and contains zero
+resources; it does not establish the current spending-limit state, current
+credit/expiry, exact per-resource free indicators or displayed estimates.
+
+Published Microsoft material advertises the requested PostgreSQL B1ms,
+Standard ACR and Container Apps Consumption allowances. Those are general
+benefits, not proof that the exact selected region/SKU is active for this
+subscription. The 5 GB Azure Files item is labelled under Cloud Shell and was
+not assumed to fund an MLflow artifact share. A private PostgreSQL route
+normally requires a Private DNS zone, for which Azure documents a per-zone
+charge. A public PostgreSQL firewall could instead list Container Apps outbound
+addresses, but Azure says those addresses can change; a durable exact-address
+solution has not been verified. No safe, confirmed zero-credit persistence and
+network plan was available, so resource creation stopped.
+
+This is an engineering lesson about **entitlement versus list price**: a general
+free-service page and an account's promotional credit are not evidence that a
+particular dependency is free. A service chain costs money if one required
+supporting resource is billed. A fail-closed preflight keeps authentication,
+database isolation and budget rules ahead of a public demonstration. The
+alternative of paying a small amount from student credit was rejected by the
+approved zero-credit boundary. Reconsider only after account-specific free
+screens/estimates and a reliable free network/storage route are documented, or
+after the supervisor authorizes a different task.
+
+**Verification actually performed:** CLI subscription name/state and a zero
+resource inventory; Git branch/HEAD/upstream/divergence/stash/status;
+Docker context/engine/read-only inventory; SHA-256 manifests for 893 Stage 3,
+frozen and task-input files plus 1,300 preceding interactive evidence files;
+the corrected final rehash checked all 2,182 protected files with zero
+mismatches; `git diff --check` passed. An initial comparison falsely reported
+mismatches because PowerShell treated two decoded JSON arrays as nested objects.
+Checking the parsed type/count and flattening the arrays fixed the verification
+script; no protected file was repaired or rewritten. These are preflight checks,
+not deployment or
+application regression tests. Cash charged, promotional credit used, current
+free-tier consumption and cost forecast are unknown. The user's earlier
+INR 9,599 credit, INR 0 October cost and 2027-06-26 expiry observations have not
+been independently reverified. Exact ignored evidence and sources are in
+`artifacts/azure-preflight/PREFLIGHT.md`; the separate Docker cleanup dry run is
+`docs/LOCAL_CLEANUP_DRY_RUN.md`. No meaningful runtime bug occurred; the
+meaningful blockers were missing account-level entitlement evidence and an
+unproven free network/artifact path.
+
+**Viva/interview follow-up:** Why stop with an enabled student subscription?
+Because subscription eligibility alone does not cover supporting resources,
+and even a small promotional-credit charge violates this milestone. How would
+you resume? Verify spending protection and each exact SKU in the portal,
+establish free persistent storage and a reliable restricted PostgreSQL path,
+then provision and measure the real cold-start, persistence, security and cost
+behavior. No cloud performance or clinical validation claim can be made yet.
+
 ## Supervisor UI acceptance repair (2026-10-15)
 
 This repair follows the interactive workflow milestone below. Its previous

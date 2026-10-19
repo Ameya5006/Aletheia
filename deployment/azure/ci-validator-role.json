@@ -1,0 +1,23 @@
+{
+  "Name": "Aletheia CI ARM Validator",
+  "IsCustom": true,
+  "Description": "Validate and preview deployments in the existing Aletheia workload group without resource write permissions.",
+  "Actions": [
+    "Microsoft.Resources/deployments/read",
+    "Microsoft.Resources/deployments/write",
+    "Microsoft.Resources/deployments/validate/action",
+    "Microsoft.Resources/deployments/whatIf/action",
+    "Microsoft.Resources/deployments/operations/read",
+    "Microsoft.Resources/deployments/operationstatuses/read",
+    "Microsoft.Resources/subscriptions/resourceGroups/read",
+    "Microsoft.Resources/subscriptions/resources/read",
+    "Microsoft.App/managedEnvironments/read",
+    "Microsoft.App/containerApps/read"
+  ],
+  "NotActions": [],
+  "DataActions": [],
+  "NotDataActions": [],
+  "AssignableScopes": [
+    "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/rg-aletheia-workload-sea-01"
+  ]
+}

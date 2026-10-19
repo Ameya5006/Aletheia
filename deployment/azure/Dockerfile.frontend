@@ -1,0 +1,9 @@
+ARG FRONTEND_BASE
+FROM ${FRONTEND_BASE}
+USER root
+COPY deployment/azure/nginx-cloud.conf.template /etc/nginx/templates/default.conf.template
+COPY --chmod=755 deployment/azure/frontend-cloud-entrypoint.sh /usr/local/bin/aletheia-cloud-entrypoint
+ENV NGINX_ENVSUBST_FILTER='OIDC_CONNECT_SOURCE|BACKEND_HOST'
+USER 101:101
+ENTRYPOINT ["/usr/local/bin/aletheia-cloud-entrypoint"]
+CMD ["nginx", "-g", "daemon off;", "-c", "/etc/nginx/nginx.conf"]

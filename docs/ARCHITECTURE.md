@@ -1,5 +1,72 @@
 # Aletheia — System Architecture
 
+## Current approved Azure architecture (2026-10-19)
+
+The running showcase uses the Southeast Asia Azure Container Apps **Workload
+Profiles** environment `cae-aletheia-workload-sea-01` with exactly one
+**Consumption** workload profile. Three serving apps run at min 0/max 1:
+public HTTPS `frontend` (0.25 vCPU/0.5 GiB), internal-only `api`
+(1 vCPU/2 GiB), and internal-only `mlflow` (0.5 vCPU/1 GiB). The stopped,
+no-ingress `release-operator` runs controlled migrations and synthetic CI
+smoke checks only when needed. All three serving apps use Multiple revision
+mode so the previous working revision can receive rollback traffic.
+
+```mermaid
+flowchart LR
+  Browser -->|HTTPS| Frontend[public frontend / NGINX]
+  Frontend -->|http://api| API[private FastAPI]
+  API -->|http://mlflow| MLflow[private MLflow]
+  API -->|TLS, app role| PG[(existing PostgreSQL)]
+  MLflow -->|TLS, MLflow role| PG
+  Operator[stopped release operator] -.->|controlled migration / smoke| PG
+```
+
+API and MLflow effective FQDNs include `.internal.`. Direct public requests
+to their public-style hostnames returned 404; frontend-proxied liveness and
+readiness returned 200. The frontend authenticates invented demonstration
+users with provisioned signed JWTs; the API validates issuer, audience, JWT
+signature and database role grants. Predictions use the frozen approved
+release/model/evidence hashes, and PostgreSQL migration head is
+`0004_case_input`. Saved predictions and append-only audit events persisted
+after restart and scale-to-zero. PostgreSQL retains TLS and the supervisor's
+bounded Azure-services firewall exception. No Dedicated profile, VNet, NAT,
+Private DNS, paid load balancer or Log Analytics workspace exists.
+
+The original Express environment and its four apps remain stopped and
+preserved. Its earlier private-ingress failure below is historical evidence,
+not the current serving route. The GitHub OIDC deployment workflow has local
+and Azure command verification, but has not executed on GitHub because no
+commit or push is authorized in this task.
+
+## Private-ingress repair checkpoint (2026-10-18)
+
+The supervisor-authorized repair tested the existing stopped API and MLflow
+apps through Azure CLI and the current 2025-07-01 ARM API. Recreating ingress
+with `--type internal` and an accepted ARM patch both retained FQDNs without
+`.internal.`. Express-specific Microsoft documentation says built-in short-name
+service discovery is unsupported, so the standard `http://api` and
+`http://mlflow` route has not been deployed as an unverified assumption.
+At that historical checkpoint the cloud architecture remained incomplete:
+API and MLflow were denied and stopped; frontend and bootstrap were stopped.
+The prior implementation checkpoint below is historical evidence. See
+`docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md` for exact observations.
+
+## Historical Azure implementation checkpoint (2026-10-18)
+
+The local application architecture below remains the verified product contract.
+An Azure implementation of its infrastructure boundaries is partly installed
+in the existing Southeast Asia resource group: Azure-managed HTTPS frontend,
+Container Apps API and MLflow images, separate application and MLflow databases
+on one PostgreSQL Flexible Server, and a stopped temporary bootstrap/migration
+app. PostgreSQL migration verification reported `0004_case_input (head)`.
+All four apps are stopped. API and MLflow have deny-all ingress restrictions.
+The intended frontend-to-API private path failed verification: API directly
+returned HTTP 200 from outside Azure despite `ingress.external=false`, while
+an ingress deny rule blocked the frontend proxy too. No secure operating cloud
+topology, authenticated Azure prediction or persistence journey is established.
+The exact state and remaining decision at that checkpoint are in
+`docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md`.
+
 ## Current post-Stage-3 interactive case architecture (2026-10-15)
 
 Implemented locally: React/TypeScript static UI and same-origin NGINX proxy,

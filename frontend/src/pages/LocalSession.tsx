@@ -6,6 +6,7 @@ import { PageHeading } from '../components/Shell';
 
 export function LocalSession() {
   const auth = useAuth();
+  const local = import.meta.env.VITE_LOCAL_IDENTITY === 'true';
   const navigate = useNavigate();
   const [token, setToken] = useState('');
   const [busy, setBusy] = useState(false);
@@ -13,11 +14,11 @@ export function LocalSession() {
   return (
     <>
       <PageHeading
-        title="Local provisioned identity"
-        description="Use a short-lived access token provisioned by your local operator."
+        title="Provisioned identity"
+        description="Use a short-lived access token provisioned by the operator."
       />
       {!auth.localAvailable ? (
-        <p>This build does not enable local provisioned sessions.</p>
+        <p>This build does not enable provisioned sessions.</p>
       ) : (
         <form
           onSubmit={(e) => {
@@ -49,7 +50,11 @@ export function LocalSession() {
             />
           </label>
           <button className="button primary" disabled={busy}>
-            {busy ? 'Connecting…' : 'Connect local identity'}
+            {busy
+              ? 'Connecting…'
+              : local
+                ? 'Connect local identity'
+                : 'Connect provisioned identity'}
           </button>
           {Boolean(error) && <p role="alert">{errorCopy(error)}</p>}
           <p className="small">

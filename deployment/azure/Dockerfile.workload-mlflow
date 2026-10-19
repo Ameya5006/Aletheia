@@ -1,0 +1,5 @@
+ARG MLFLOW_BASE
+FROM ${MLFLOW_BASE}
+USER root
+COPY --chown=10001:10001 --chmod=0500 deployment/azure/cloud-entrypoint.sh /usr/local/bin/aletheia-cloud-entrypoint
+USER root

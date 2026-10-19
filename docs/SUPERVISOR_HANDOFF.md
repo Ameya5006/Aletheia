@@ -1,199 +1,182 @@
-# Supervisor Handoff - Interactive workflow UI acceptance repair
+# Supervisor Handoff - final Azure closure checks (2026-10-19)
 
-1. **Current milestone/status:** repair of the existing post-Stage-3 interactive
-   case-input/prediction milestone. Implementation and affected verification pass;
-   external supervisor acceptance remains pending. No next milestone authorized.
-2. **Implemented:** authenticated Overview is a neutral **No analysis is selected**
-   state linking New Analysis and Analysis History. No preloaded prediction,
-   probability, case fetch or attribution appears. Sign-in, navigation and review
-   guidance use neutral wording. Legacy unselected case route redirects to the
-   empty manual form; explicitly selected archived records remain read-only.
-   Presentation-only labels cover frozen provenance/model-card/reliability and
-   historical review/audit strings. Stored evidence, enums, numbers and hashes
-   are unchanged. The existing 13-field prediction/save/reopen/rerun/reset workflow
-   and authentication/RBAC remain intact.
-3. **Repair files:** `frontend/src/pages/{Overview,CaseAnalysis,SignIn,Review,
-   ModelCard,Reliability,AuditTrail,Analyses}.tsx`, `components/{Shell,ui}.tsx`,
-   `frontend/tests/app.test.tsx`, new `tests/product-copy.test.ts`, browser
-   workbench/authenticated/interactive tests; `deployment/tests/scan.py` adds an
-   exercised `--only-frontend` option. README and PROJECT_REPORT updated. Other
-   working-tree files belong to the preceding authorized milestone; see the exact
-   final status below/in the ignored evidence file. No test fixture was renamed
-   or changed for this repair.
-4. **Decisions/why:** an empty selected-analysis state is truthful even with saved
-   history and avoids adding automatic record selection. Historical protocol
-   terminology is translated only when displayed, rather than changing frozen
-   evidence or API contracts. Static AST copy checks and rendered route checks
-   include expanded metadata. Internal protocol terms remain legitimate in source,
-   API schemas and fixtures; generated-asset inspection classifies 11 occurrences
-   as internal identifiers/compatibility/formatter code, not product copy.
-5. **Executed verification:** commands below passed on the final repair. Full
-   frontend unit regression ran once after focused checks. No results are summed
-   across partial runs. Browser boundary tests use HTTP fixtures; the separate
-   interactive browser test uses the real stack and no API interception.
-6. **Model/ML:** no new experiment, fitting, calibration, model selection or held-out
-   access. Frozen Histogram Gradient Boosting plus sigmoid calibration, threshold
-   0.5, 13 raw string fields / 43 transformed columns remain. Model SHA-256
-   `8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`;
-   backend release
-   `65f2302cc9c4795142567296cc6b16143fad5abfe4df7b04152975748c2ec271`;
-   audit results
-   `2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
-   Original exact field mapping, preprocessing, persistence and explanation flow
-   are in PROJECT_REPORT's interactive milestone section. New Analysis applies
-   strict versioned validation, canonical raw row, frozen preprocessing/model/
-   calibrator, signed reference-contrast explanation, version-bound immutable
-   prediction/audit snapshot, then optional Save history membership. Stability
-   remains model-level; no attribution is causal. No LLM supplies values.
-7. **Problems:** the old Overview test asserted 12.78%, preserving the acceptance
-   defect. New tests assert no selected case/probability/reference-case requests.
-   Focused tests needed real lazy-module preload and a nonambiguous heading query;
-   desktop browser locator needed sidebar scope after adding a duplicate CTA.
-   A Windows npm cleanup chain lingered across user interruption; final harness
-   owns/stops its direct Vite child. Its earlier 2.9h summary is not a latency
-   measurement. Real browser first needed an explicit successful session wait;
-   another attempt returned HTTP 504 (root cause unestablished, inputs preserved).
-   Final serial real journey passed without backend restart or weakened limits.
-   Failed logs are retained; see PROJECT_REPORT for verified lessons.
-8. **Known limitations/security:** local review only, no clinical/commercial/public
-   deployment claim. Login, Signup and real external OIDC are deferred. No
-   case-specific stability, causal recourse, arbitrary upload or LLM narrative.
-   The fresh frontend vulnerability scan reports zero findings; unchanged backend
-   retains 1 critical/55 high and test image 1 critical/65 high findings with their
-   existing digest-bound dispositions. Do not interpret this as vulnerability-free
-   infrastructure or production approval.
-9. **Architecture:** no new architecture, API, migration, dependency, authentication,
-   RBAC, database, audit or ML change in this repair. Existing architecture notes
-   still describe the preceding milestone. Raw model-card/audit evidence is not
-   altered by its human-readable presentation.
-10. **Documentation:** README describes neutral Overview and empty input;
-    PROJECT_REPORT incrementally records rationale, alternatives, tests, failures,
-    evidence reuse, limitations and viva questions. This handoff replaces the old
-    state. CURRENT_TASK is not edited.
-11. **Evidence to inspect:** new ignored root
-    `artifacts/interactive-verification/ui-repair-20261015/`: final-static-results,
-    frontend-complete log/result, focused-pass log, browser-boundaries-final
-    log/result, browser-real-verified log/result, browser.json, scan-summary,
-    frontend scan/SBOM/licence inventory, frontend-html + image-asset-inspection,
-    python-regression-reuse, protection-final and git-status-final. Logs can hold
-    local credentials; they are ignored and must not be committed. The entire
-    previous `resume-20261015b` evidence root is preserved.
-12. **Environment/images:** Docker Desktop updated, healthy `desktop-linux` server
-    29.8.2. Review project `aletheia-interactive-20261015b`, port 18081; old Stage 3
-    restore containers are separate. Only frontend rebuilt/recreated, tagged
-    `aletheia-interactive-20261015b-frontend:ui-repair-20261015`. New index digest
-    `sha256:7845f8c0f1ec7897c65c373da9af490c37c55119d60985f2534da2b26e1af185`,
-    scanned config
-    `sha256:0ba668fa91b5dc2233e7ea3d5e8b724973052016dba03247d6232547e9f57807`.
-    Fresh scan/SBOM/103-entry licence inventory bind matching runtime layers.
-    Backend unchanged index
-    `sha256:0063dfacebdbd22e5a09fc0efebe686e0be40841d89e7bc0245044372e41e406`;
-    regression unchanged index
-    `sha256:da2911c0235bd9ea74d082fc2607b886b7eb73e00b84b48db67ef69cf05ed5a1`.
-    PostgreSQL unchanged index
-    `sha256:3a53d82d19ffeb494281b3cb4c17193b4ba09311f265e916ae1acb711dbbce7c`.
-    Unchanged image evidence is reused only for matching digests/inputs.
-13. **Protection/Git:** initial milestone branch `main`, HEAD/upstream
-    `a5e64dc3839435e6ef03f6efd2a3aed2eb5be418`, divergence 0/0; original status
-    only `M docs/CURRENT_TASK.md`. This repair resumed inspected authorized
-    in-progress changes (not an empty tree); starting status is recorded separately.
-    Task SHA-256 remains
-    `AB2FE7FA54652B733A6F64E3B0A1D27720CDF21F14C6ED0D0B516F10B190B652`.
-    Existing stash remains `c6b91a13bf4338e559dfaad49f850dd719f5ca47`, caption
-    `On main: wip: credit research core before healthcare realignment`.
-    Final protection evidence checks 1,338 repair-baseline files, permits only
-    named repair edits, and checks 924 original protected artifacts (914 Stage 3
-    plus 10 frozen model/audit files). All 1,148 prior milestone evidence files
-    and all three frontend fixture files are byte-identical; no protected or unexplained mismatch was found.
-    See recorded final results. No staged changes, commit, push, branch/history/stash mutation.
-14. **Unresolved questions:** external supervisor must accept the repaired UI.
-    The transient HTTP-504 cause is not established. No additional implementation
-    milestone is authorized by passing these checks.
-15. **Suggested next step:** manually inspect Overview, sign-in, New Analysis,
-    saved history and expanded evidence in the running review stack, then decide
-    acceptance. Commit recommendation, if accepted:
-    `feat: add interactive case prediction workflow`. User performs Git mutations.
+## 1. Current milestone and status
 
-| Command (from frontend unless noted) | Exact final result |
+Azure application acceptance and the remaining local/evidence gates are verified,
+with the retained security findings below. **The milestone remains open until
+the actual hosted GitHub Actions run passes.** The user explicitly granted a
+one-time exception to the no-commit/no-push restrictions for this reviewed Azure
+closure. Permanent governing files remain unchanged by that exception.
+
+Public URL: https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io
+
+## 2. What changed and why
+
+- Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.
+- Finished API, MLflow and stopped-operator scans/SBOMs/licence inventories. The
+  API archive was reused after blob/config/layer/ACR binding; only missing archives
+  were exported. No image rebuild, push or app deployment occurred in this closure.
+- Fixed `deployment/azure/ci-deploy.sh` to snapshot the revision actually serving
+  100% traffic, rather than a possibly failed latest revision. Missing/ambiguous
+  traffic fails before migration/update. Added three command-boundary regression
+  tests in `tests/deployment/test_ci_rollback.py` and included them in the workflow.
+- Removed literal non-secret Azure account identifiers from the pending workflow
+  and role templates to follow CURRENT_TASK's handling rule. The workflow reads
+  repository Actions variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and
+  `AZURE_SUBSCRIPTION_ID`. Role JSON templates require in-memory substitution of
+  `${AZURE_SUBSCRIPTION_ID}`. Live identities, permissions and architecture did
+  not change. All three required GitHub repository Actions variables were absent,
+  were configured through existing authenticated tooling, and were read back to
+  match the approved Azure identity. Their values were never printed or recorded.
+- Reconciled README, PROJECT_REPORT, DEPLOYMENT_ARCHITECTURE and this handoff.
+  Prior handoffs, original scan bytes, failed candidates and attempts are preserved.
+
+## 3. Exact security evidence
+
+| Image | Critical / High / Medium / Low / Unknown | Complete SBOM / licence entries |
+|---|---|---|
+| Frontend (preserved verified result) | 0 / 0 / 0 / 0 / 0 | 71 / 103 |
+| api | 1 / 63 / 112 / 105 / 1 | 240 / 772 |
+| mlflow | 1 / 63 / 112 / 105 / 1 | 240 / 772 |
+| ci_operator | 1 / 63 / 112 / 105 / 1 | 240 / 772 |
+
+All six remaining Trivy scan/SBOM commands exited 0. These are successful
+evidence-generation commands, **not clean backend scans**. All 282 findings per
+backend-family image remain recorded, without suppression. Raw CycloneDX 1.7
+outputs contain 239 components and 771 licence entries each; separate complete
+inventories add native SQLite 3.54.0 with its actual SHA-256 and public-domain
+licence/source reference. Component/reference and exact-digest binding checks
+passed. An external JSON-schema validator was not installed/run; licence
+inventory is not legal clearance.
+
+The critical zlib finding concerns MiniZip; the inspected binary/library and
+affected symbol are absent, consistent with Debian Bookworm's published note.
+Six fix-version findings (four HIGH, two MEDIUM) are pip-vendored packages.
+Installed top-level setuptools 84.0.0 and urllib3 2.8.0 are fixed; pip 26.2.1
+is still the latest official release checked. No user-directed installer path
+exists in reviewed serving entrypoints. Other distribution findings have no
+fixed Bookworm version reported and remain residual risk. No unsupported vendor
+surgery or unrelated dependency upgrade was made. Inspect every disposition in
+`artifacts/azure-preflight/final-closure-20261019/*-dispositions.json`.
+
+Exact current ACR index digests:
+
+- Frontend: `sha256:12176c6a16302f1f4208c7878ead164701c08704ad3620fddc744ada63547416`
+- API: `sha256:06f7bb2229fb1c77b6561afaeccdbf51c9a0243005fb0ea647a8d6de44f683ab`
+- MLflow: `sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d`
+- Stopped operator: `sha256:3f6b5f2fc264d26c57da3d9b87174eae37438c7bfdbc2f0ef22164ddb65ec8dd`
+
+Frontend scan SHA-256, corrected from an earlier 65-character transcription:
+`78e3cdf93a18350b1d6b6c4da2a9cd38bc56ebdbf74a5b445c8bfa4f9b72d344`.
+Its 194,958-byte JSON and original timestamp are unchanged. Frontend SBOM hash:
+`99b867cf4a7ec05e2275c84a8f38e716c00d49fe14dbb9a26827b2720c8c108b`.
+
+## 4. Tests actually executed and preserved acceptance
+
+| Check | Exact result |
 |---|---|
-| `npm.cmd test -- --maxWorkers=1 tests/app.test.tsx tests/product-copy.test.ts` | 38 passed / 2 files, 36.86s, exit 0 |
-| `npm.cmd test -- --maxWorkers=1` (complete, once) | 80 collected/passed, 0 failed/skipped/deselected, 6 files, 46.92s (wrapper 50.084s), exit 0 |
-| `node node_modules/@playwright/test/cli.js test browser/workbench.spec.ts browser/authenticated.spec.ts` | 7 passed, 4.1m (wrapper 260.297s), exit 0; responsive/keyboard/dark/reduced-motion/axe/copy checks |
-| `node node_modules/@playwright/test/cli.js test browser/interactive.spec.ts` | 1 passed, 20.0s (wrapper 21.813s), exit 0; real prediction/save/reopen/changed rerun/immutable original/reset + evidence copy checks |
-| Real browser axe | 18 checks, 6 states x 3 viewports, zero violations |
-| `npm.cmd run typecheck` | exit 0, 23.954s |
-| `npm.cmd run lint` | exit 0, 14.948s, zero allowed warnings |
-| `npm.cmd run format:check` | exit 0, 10.002s |
-| `npm.cmd run build` | exit 0, 28.846s wrapper; Vite build 1.05s |
-| `npm.cmd run contract:check` | exit 0, 61.810s; real OpenAPI + 10 responses match |
-| `npm.cmd run licenses` | exit 0, 2.549s; 29 direct entries |
-| `python -m ruff check deployment/tests/scan.py`; `python -m ruff format --check deployment/tests/scan.py` | passed, 1 file; new frontend-only scan option directly exercised |
-| Compose config / frontend build / frontend-only up / frontend scan + SBOM + licences | exit 0; fresh frontend findings 0, licence entries 103; runtime/export binding matches |
+| Frontend formatting | Passed after Prettier-only correction |
+| Rollback regression before fix | 2 failed, 1 passed; correct failures reproduced |
+| Rollback regression after fix | 3 passed; local command simulation only |
+| Focused deployment unit suite | 8 passed in 2.67s; no real backup/restore/cloud workflow |
+| Local CI static checks | 1 workflow, 3 rendered role templates, 7 Python files, 6 shell scripts and 12 PowerShell scripts parsed; Ruff passed |
+| Credential-pattern/source review | Zero findings across the 74 reviewed candidate paths; 50 deployable source/asset files also passed; no files staged |
+| Frozen/protected inputs | 32 tracked frozen inputs, entrypoint and pin passed; accessible protection result below |
+| Fresh read-only Azure guard | Spending limit On, Consumption-only mode, exact inventory, internal ingress, min/max and current image digests passed |
+| Fresh federation/RBAC read | One exact main-branch trust, zero application password/certificate credentials, nine scoped role assignments; custom role actions match templates |
+| Preserved public acceptance | HTTPS/live/ready 200; public API/MLflow 404; unauthorized history 401; engineer/admin boundary 403 |
+| Preserved prediction/workflow | 201; probability `0.16546872246399696`; sign-in/manual case/save/history/reopen/changed rerun/immutable original/reset/review/audit passed |
+| Preserved restart/cold persistence | Saved predictions/audits retained; actual zero replicas observed; readiness 504, 504, then 200 |
+| Preserved manual live rollback | MLflow previous `0000001` ready, then current `0000002` restored ready; attempted API previous `0000002` live 200/ready 503, then current `0000003` restored ready |
+| Hosted CI / OIDC / automated rollback | **Not run; no run URL or hosted success claimed** |
 
-The complete **unchanged Python** result remains 304 collected, 303 passed,
-0 failed, 0 skipped, 1 `live_data` deselected, 63 warnings, 3378.28s, exit 0;
-one invocation, not combined partial runs. Exact Compose regression command is
-recorded in `python-regression-reuse.json` (`docker compose ... --profile regression
-run --rm regression`), wrapper 3428.969s. All 104 regression input files and the
-immutable test-image config/rootfs match. CURRENT_TASK permits reuse for unchanged
-inputs and prohibits unnecessary unchanged PostgreSQL/restore/recovery reruns.
-This Python evidence validates neither changed frontend nor the changed scan
-helper. The changed frontend's complete regression and affected gates were run
-fresh above. No old frontend regression is claimed for this repair.
+The current traffic query selected API `api--0000003` and repaired frontend
+`frontend--0000002` as CI rollback bases. The preserved older frontend
+`frontend--0000001` retains its baseline findings. Manual and simulated rollback
+evidence does not establish hosted execution of the rollback branch.
 
-Exact retained Python regression command (not rerun for this UI repair):
+Frozen model: `8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`;
+release: `65f2302cc9c4795142567296cc6b16143fad5abfe4df7b04152975748c2ec271`;
+evidence: `2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
+No model training, fitting, calibration, held-out analysis or full offline
+regression was repeated. Application OIDC/Signup and clinical validation remain
+outside this educational showcase.
 
-```text
-docker compose --env-file C:\code\xai-decision-auditor\artifacts\interactive-verification\resume-20261015b\local\config.env -f deployment/compose.yaml -f deployment/compose.test.yaml --profile test --profile operator -f C:\code\xai-decision-auditor\artifacts\interactive-verification\resume-20261015b\override.json --profile regression run --rm regression
-```
+## 5. Protection report resolution
 
-Exact final `git status --short --untracked-files=all` (includes preceding authorized work):
+The 2,193-path baseline has 1,744 immutable matches, six authorized edits,
+four classified mutable credential paths and 439 inaccessible generated runtime
+paths. None of those 439 is tracked repository input. They remain UNVERIFIED;
+no content or ACL change was made. **Zero unexplained accessible mismatches**
+is the gate, and it passes. Original manifests/policies remain preserved; the
+reviewed README status correction has a separate exact-hash/diff classification.
+The inaccessible runtime class is a disclosed evidence limitation, not a mismatch.
 
-```text
- M README.md
- M deployment/Dockerfile.frontend
- M deployment/compose.yaml
- M deployment/tests/scan.py
- M deployment/tests/verify.py
- M deployment/tests/workspace.py
- M docs/ARCHITECTURE.md
- M docs/CURRENT_TASK.md
- M docs/PROJECT_REPORT.md
- M docs/SUPERVISOR_HANDOFF.md
- M frontend/browser/authenticated.spec.ts
- M frontend/browser/workbench.spec.ts
- M frontend/contracts/openapi.json
- M frontend/playwright.config.ts
- M frontend/src/App.tsx
- M frontend/src/api/contracts.ts
- M frontend/src/auth/session.tsx
- M frontend/src/components/Shell.tsx
- M frontend/src/components/ui.tsx
- M frontend/src/pages/AuditTrail.tsx
- M frontend/src/pages/CaseAnalysis.tsx
- M frontend/src/pages/ModelCard.tsx
- M frontend/src/pages/Overview.tsx
- M frontend/src/pages/Reliability.tsx
- M frontend/src/pages/Review.tsx
- M frontend/src/pages/SignIn.tsx
- M frontend/src/styles/app.css
- M frontend/tests/app.test.tsx
- M src/aletheia/application/api.py
- M src/aletheia/application/release.py
- M src/aletheia/application/schema.py
- M src/aletheia/application/store.py
- M tests/application/test_postgres_api.py
-?? deployment/tests/interactive_browser.py
-?? deployment/tests/interactive_stack.py
-?? frontend/browser/interactive.spec.ts
-?? frontend/src/api/analyses.ts
-?? frontend/src/pages/Analyses.tsx
-?? frontend/src/pages/LocalSession.tsx
-?? frontend/tests/analyses.test.tsx
-?? frontend/tests/case-fixtures.json
-?? frontend/tests/product-copy.test.ts
-?? migrations/versions/0004_case_input.py
-?? src/aletheia/application/case_input.py
-?? tests/application/test_case_input.py
-?? tests/application/test_case_workflow.py
-```
+## 6. Backup/restore and PostgreSQL
+
+Fresh backup `artifacts/azure-preflight/final-local-backup-20261019T051444Z`
+still matches all five full SHA-256 values and sizes in its manifest. Reused
+isolated restore evidence confirms `0004_case_input`, approved active release,
+one registered model, readiness 200, prediction 201 and matching restored volume
+contents; the initial cold prediction 504 and successful retry are retained.
+Only that temporary restore project was removed earlier. The original expired
+identity certificate, 13 October Stage 3 backup, fresh archives and original
+source volumes remain preserved. No restore or backup operation was repeated.
+
+Fresh PostgreSQL control-plane read: Ready, version 18, Standard_B1ms, 32 GiB,
+seven-day backup, HA Disabled, `require_secure_transport=ON`. Its sole firewall
+rule remains `AllowAzureServicesShowcase` (0.0.0.0/0.0.0.0), the approved bounded
+Azure-services exception. Prior verified migration head is `0004_case_input`;
+application/MLflow roles, TLS and persistence semantics remain unchanged.
+
+## 7. Exact Azure inventory, budget and cost
+
+There are 13 approved group resources, all in Southeast Asia:
+
+- `rg-aletheia-showcase-sea-01` (8): `cae-aletheia-sea-01` (Express environment),
+  `acraletheiasea1017` (Standard ACR), `id-aletheia-pull-sea-01` (pull identity),
+  `pg-aletheia-sea-1017` (PostgreSQL), and stopped apps `frontend`, `api`,
+  `mlflow`, `db-bootstrap`.
+- `rg-aletheia-workload-sea-01` (5): `cae-aletheia-workload-sea-01`
+  (WorkloadProfiles/Consumption only), serving apps `frontend`, `api`, `mlflow`,
+  and stopped no-ingress `release-operator`.
+
+Only frontend is external HTTPS. API is 1 vCPU/2 GiB; all three serving apps
+are min 0/max 1. API/MLflow retain `.internal.` FQDNs and `http://api` /
+`http://mlflow` discovery. No Dedicated profile, VNet, NAT, Private DNS,
+load balancer or paid monitoring workspace was introduced. No Azure resource
+or persistent Docker data was deleted.
+
+The additional subscription warning budget `aletheia-showcase-warning` now
+exists: INR 100 monthly, enabled 50/80/100 notifications, one contact per alert.
+The earlier `RBACAccessDenied` is preserved as historical evidence and is no
+longer an active budget limitation. A budget warns; spending limit remains On
+separately. Fresh Cost Management month-to-date pre-tax cost remains
+**INR 11.7066685215817**. No numeric zero forecast, future free-tier guarantee,
+cash-versus-credit settlement or fresh remaining-credit amount is asserted;
+billing can lag. Existing student benefits do not erase the reported cost.
+
+## 8. Evidence, Git state and next action
+
+Inspect ignored `artifacts/azure-preflight/final-closure-20261019/`: summary,
+exact archive bindings, raw and complete SBOM/licence inventories, complete
+findings/dispositions, component applicability, preserved acceptance hashes,
+protection resolution, cost/budget readback, federation/scopes, static checks,
+and the explicit reviewed source list. Original failed attempts and earlier
+handoffs remain preserved. Generated evidence, archives, dumps, tokens,
+certificates, keys and local secrets are excluded from Git.
+
+Branch `main`; HEAD `07415aaf9eb58b028e2f629d884199016ccbe13f`; live upstream was read at the same SHA,
+0 ahead / 0 behind. **12 modified tracked paths, 62 untracked
+paths, zero staged files.** The exact status and reviewed source lists are
+stored as ignored closure evidence. Existing stash remains
+`c6b91a13bf4338e559dfaad49f850dd719f5ca47`. No commit or push occurred.
+
+Next action under the user's explicit one-time exception: selectively stage the
+74 reviewed source/documentation paths, verify the index, commit and push main,
+then observe a real hosted run through OIDC, tests, image builds/digest deployment,
+controlled migration and smoke checks. Variable configuration is now verified.
+The required commit message is:
+`feat: deploy Aletheia to Azure with secure CI/CD`.
+Stop for external supervisor review only after the hosted gate passes, or
+report a reproduced external permission/security blocker without claiming closure.

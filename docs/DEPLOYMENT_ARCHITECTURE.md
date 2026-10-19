@@ -1,5 +1,97 @@
 # Deployable architecture and tooling decision
 
+## Current Azure Workload Profiles deployment (2026-10-19)
+
+The approved cloud path is public HTTPS `frontend` → same-environment
+`http://api` → `http://mlflow`, with API and MLflow private ingress and
+PostgreSQL Flexible Server reached over verified TLS using separate
+least-privilege roles. ARM 2026-07-01 reports environment mode
+`WorkloadProfiles`, provisioning `Succeeded`, one Consumption profile and no
+VNet or Log Analytics destination. API/MLflow FQDNs contain `.internal.`;
+external direct probes return 404 while frontend-routed health and an
+authenticated prediction succeed. API is 1 vCPU/2 GiB and all serving apps
+are min 0/max 1. The existing Express environment and all four old apps
+remain stopped, retaining their evidence and deny rules.
+
+The deployment source is `deployment/azure/`. `ci-plan.bicep` validates and
+previews only the already existing resources. The CI script updates app images
+by immutable ACR digest, uses a stopped-by-default no-ingress operator for
+migration and smoke prediction, and can route traffic back to prior revisions.
+GitHub Actions uses an Entra federated identity credential and narrowly scoped
+RBAC; no long-lived Azure credential is stored in GitHub. The workflow is
+implemented and locally checked, and its migration/smoke commands passed in
+Azure, but the workflow has not yet run on GitHub because commit/push is
+forbidden in this task. Current Cost Management returned a nonzero INR
+11.7066685215817 month-to-date pre-tax amount, mostly from the earlier
+Express apps; a numeric zero future forecast is not asserted. The historical
+ingress checkpoints below are preserved for the supervisor.
+
+Before the first hosted run, configure repository Actions variables named
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` with the
+existing federated application's non-secret identifiers. The workflow reads
+these variables; account identifiers are not embedded in source. Their
+presence in GitHub has not been verified from this environment. The three
+`deployment/azure/ci-*-role.json` files are role templates: substitute the
+literal `${AZURE_SUBSCRIPTION_ID}` placeholder in process memory before an
+authorized role-definition operation. The existing live roles and federation
+were preserved; template sanitization grants no new permission. This follows
+the task's stricter account-identifier handling rule even though these IDs
+are not passwords. A user commit/push remains subject to the Git authority
+in `AGENTS.md` and `CURRENT_TASK.md`.
+
+## 2026-10-18 private-ingress repair audit
+
+The existing Express API and MLflow apps were kept stopped while internal
+ingress was disabled and re-enabled through the CLI, then patched through
+ARM 2025-07-01. Both accepted `external:false`, but neither acquired the
+`.internal.` FQDN expected by the general Container Apps guide. The Express
+feature guide instead says apps communicate by public URLs and short-name
+service discovery is unavailable. The frontend remains configured for its
+prior HTTPS upstream, and the backend's MLflow endpoint remains unmodified;
+neither route has been reopened. API and MLflow retain deny-all ingress rules.
+The stopped apps and all eight resources are preserved for supervisor review.
+The observed mismatch does not establish a usable private Express topology.
+
+## Historical 2026-10-18 Azure checkpoint: implementation stopped at private ingress
+
+The current Azure resource group has one Consumption Express environment,
+one Standard ACR, one pull identity, one PostgreSQL Flexible Server, and four
+Container Apps: public frontend, backend API, MLflow and a temporary controlled
+bootstrap/migration app. PostgreSQL holds separate application and MLflow
+databases; Alembic reached `0004_case_input (head)` through the temporary app.
+The supervisor-approved bounded showcase uses PostgreSQL's Azure-services
+firewall exception with TLS and least-privilege users because Express did not
+report a finite outbound IP set. No paid VNet or private DNS was added.
+
+The intended routing is browser to frontend HTTPS, frontend proxy to backend
+HTTPS, backend to MLflow and PostgreSQL, and MLflow to PostgreSQL. A direct
+outside request to the backend FQDN returned HTTP 200 even though Azure
+reported `ingress.external=false`. Deny-all ingress blocked both direct and
+frontend-proxied traffic. Tested narrow allow rules and the `.internal.` FQDN
+did not provide a private working path. This means the approved architecture
+has **not** been verified or activated. Frontend, API, MLflow and temporary
+app are stopped; API and MLflow have deny-all ingress restrictions. No real
+Azure prediction or persistence verification has occurred. The exact probes,
+image digests and remaining work are in `docs/SUPERVISOR_HANDOFF.md`. A revised
+topology requires external supervisor review before reopening service ingress.
+
+## Historical 2026-10-17 Azure checkpoint
+
+The local Compose application and interactive workflow were implemented after
+the historical design snapshot below. Azure currently contains only the
+Southeast Asia Consumption environment, Standard ACR, pull identity and
+public static frontend; the backend, MLflow, PostgreSQL, migration and CI/CD
+are not deployed. The frontend HTTPS health route passed, but the application
+cannot serve predictions. The exact outbound IP list required by the approved
+public PostgreSQL firewall is `null` in Azure's app control-plane response,
+including a delayed reread after outbound traffic. This triggers the current
+task's network hard stop. The complete current design and cost decision are
+recorded in `docs/CURRENT_TASK.md` and ignored
+`artifacts/azure-preflight/{RESOURCE_GATE_SEA_20261017,EGRESS_GATE_20261017}.md`.
+No database networking relaxation or paid private networking was deployed.
+
+## Historical design snapshot
+
 Status: research Milestones 1-3 and local Milestone 4 Stages 1-2 are implemented.
 FastAPI/PostgreSQL migrations, MLflow import/lifecycle, JWT/local-entitlement RBAC
 and React/TypeScript have local verification recorded in PROJECT_REPORT.md.

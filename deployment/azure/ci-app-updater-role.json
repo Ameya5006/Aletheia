@@ -1,0 +1,23 @@
+{
+  "Name": "Aletheia CI Existing App Updater",
+  "IsCustom": true,
+  "Description": "Update and operate only Container Apps at individually assigned existing app scopes; no delete or secret-list permission.",
+  "Actions": [
+    "Microsoft.App/containerApps/read",
+    "Microsoft.App/containerApps/write",
+    "Microsoft.App/containerApps/start/action",
+    "Microsoft.App/containerApps/stop/action",
+    "Microsoft.App/containerApps/revisions/read",
+    "Microsoft.App/containerApps/revisions/activate/action",
+    "Microsoft.App/containerApps/revisions/deactivate/action",
+    "Microsoft.App/containerApps/revisions/restart/action"
+  ],
+  "NotActions": [],
+  "DataActions": [
+    "Microsoft.App/containerApps/logstream/action"
+  ],
+  "NotDataActions": [],
+  "AssignableScopes": [
+    "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/rg-aletheia-workload-sea-01"
+  ]
+}

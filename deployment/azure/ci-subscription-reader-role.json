@@ -1,0 +1,10 @@
+{
+  "Name": "Aletheia CI Subscription Policy Reader",
+  "IsCustom": true,
+  "Description": "Read only this subscription's policy metadata for the student spending-limit guard.",
+  "Actions": ["Microsoft.Resources/subscriptions/read"],
+  "NotActions": [],
+  "DataActions": [],
+  "NotDataActions": [],
+  "AssignableScopes": ["/subscriptions/${AZURE_SUBSCRIPTION_ID}"]
+}

@@ -1,0 +1,8 @@
+ARG BACKEND_BASE
+FROM ${BACKEND_BASE}
+USER root
+COPY --chown=10001:10001 deployment/azure/cloud-deployment-pin.json /state/deployment.json
+COPY --chown=10001:10001 --chmod=0500 deployment/azure/ci-migrate.sh /usr/local/bin/aletheia-ci-migrate
+COPY --chown=10001:10001 --chmod=0500 deployment/azure/ci-smoke.sh /usr/local/bin/aletheia-ci-smoke
+COPY --chown=10001:10001 deployment/azure/ci-smoke.py /app/deployment/azure/ci-smoke.py
+USER root

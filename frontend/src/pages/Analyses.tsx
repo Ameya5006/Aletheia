@@ -29,8 +29,9 @@ function validation(field: InputField, value: string | undefined) {
 function Access() {
   return (
     <p role="alert">
-      An authorized local provisioned identity is required.{' '}
-      <Link to="/local-session">Connect local identity</Link>. Login and Signup remain future scope.
+      An authorized provisioned identity is required.{' '}
+      <Link to="/local-session">Connect provisioned identity</Link>. Login and Signup remain future
+      scope.
     </p>
   );
 }

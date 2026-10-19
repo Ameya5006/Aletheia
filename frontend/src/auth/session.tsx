@@ -69,6 +69,20 @@ export function sessionFromUser(user: User): Session {
     expired: false,
   };
 }
+function provisionedRoles(token: string): string[] {
+  try {
+    const segment = token.split('.')[1];
+    const claims: unknown = segment
+      ? (JSON.parse(atob(segment.replaceAll('-', '+').replaceAll('_', '/'))) as unknown)
+      : null;
+    const roles = claims && typeof claims === 'object' && 'roles' in claims ? claims.roles : null;
+    return Array.isArray(roles)
+      ? roles.filter((role): role is string => typeof role === 'string' && role in ROLE_LABELS)
+      : [];
+  } catch {
+    return [];
+  }
+}
 export function SessionProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [manager] = useState(createManager);
@@ -104,15 +118,32 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const auth: Auth = {
     ...session,
     configured: Boolean(manager),
-    localAvailable: import.meta.env.VITE_LOCAL_IDENTITY === 'true',
+    localAvailable:
+      import.meta.env.VITE_LOCAL_IDENTITY === 'true' ||
+      import.meta.env.VITE_PROVISIONED_IDENTITY === 'true',
     connectLocal: async (token) => {
-      if (import.meta.env.VITE_LOCAL_IDENTITY !== 'true')
-        throw new Error('Local identity unavailable');
+      const local = import.meta.env.VITE_LOCAL_IDENTITY === 'true';
+      if (!local && import.meta.env.VITE_PROVISIONED_IDENTITY !== 'true')
+        throw new Error('Provisioned identity unavailable');
       const localApi = new ApiClient(undefined, () => token);
-      const result = await localApi.request('/session', z.object({ roles: z.array(z.string()) }), {
-        private: true,
-      });
-      setSession({ token, roles: result.data.roles, expired: false });
+      if (local) {
+        const result = await localApi.request(
+          '/session',
+          z.object({ roles: z.array(z.string()) }),
+          {
+            private: true,
+          },
+        );
+        setSession({ token, roles: result.data.roles, expired: false });
+      } else {
+        await localApi.request(
+          '/analyses?limit=1',
+          z.object({ items: z.array(z.unknown()), next_cursor: z.string().nullable() }),
+          { private: true },
+        );
+        // These are display hints; the API checks signed claims and DB entitlements.
+        setSession({ token, roles: provisionedRoles(token), expired: false });
+      }
     },
     signIn: async () => {
       await manager?.signinRedirect();

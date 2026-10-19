@@ -1,6 +1,53 @@
 # Aletheia — Explainable AI Decision Auditor
 
-Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. This repository contains both data foundations, a credit training-only baseline and a healthcare model experiment with a locked holdout gate. It has a local Docker Compose application with authorized manual case entry, immutable results and saved analysis history; no public deployment.
+Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. The repository includes a locked healthcare model, local Docker Compose stack and an Azure showcase with authorized manual case entry, immutable results and saved analysis history. It is educational, not a clinical decision system; use invented cases only.
+
+## Azure showcase — supervisor review state
+
+The verified public entry point is
+<https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io>.
+The frontend uses Azure-managed HTTPS and proxies `/api` to `http://api` inside
+the Southeast Asia Workload Profiles Container Apps environment. The API (1
+vCPU/2 GiB) and MLflow have internal ingress only; direct public-style requests
+to either returned 404. All three serving apps have zero minimum and one
+maximum replica. PostgreSQL 18/B1ms stores predictions, audits and MLflow
+metadata with required TLS and least-privilege application roles. The
+supervisor-approved Azure-services PostgreSQL firewall exception is a bounded
+showcase limitation. The earlier Express environment and its four apps remain
+stopped and preserved.
+
+A real authenticated invented-case prediction returned probability
+`0.16546872246399696`; save, history, reopen, changed rerun, immutable
+original, reset, RBAC checks and PostgreSQL persistence after restart and
+scale-to-zero passed. Cold readiness returned 504 twice before 200. Warm the
+URL two to three minutes before a presentation and allow for this cold start.
+The current migration head is `0004_case_input`. On the machine holding the
+existing ignored showcase signing key, refresh a 14-minute reviewer token
+without printing it:
+
+```powershell
+.\.venv\Scripts\python.exe deployment/azure/cloud-identity.py token --role reviewer
+```
+
+The command writes only to ignored
+`artifacts/azure-preflight/cloud-private/reviewer.token`. Open `/local-session`
+on the HTTPS frontend and enter the token there; never paste it into Git, logs
+or an issue. The current Azure configuration, evidence and exact
+limits are in [the supervisor handoff](docs/SUPERVISOR_HANDOFF.md) and
+[project report](docs/PROJECT_REPORT.md).
+
+The GitHub Actions OIDC workflow is implemented and its local checks plus
+controlled Azure migration/smoke commands passed. Manual live rollback and
+restoration were verified; hosted OIDC deployment and automated rollback
+remain unverified pending an authorized commit/push. Local rollback command
+simulations now verify recovery to the revision serving traffic. No commit,
+push, local Docker cleanup
+or Express-resource deletion was performed in this continuation. Azure Cost
+Management reported nonzero month-to-date pre-tax cost; see the handoff for
+the exact amount, free-service eligibility and settlement limits. An INR 100
+monthly warning budget now exists with enabled 50%, 80% and 100% notifications.
+The earlier `RBACAccessDenied` attempt is preserved as historical evidence;
+the subscription spending limit remains On.
 
 ## Interactive case workflow â€” local supervisor review
 
@@ -43,8 +90,9 @@ Open `/local-session` and supply the provisioned engineer token from the ignored
 in memory; refresh/sign-out requires reconnecting. The server still verifies its
 signature, expiry, audience and current local role grants. This is the existing
 local provisioned-identity mechanism, not Login, Signup, password management or
-real external OIDC; those remain deferred. Keep any later cloud deployment
-private/access-restricted until production authentication is approved.
+real external OIDC; those remain deferred. The Azure showcase instead uses
+provisioned short-lived tokens and verified application RBAC; the public
+frontend does not expose API or MLflow ingress.
 
 Verification used healthy Docker Desktop desktop-linux 29.8.2 after the engine
 update, a fresh Compose project, focused tests, real browser/axe checks, fresh
@@ -162,8 +210,9 @@ host ports, and this HTTP-only local proxy deliberately emits no HSTS.
 ## Frontend setup and execution (Macro Milestone 4 Stage 2)
 
 The Stage 1 backend and Stage 2 React/TypeScript frontend are implemented locally.
-Real external OIDC-provider integration is unverified; sign-out clears the local
-session only. Live OIDC logout remains a Stage 3 verification item. Docker Compose is implemented locally; CI/CD, public hosting and production monitoring remain unimplemented.
+At this historical Stage 2 checkpoint, real external OIDC-provider integration
+was unverified and sign-out cleared local session only. Docker Compose was
+implemented locally; the current Azure and CI status is recorded above.
 
 Use Node.js 24 or newer and the pinned npm lockfile. From the repository root:
 
@@ -219,7 +268,7 @@ hosting is outside Stage 2. Runtime code contains no fixture fallback.
 
 A risk score alone does not tell an ML engineer whether a model generalizes, or a human reviewer why a decision deserves attention. Aletheia's intended workflow joins valid model comparison, calibrated probabilities, explanations, constrained alternatives, subgroup checks, similar training cases and durable audit evidence. Intended users are ML engineers, human risk/clinical reviewers, and administrators. The healthcare demonstration is educational and **not a clinical decision support device or treatment recommendation**. It must not process real patient submissions in a public demo.
 
-The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The FastAPI/PostgreSQL/MLflow backend and React UI support independently entered cases, saved immutable analyses, review/audit persistence and operator release/entitlement workflows, alongside the earlier protocol-case route. Real external OIDC-provider integration remains deferred. Local Compose is implemented; public deployment, CI/CD, production monitoring and LLM/RAG remain unimplemented.
+The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The FastAPI/PostgreSQL/MLflow backend and React UI support independently entered cases, saved immutable analyses, review/audit persistence and operator release/entitlement workflows, alongside the earlier protocol-case route. Real external application OIDC-provider integration remains deferred. Local Compose and the Azure showcase are implemented; the GitHub Actions workflow awaits its first hosted run after a user commit/push. Production monitoring and LLM/RAG remain unimplemented.
 
 ## Current capabilities and roadmap
 
@@ -243,10 +292,10 @@ measured results are recorded in the model card, project report and handoff.
 
 **Implemented locally in Milestone 4 Stages 1–2:** MLflow import/registry,
 FastAPI, PostgreSQL, JWT/local-entitlement RBAC and React/TypeScript.
-**Unimplemented:** similar-case retrieval, GitHub Actions and
-production monitoring.
+**Unimplemented:** similar-case retrieval and production monitoring.
+**Implemented but not yet run on GitHub:** the Azure OIDC GitHub Actions workflow.
 **Deferred hosting choices:** DagsHub-hosted MLflow, DVC versus
-source hashes/locks, managed host, optional Hugging Face demo and optional
+source hashes/locks, optional Hugging Face demo and optional
 OpenRouter narrator. **Rejected:** RunwayML, which has no role in tabular auditing.
 Similar-case retrieval is not collaborative filtering; a recommendation project
 would be separate. Clinically actionable counterfactual search remains unjustified.
@@ -256,7 +305,7 @@ deployable design **committed and externally reviewed**; (2) frozen healthcare
 modelling/calibration **completed**, committed at `49a1a8c`; (3) explanations and audit methods
 **completed and externally approved at `ff9dce291`**; (4) application and MLOps; (5) public delivery
 and operations. Definitions of done are in [the execution plan](docs/EXECUTION_PLAN.md).
-Milestone 4 Stages 1–3 are implemented locally; Milestone 5 remains unimplemented. Only the current task and explicit supervisor repair authorize work; completion does not authorize progression.
+Milestone 4 Stages 1–3 are implemented locally. The Azure showcase has passed cloud acceptance and awaits external supervisor review; the GitHub-hosted CI run remains pending a user commit/push. Only the current task and explicit supervisor repair authorize work; completion does not authorize progression.
 
 **Historical Macro Milestone 4 Stage 0:** documentation-only application contract prepared
 for supervisor review. The first application will serve verified aggregate
@@ -309,8 +358,8 @@ Status is explicit. Configuration and artifacts are detailed in [deployment arch
 | PostgreSQL | Implemented local transactional append-only audit/version metadata | Secret `DATABASE_URL`, migrations/least privilege; audit write failure blocks served decision. SQLite is weaker for concurrent managed use. |
 | React + TypeScript | Implemented local reviewer browser interface calling API JSON | `VITE_API_BASE_URL`; no PHI browser persistence. Next.js adds unneeded server surface. |
 | Docker + Compose | Implemented local API/static images and Compose stack | Pinned bases, secret files and health checks; Compose is not public orchestration. Host installs drift. |
-| GitHub Actions | Selected CI tests/build/deploy gate and future code dependency graph artifact | Future protected environments/OIDC; no raw data on runners. Local checks remain fallback. |
-| Managed public host | Provisional API/UI and managed PostgreSQL deployment | Vendor, region and cost unresolved; synthetic examples only. Self-hosting costs more operations. |
+| GitHub Actions | Azure OIDC build/test/immutable-digest deployment workflow implemented; local checks and controlled Azure commands passed; hosted run pending authorized commit/push | No long-lived Azure GitHub credential or regression-image deployment; rollback traffic logic passes local command simulations, with hosted execution still unverified. |
+| Azure showcase | Southeast Asia Consumption-only Workload Profiles Container Apps, Standard ACR and PostgreSQL B1ms deployed | Public HTTPS frontend, internal API/MLflow, synthetic examples only; observed Cost Management charge and Azure-services PostgreSQL rule are documented limitations. |
 | Monitoring/drift | Selected aggregate service/model checks after deployment | Versioned baselines/alerts; drift is not proof of harm. Manual review fallback. |
 | Hugging Face cards | Selected future model/dataset provenance and limitations | No sensitive artifact upload; repository Markdown fallback. Hosted demo provisional and synthetic only. |
 | OpenRouter narrator | Provisional optional prose from computed explanations | Future API key secret; no patient values, hallucination/cost risk. Deterministic templates default. |
@@ -368,12 +417,12 @@ missing and rare groups, and have no clinical or external validation. Predictive
 and subgroup evidence use the frozen retrospective patient split. XAI uses a
 small training reference and marginal combinations that may be unlikely;
 stability is a limited recording-sensitivity probe. No clinical recourse,
-fairness certification, latency claim, security certification or deployment is
-established. Aggregate publication is not formal differential privacy. The repo's
+fairness certification, latency claim, security certification or clinical deployment is
+established. The Azure showcase is educational. Aggregate publication is not formal differential privacy. The repo's
 software licence should be checked before reuse; dataset reuse follows
 **CC BY 4.0** with UCI/Strack attribution. This is not medical advice.
 
 Read [product requirements](docs/PRODUCT_REQUIREMENTS.md), [dataset audit](docs/HEALTHCARE_DATASET_AUDIT.md), [architecture](docs/ARCHITECTURE.md), [deployment design](docs/DEPLOYMENT_ARCHITECTURE.md), [execution plan](docs/EXECUTION_PLAN.md), [project report](docs/PROJECT_REPORT.md), [credit audit](docs/DATASET_AUDIT.md), [ADRs](docs/decisions), and [supervisor handoff](docs/SUPERVISOR_HANDOFF.md).
-CURRENT_TASK.md authorizes Stage 3 only. Local backend/frontend and Compose exist;
-exact acceptance status is recorded in SUPERVISOR_HANDOFF.md.
-No subsequent milestone or Git mutation is authorized.
+The current Azure task and supervisor instructions authorize only this deployment
+continuation. Exact acceptance status and pending hosted-CI verification are in
+SUPERVISOR_HANDOFF.md. No subsequent milestone or Git mutation is authorized.

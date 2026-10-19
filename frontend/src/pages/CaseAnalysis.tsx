@@ -24,8 +24,8 @@ export function CaseAnalysis() {
       />
       {!auth.token ? (
         <p>
-          An authorized local provisioned identity is required.{' '}
-          <Link to="/local-session">Connect local identity</Link>.
+          An authorized provisioned identity is required.{' '}
+          <Link to="/local-session">Connect provisioned identity</Link>.
         </p>
       ) : (
         <ResourceState loading={record.loading} error={record.error} retry={record.reload} />
