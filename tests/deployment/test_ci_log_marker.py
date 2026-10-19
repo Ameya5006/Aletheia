@@ -55,3 +55,14 @@ def test_log_read_has_a_finite_timeout():
         raise subprocess.TimeoutExpired("az", 30)
 
     assert MODULE.observe("Migration", timeout) == {"status": "timeout"}
+
+
+def test_current_internal_health_smoke_probability_is_preserved():
+    output = (
+        "smoke prediction saved and audited: probability=0.165468722464; "
+        "internal health=200\naletheia-smoke-complete"
+    )
+    result = MODULE.observe(
+        "Smoke", lambda *a, **k: SimpleNamespace(returncode=0, stdout=output, stderr="")
+    )
+    assert result == {"status": "complete", "probability": 0.165468722464}

@@ -80,7 +80,8 @@ def observe(task, runner=None, revision=None):
         return {"status": "pending"}
     result = {"status": "complete"}
     probability = re.search(
-        r"smoke prediction saved and audited: probability=([0-9.]+); private apps=404",
+        r"smoke prediction saved and audited: probability=([0-9.]+); "
+        r"(?:private apps=404|internal health=200)",
         content,
     )
     if probability:

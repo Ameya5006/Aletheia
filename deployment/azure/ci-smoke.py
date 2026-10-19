@@ -42,15 +42,17 @@ def engineer_headers() -> dict[str, str]:
 def main() -> None:
     with httpx.Client(timeout=60, follow_redirects=False) as client:
         assert client.get(ORIGIN + "/").status_code == 200
-        for name in ("api", "mlflow"):
-            direct = f"https://{name}.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io/api/v1/health/live"
-            assert client.get(direct).status_code == 404, f"public {name} boundary"
         for _attempt in range(6):
             if client.get(API + "/health/ready").status_code == 200:
                 break
             time.sleep(5)
         else:
             raise AssertionError("API readiness after cold start")
+        for name, endpoint in (
+            ("api", "http://api/api/v1/health/live"),
+            ("mlflow", "http://mlflow/health"),
+        ):
+            assert client.get(endpoint).status_code == 200, f"internal {name} health"
         assert client.get(API + "/analyses").status_code == 401
         headers = engineer_headers()
         assert client.get(API + "/admin/model-versions", headers=headers).status_code == 403
@@ -89,7 +91,7 @@ def main() -> None:
         audit = client.get(API + "/audit-events?limit=100", headers=headers)
         assert audit.status_code == 200
         assert any(row["event_type"] == "prediction_saved" for row in audit.json()["data"]["items"])
-        print(f"smoke prediction saved and audited: probability={result['probability']:.12f}; private apps=404")
+        print(f"smoke prediction saved and audited: probability={result['probability']:.12f}; internal health=200")
 
 
 if __name__ == "__main__":

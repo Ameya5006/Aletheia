@@ -124,6 +124,29 @@ operator-only role now includes this read plus getAuthToken; no new role or
 assignment was created, and the count remains ten. The next hosted run must
 verify replica discovery, migration observation and the remaining deployment.
 
+**First complete hosted acceptance.** [Run 39275058032](https://github.com/Ameya5006/Aletheia/actions/runs/39275058032)
+at commit `1428e30714df3375885777732e5e881d51834150` completed successfully:
+OIDC, frozen fixture checks, 50 backend tests (2 warnings, 5.14s), 81 frontend
+tests, lint/type/contract/build checks, credential scan, immutable ACR push,
+Bicep validation/what-if, controlled migration, digest deployment and smoke.
+Migration and smoke each completed and the operator stopped after each task.
+The real public prediction was saved, reopened, found in history and audited;
+the safely reported probability is `0.165468722464`. Model/release/evidence
+hashes and the existing negative RBAC assertions passed. This is an actual
+hosted run, separately from earlier local validation and preserved browser/
+persistence/backup acceptance.
+
+Final source review then found a boundary-test gap: the inside-operator smoke
+used the API health path for MLflow, which could return an application 404 even
+if MLflow were public. Outside checks now run in the GitHub runner against both
+the effective `.internal.` FQDN and generated alias, using API `/api/v1/health/live`
+and MLflow `/health`. The operator separately verifies the real same-environment
+`http://api` and `http://mlflow` health routes after readiness. Six boundary cases
+first failed, then the boundary/discovery/safe-probability suite passed all 12
+tests (0.67s). A fresh outside-Azure check returned 404 on all four effective/
+alias health URLs, with valid HTTPS. Runtime ingress and application behavior
+were not changed. Hosted execution of this stronger verification is pending.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;

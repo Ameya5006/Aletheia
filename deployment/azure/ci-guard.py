@@ -4,12 +4,28 @@ import argparse
 import json
 import shutil
 import subprocess
+import urllib.error
+import urllib.request
 
 
 GROUP = "rg-aletheia-workload-sea-01"
 ENVIRONMENT = "cae-aletheia-workload-sea-01"
 DOMAIN = "whiteflower-9d03c62c.southeastasia.azurecontainerapps.io"
 RESOURCES = {ENVIRONMENT, "frontend", "api", "mlflow", "release-operator"}
+
+
+def verify_private_boundary(name, fqdn, opener=None):
+    """Run from outside Azure at each app's real health route and effective host."""
+    path = {"api": "/api/v1/health/live", "mlflow": "/health"}[name]
+    for host in (fqdn, f"{name}.{DOMAIN}"):
+        try:
+            with (opener or urllib.request.urlopen)(
+                f"https://{host}{path}", timeout=10
+            ) as response:
+                status = response.status
+        except urllib.error.HTTPError as error:
+            status = error.code
+        assert status == 404, f"public {name} boundary: HTTP {status}"
 
 
 def az(*arguments: str):
@@ -57,6 +73,8 @@ def main() -> None:
             assert (".internal." in ingress["fqdn"]) == (name != "frontend")
             assert not ingress.get("ipSecurityRestrictions")
             assert ingress["allowInsecure"] is False
+            if name in {"api", "mlflow"}:
+                verify_private_boundary(name, ingress["fqdn"])
         else:
             assert p["runningStatus"] == "Stopped" and p["configuration"].get("ingress") is None
         container = p["template"]["containers"][0]

@@ -80,6 +80,18 @@ operator-scoped log role (alongside getAuthToken), with no new assignment: ten
 remain. The diagnostic run is cancelled, operator stopped, and serving apps
 unchanged. Hosted discovery/migration/deployment/smoke verification must resume.
 
+**Verified hosted acceptance:** [run 39275058032](https://github.com/Ameya5006/Aletheia/actions/runs/39275058032),
+commit `1428e30714df3375885777732e5e881d51834150`, succeeded through OIDC,
+50 backend tests (2 warnings, 5.14s), 81 frontend tests, contract/build/credential
+checks, immutable push, Bicep validation/what-if, migration, digest deployment,
+and authenticated prediction/save/reopen/history/audit. Probability
+`0.165468722464`; frozen identities and negative RBAC passed; operator stopped.
+Final review found the MLflow public probe used an API-only route. The correction
+tests real endpoints on effective internal FQDNs and aliases from the outside
+runner, plus real short-name health from inside the operator. Twelve focused
+tests pass (0.67s); four fresh outside health requests returned 404 with valid TLS.
+This stronger hosted verification and final digest/security reconciliation remain.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.
