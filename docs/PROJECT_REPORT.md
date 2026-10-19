@@ -34,6 +34,13 @@ The preliminary incomplete patch was rejected by automatic approval review
 before applying; the completed patch supplies retrieval and retains deployment
 test coverage. No application behavior or Azure topology changed.
 
+The third [run 39263626020](https://github.com/Ameya5006/Aletheia/actions/runs/39263626020)
+failed during runner service initialization, before checkout or Azure login:
+the runner passed single quotes literally in Docker's health command and Docker
+reported `unknown shorthand flag: 'U' in -U` (exit 125). Replacing the option's
+single quotes with double quotes preserves the same health check and corrects
+runner argument parsing. The failed log is retained; Azure was unchanged.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;

@@ -25,7 +25,11 @@ deployment application tests, retrieves ten immutable-image fixtures after OIDC,
 verifies all 42 release-file hashes, pins Python 3.12.10, and supplies disposable
 runner PostgreSQL 18. PR checks remain artifact-free and cannot access Azure.
 The isolated fixture-preparation check matched all hashes and rejected tampering.
-The corrected hosted execution is pending.
+The third [run 39263626020](https://github.com/Ameya5006/Aletheia/actions/runs/39263626020)
+failed before checkout: runner parsing preserved single quotes around Docker's
+health command (`unknown shorthand flag: 'U' in -U`, exit 125). A one-line double
+quote correction preserves the health command; Azure was unchanged. Corrected
+hosted execution is pending.
 
 ## 2. What changed and why
 
