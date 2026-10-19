@@ -83,12 +83,14 @@ jobs:
           python -m ruff check --select F deployment/azure/ci-frozen-check.py deployment/azure/ci-prepare-tests.py deployment/azure/ci-guard.py deployment/azure/ci-smoke.py deployment/azure/ci-secret-scan.py
       - name: Frontend checks
         working-directory: frontend
+        env:
+          ALETHEIA_PYTHON: python
         run: |
           npm ci
           npm run lint
           npm run typecheck
           npm test
-          npm run contract:check
+          if [ "$GITHUB_EVENT_NAME" != pull_request ]; then npm run contract:check; fi
           npm run build
       - name: Scan deployable source and built assets for credentials
         run: python deployment/azure/ci-secret-scan.py

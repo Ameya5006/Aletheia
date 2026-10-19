@@ -39,6 +39,13 @@ observed main subject after confirming repository IDs; issuer/audience and RBAC
 were preserved. Readback matches `deployment/azure/github-oidc.json`; old trust
 and failure evidence remain preserved. Hosted login must still be rerun.
 
+The fifth [run 39264655113](https://github.com/Ameya5006/Aletheia/actions/runs/39264655113)
+passed OIDC, fixture retrieval, 46 backend tests (2 warnings, 6.60s), frontend
+lint/type checks and 81 frontend tests. Contract export failed because it assumed
+`.venv/bin/python`; the workflow sets its existing `ALETHEIA_PYTHON=python`
+override. Deployment runs retain the contract gate; PRs remain artifact-free.
+Image builds and Azure deployment have not run yet.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.

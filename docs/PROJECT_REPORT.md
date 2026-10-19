@@ -51,6 +51,16 @@ readback confirmed one credential, unchanged issuer/audience, and no new Azure
 password/certificate or role assignment. The original trust and failed run are
 preserved. See [GitHub's OIDC reference](https://docs.github.com/en/actions/reference/security/oidc).
 
+The fifth [run 39264655113](https://github.com/Ameya5006/Aletheia/actions/runs/39264655113)
+verified OIDC, frozen fixture retrieval and all 46 focused backend tests (2
+warnings, 6.60 seconds); frontend lint/type checks and all 81 tests also passed.
+The contract exporter then failed with `spawnSync .../.venv/bin/python ENOENT`:
+hosted setup-python supplies Python on PATH rather than a repository `.venv`.
+The workflow now uses the exporter's existing `ALETHEIA_PYTHON=python` override.
+The real contract comparison remains mandatory before deployment; untrusted PRs
+cannot fetch the private frozen fixtures and run only artifact-free checks.
+No frontend application/image change or Azure deployment occurred in these runs.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;
