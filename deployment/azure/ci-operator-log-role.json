@@ -1,0 +1,12 @@
+{
+  "Name": "Aletheia CI Controlled Operator Log Token",
+  "IsCustom": true,
+  "Description": "Mint a short-lived dev API token only at the assigned release-operator app scope; existing logstream permission controls console-log access. No exec, secret-list, write or delete action.",
+  "Actions": ["Microsoft.App/containerApps/getAuthToken/action"],
+  "NotActions": [],
+  "DataActions": [],
+  "NotDataActions": [],
+  "AssignableScopes": [
+    "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/rg-aletheia-workload-sea-01"
+  ]
+}

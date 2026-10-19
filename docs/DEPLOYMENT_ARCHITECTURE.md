@@ -32,7 +32,7 @@ Repository Actions variables named
 existing federated application's non-secret identifiers are configured and
 verified. Matching encrypted repository settings provide automatic log masking;
 the workflow reads those masked settings. No client secret or certificate is
-stored in GitHub, and account identifiers are not embedded in source. The three
+stored in GitHub, and account identifiers are not embedded in source. The four
 `deployment/azure/ci-*-role.json` files are role templates: substitute the
 literal `${AZURE_SUBSCRIPTION_ID}` placeholder in process memory before an
 authorized role-definition operation. The existing live roles and federation
@@ -40,6 +40,13 @@ were preserved; template sanitization grants no new permission. This follows
 the task's stricter account-identifier handling rule even though these IDs
 are not passwords. The user's one-time exception authorizes only this reviewed
 closure commit/push and the smallest corrections for hosted workflow defects.
+
+The controlled operator additionally needs the registered
+`Microsoft.App/containerApps/getAuthToken/action` for CLI console-log reads.
+`ci-operator-log-role.json` grants that single action only at the operator app
+assignment scope. It complements the existing logstream data action; API,
+frontend and MLflow do not receive this token action. There are ten CI role
+assignments, no exec/secret-list permission and no long-lived Azure credential.
 
 ## 2026-10-18 private-ingress repair audit
 

@@ -53,6 +53,16 @@ build/push, then the Azure guard and Bicep validation. What-if required the CLI
 or app update. The one-flag correction is covered by the shell regression.
 Built but undeployed images and failed logs remain preserved.
 
+Run 39266540207 passed structured what-if and started controlled migration.
+Independent sanitized log read confirmed `0004_case_input`, but the controller
+did not advance. CLI/provider inspection proved logs require the omitted
+`Microsoft.App/containerApps/getAuthToken/action`. A new one-action custom role
+is assigned only to release-operator; four role templates and all ten exact
+assignments are verified. Existing nine assignments and federation are unchanged.
+Hosted completion remains pending. The new operator digest `sha256:b4b741f0ab70c22a055400b249b13cfea52c3057f3976d610a50ee16434ea2ec`
+has scan/SBOM exits 0 and unchanged retained severity counts; complete inventory
+is 240 components / 772 licence entries with verified SQLite 3.54.0.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.

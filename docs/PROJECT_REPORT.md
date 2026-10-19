@@ -70,6 +70,28 @@ Azure CLI help confirms `--no-pretty-print` is required to use the output format
 The shell boundary reproduced two failing cases before adding that one flag;
 the previous failed image attempts remain in ACR and no resource was deleted.
 
+During [run 39266540207](https://github.com/Ameya5006/Aletheia/actions/runs/39266540207),
+the structured what-if gate passed and the controlled migration emitted
+`aletheia-migration-complete 0004_case_input`, independently read without
+printing raw logs. Its controller did not advance. Installed CLI implementation
+and provider operations show console logs first call
+`Microsoft.App/containerApps/getAuthToken/action`; the existing CI role granted
+logstream data access but omitted this action. A new custom role grants only
+that action at the release-operator app scope. Fresh verification matches all
+four role templates and ten exact assignments; the previous nine assignments
+and main-only federation remain unchanged. No API/frontend/MLflow token scope,
+exec/secret-list/delete action, client credential or paid service was added.
+The running hosted controller still needs to demonstrate successful completion.
+
+The new operator backend digest
+`sha256:b4b741f0ab70c22a055400b249b13cfea52c3057f3976d610a50ee16434ea2ec`
+has fresh exact-digest vulnerability/SBOM commands exiting 0, with the same
+1 critical / 63 high / 112 medium / 105 low / 1 unknown retained findings.
+Its raw/complete inventories contain 239/240 components and 771/772 licence
+entries. Native SQLite 3.54.0 still matches the approved binary hash. The first
+new scan wrapper failed while saving a Unicode log on Windows; its JSON and
+empty log are retained, and the UTF-8 retry records successful command exits.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;
