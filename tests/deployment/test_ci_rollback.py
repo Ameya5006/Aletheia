@@ -20,7 +20,12 @@ az() {
   local app=frontend
   [[ " $* " == *" -n api "* ]] && app=api
   case "$1 $2 $3" in
-    'deployment group what-if') printf '{"changes":[]}\n' ;;
+    'deployment group what-if')
+      if [[ " $* " == *" --no-pretty-print "* ]]; then
+        printf '{"changes":[]}\n'
+      else
+        printf 'Resource changes: no changes.\n'
+      fi ;;
     'containerapp revision list')
       [[ ${NO_TRAFFIC:-0} == 1 ]] || printf '%s--working\n' "$app" ;;
     'containerapp show -g') printf '%s--candidate\n' "$app" ;;

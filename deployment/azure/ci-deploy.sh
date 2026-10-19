@@ -11,7 +11,7 @@ name="aletheia-ci-${GITHUB_RUN_ID:-local}"
 az deployment group validate -g "$group" -n "$name" -f deployment/azure/ci-plan.bicep -o none --only-show-errors
 preview=$(mktemp)
 trap 'rm -f "$preview"' EXIT
-az deployment group what-if -g "$group" -n "$name" -f deployment/azure/ci-plan.bicep -o json --only-show-errors > "$preview"
+az deployment group what-if -g "$group" -n "$name" -f deployment/azure/ci-plan.bicep --no-pretty-print -o json --only-show-errors > "$preview"
 python - "$preview" <<'PY'
 import json
 import sys

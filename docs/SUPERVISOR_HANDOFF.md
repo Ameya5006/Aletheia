@@ -46,6 +46,13 @@ lint/type checks and 81 frontend tests. Contract export failed because it assume
 override. Deployment runs retain the contract gate; PRs remain artifact-free.
 Image builds and Azure deployment have not run yet.
 
+The sixth [run 39265385717](https://github.com/Ameya5006/Aletheia/actions/runs/39265385717)
+passed all tests, contract/build/credential gates, OIDC and immutable image
+build/push, then the Azure guard and Bicep validation. What-if required the CLI
+`--no-pretty-print` flag for JSON parsing; the failure occurred before migration
+or app update. The one-flag correction is covered by the shell regression.
+Built but undeployed images and failed logs remain preserved.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.

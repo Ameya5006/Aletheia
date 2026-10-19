@@ -61,6 +61,15 @@ The real contract comparison remains mandatory before deployment; untrusted PRs
 cannot fetch the private frozen fixtures and run only artifact-free checks.
 No frontend application/image change or Azure deployment occurred in these runs.
 
+The sixth [run 39265385717](https://github.com/Ameya5006/Aletheia/actions/runs/39265385717)
+passed OIDC, backend/frontend tests, real contract export, frontend build,
+credential scanning and immutable ACR image builds/pushes. The live topology
+guard and Bicep validation passed. What-if then supplied human-formatted output
+despite `-o json`, causing the JSON parser to stop before migration or app update.
+Azure CLI help confirms `--no-pretty-print` is required to use the output format.
+The shell boundary reproduced two failing cases before adding that one flag;
+the previous failed image attempts remain in ACR and no resource was deleted.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;
