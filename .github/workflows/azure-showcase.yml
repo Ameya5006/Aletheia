@@ -20,6 +20,15 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['127.0.0.1:5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U postgres'
+          --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -32,7 +41,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.12.10'
           cache: pip
           cache-dependency-path: requirements.lock.txt
       - uses: actions/setup-node@v4
@@ -42,12 +51,36 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Verify frozen release inputs
         run: python deployment/azure/ci-frozen-check.py
+      - name: Azure federated login
+        if: github.event_name != 'pull_request'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+      - name: Restore verified frozen test fixtures
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          az acr login --name "$ACR_NAME" --only-show-errors
+          frozen="$ACR_LOGIN_SERVER/backend@sha256:06f7bb2229fb1c77b6561afaeccdbf51c9a0243005fb0ea647a8d6de44f683ab"
+          docker pull "$frozen"
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --entrypoint tar "$frozen" -C /release/current -cf - artifacts | tar -xf -
+          python deployment/azure/ci-prepare-tests.py
+          python deployment/azure/ci-frozen-check.py
       - name: Focused backend checks
+        env:
+          ALETHEIA_TEST_PG_ADMIN_URL: postgresql+psycopg://postgres@127.0.0.1:5432/postgres
         run: |
           python -m pip install --disable-pip-version-check -r requirements.lock.txt
           python -m pip install --disable-pip-version-check --no-deps -e .
-          python -m pytest tests/application/test_case_workflow.py tests/application/test_release_auth.py tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py -q
-          python -m ruff check --select F deployment/azure/ci-frozen-check.py deployment/azure/ci-guard.py deployment/azure/ci-smoke.py deployment/azure/ci-secret-scan.py
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            python -m pytest tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py -q
+          else
+            python -m pytest tests/application/test_case_workflow.py tests/application/test_release_auth.py tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py -q
+          fi
+          python -m ruff check --select F deployment/azure/ci-frozen-check.py deployment/azure/ci-prepare-tests.py deployment/azure/ci-guard.py deployment/azure/ci-smoke.py deployment/azure/ci-secret-scan.py
       - name: Frontend checks
         working-directory: frontend
         run: |
@@ -59,13 +92,6 @@ jobs:
           npm run build
       - name: Scan deployable source and built assets for credentials
         run: python deployment/azure/ci-secret-scan.py
-      - name: Azure federated login
-        if: github.event_name != 'pull_request'
-        uses: azure/login@v3
-        with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
-          tenant-id: ${{ env.AZURE_TENANT_ID }}
-          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
       - name: Build and push immutable release images
         if: github.event_name != 'pull_request'
         id: images

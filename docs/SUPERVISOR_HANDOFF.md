@@ -18,7 +18,14 @@ hashes and accepts only newline conversion; three regression cases pass. The
 three non-secret Azure identifiers now also have encrypted repository settings
 for automatic log masking, and the workflow reads those masked settings. Required
 variables remain configured; no long-lived Azure credential was introduced.
-The corrected hosted execution is still pending.
+The second [run 39262552221](https://github.com/Ameya5006/Aletheia/actions/runs/39262552221)
+passed frozen checks, then had 7 passing tests / 39 errors because ignored frozen
+fixtures were absent. No Azure deployment ran. The bounded repair retains the
+deployment application tests, retrieves ten immutable-image fixtures after OIDC,
+verifies all 42 release-file hashes, pins Python 3.12.10, and supplies disposable
+runner PostgreSQL 18. PR checks remain artifact-free and cannot access Azure.
+The isolated fixture-preparation check matched all hashes and rejected tampering.
+The corrected hosted execution is pending.
 
 ## 2. What changed and why
 

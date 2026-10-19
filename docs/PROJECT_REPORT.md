@@ -18,6 +18,22 @@ automatic log masking. Required repository variables remain configured; no
 Azure client secret, certificate or long-lived Azure credential was added.
 The workflow reads masked settings and continues to use OIDC federation.
 
+The second [hosted run 39262552221](https://github.com/Ameya5006/Aletheia/actions/runs/39262552221)
+passed the frozen check but reported 7 tests passed and 39 fixture errors: the
+model/aggregate release files are intentionally ignored and absent from a fresh
+checkout. No deployment ran. The repair retrieves only the ten approved frozen
+fixture files from the existing backend digest after OIDC login, verifies all
+42 approved release-file hashes, and restores the two original text newline
+representations only in the disposable runner checkout. It pins test Python to
+the approved 3.12.10 and provides pinned PostgreSQL 18 in the GitHub runner for
+the existing real-transaction tests. All application test selections are retained
+for deployment runs; untrusted pull requests run artifact-free CI unit/frontend
+checks without Azure access. A local isolated-checkout check matched all 42
+hashes and rejected a deliberately damaged fixture; original inputs were unchanged.
+The preliminary incomplete patch was rejected by automatic approval review
+before applying; the completed patch supplies retrieval and retains deployment
+test coverage. No application behavior or Azure topology changed.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;
