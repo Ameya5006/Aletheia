@@ -76,11 +76,11 @@ jobs:
           python -m pip install --disable-pip-version-check -r requirements.lock.txt
           python -m pip install --disable-pip-version-check --no-deps -e .
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            python -m pytest tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py -q
+            python -m pytest tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py tests/deployment/test_ci_log_marker.py -q
           else
-            python -m pytest tests/application/test_case_workflow.py tests/application/test_release_auth.py tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py -q
+            python -m pytest tests/application/test_case_workflow.py tests/application/test_release_auth.py tests/deployment/test_ci_rollback.py tests/deployment/test_ci_frozen_check.py tests/deployment/test_ci_log_marker.py -q
           fi
-          python -m ruff check --select F deployment/azure/ci-frozen-check.py deployment/azure/ci-prepare-tests.py deployment/azure/ci-guard.py deployment/azure/ci-smoke.py deployment/azure/ci-secret-scan.py
+          python -m ruff check --select F deployment/azure/ci-frozen-check.py deployment/azure/ci-prepare-tests.py deployment/azure/ci-log-marker.py deployment/azure/ci-guard.py deployment/azure/ci-smoke.py deployment/azure/ci-secret-scan.py
       - name: Frontend checks
         working-directory: frontend
         env:

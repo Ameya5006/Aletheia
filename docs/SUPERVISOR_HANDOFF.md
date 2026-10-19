@@ -63,6 +63,16 @@ Hosted completion remains pending. The new operator digest `sha256:b4b741f0ab70c
 has scan/SBOM exits 0 and unchanged retained severity counts; complete inventory
 is 240 components / 772 licence entries with verified SQLite 3.54.0.
 
+Run 39266540207 timed out observing the marker, stopped the operator and executed
+the actual hosted rollback branch; API/front-end healthy traffic remained 100%.
+Run 39269266858 again completed database work but hid CLI errors, so cancellation
+was requested for replacement; the operator is explicitly stopped and the
+serving apps retain API revision 3/frontend revision 2 and their approved images.
+The repair adds bounded, sanitized exact-revision log observation and safe smoke
+probability reporting; four focused tests pass, lint/format/PowerShell parsing
+pass, and local read-only observation reports completion without raw logs.
+No inference deadline changed. Corrected hosted deployment remains pending.
+
 ## 2. What changed and why
 
 - Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.

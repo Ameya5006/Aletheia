@@ -92,6 +92,27 @@ entries. Native SQLite 3.54.0 still matches the approved binary hash. The first
 new scan wrapper failed while saving a Unicode log on Windows; its JSON and
 empty log are retained, and the UTF-8 retry records successful command exits.
 
+Run 39266540207 eventually reported the controller's missing completion marker,
+stopped the operator in `finally`, and invoked the real hosted rollback branch.
+Both already-active healthy revisions remained at 100% traffic; Azure's
+`RevisionAlreadyInRequestedState` activation responses were handled. This proves
+hosted recovery execution on a pre-update failure, separately from the earlier
+completed manual live revision rollback. Run 39269266858 again reached migration
+with all tests/builds passing; an independent read found its head marker, but
+the controller still discarded its underlying CLI errors. The obsolete run was
+cancelled for replacement and the operator explicitly stopped; API/frontend
+images and traffic remained the approved `api--0000003` / `frontend--0000002`.
+
+The bounded `ci-log-marker.py` observer now captures CLI output privately with a
+30-second per-read timeout, checks for credential-like content before disclosure,
+and returns only completion/probability or sanitized error classification/action
+names. The controller addresses its exact new revision, enforces its intended
+15-minute wall-clock polling bound, stops on authorization/security failures,
+and retains `finally` cleanup. Four focused tests first failed, then passed
+(0.10s); lint/format and PowerShell parsing passed. A read-only observation of
+revision 5 returned only `{"status": "complete"}`. No inference deadline or
+application behavior changed. Hosted execution of this repair is still pending.
+
 **Completed scope and sequence.** The remaining work reused the completed
 frontend, cloud/browser/persistence, live rollback and isolated backup/restore
 checks. Five backup file sizes and SHA-256 values still match their manifest;
