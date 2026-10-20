@@ -1,175 +1,63 @@
-# Supervisor Handoff - recovered final Azure/CI closure (2026-10-20)
+# Supervisor handoff — GitHub presentation (2026-10-20)
 
-## 1. Current milestone and status
+## Current milestone and status
 
-**PASS: hosted CI and final Azure readback.** External supervisor acceptance is
-still required. Nonzero reported cost and retained backend security findings
-remain explicit limitations; the original zero-cost objective and production
-security acceptance are not established.
+**PASS WITH MINOR FIXES for external review.** The approved presentation files, design explanations, privacy-reviewed live media and fresh-clone checks are prepared. They remain uncommitted. No application, model, migration, deployment, Azure resource, CI workflow, protected evidence or Docker data changed. Supervisor review is the task boundary.
 
-Public URL: https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io
+Public frontend: https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io/ (HTTPS 200 on 2026-10-20). Prediction, history and audit actions require a provisioned short-lived identity. Public Signup and external organizational OIDC are deferred. The [reviewer-access guide](REVIEWER_ACCESS.md) documents safe operator steps; no credential is published.
 
-Final deployed commit: `929b10deb901c715bee05aaba52ac1db3ccbeb80`.
-[Hosted run 39277474682](https://github.com/Ameya5006/Aletheia/actions/runs/39277474682)
-completed **successfully**, with every job step successful. Recovery found this
-existing green run through GitHub's live API; no replacement run, new deployment,
-CI correction, commit or push was necessary. The previous handoff is preserved
-as ignored `final-closure-20261019/handoff-before-recovery-20261020.md`.
+Latest live GitHub [run 39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251) completed **successfully** at source 963050edb817b634c9a69fd692ab839c26121bd3. Earlier hosted closure checks and their limits remain in the [project report](PROJECT_REPORT.md). This presentation did not trigger another hosted run.
 
-## 2. Implemented and verified
+## Implemented and why
 
-- Hosted OIDC, frozen-input verification and verified fixture retrieval.
-- 58 backend tests, 81 frontend tests, Ruff, frontend lint/typecheck, contract,
-  production build and deployable credential scan.
-- Immutable ACR builds/pushes, Bicep validation/structured what-if, migration
-  marker observation at `0004_case_input`, controlled API/frontend deployment.
-- Authenticated public prediction HTTP 201, probability `0.165468722464`,
-  matching frozen identities; save, reopen, history and audit checks passed.
-- Anonymous history 401, engineer/admin boundary 403; real internal API and
-  MLflow health 200, outside effective-host and alias probes 404.
-- Final hosted topology/digest guard; operator stopped after migration and smoke.
-- Fresh readback: healthy serving revisions at 100% traffic; private ingress,
-  resource inventory, student spending limit, cost and budget verified.
-- Exact changed-image security/SBOM/licence reconciliation; unchanged evidence
-  reused after identity checks.
+- Replaced the stale README with a scannable entry point, accurate access model, current architecture, prediction path, technology/storage responsibilities, verified project journey, security limits, local commands and documentation index.
+- Added [HLD](HIGH_LEVEL_DESIGN.md), [LLD](LOW_LEVEL_DESIGN.md) and candid [SOLID assessment](SOLID_AND_MAINTAINABILITY.md). The LLD diagrams use actual database table names.
+- Added [cleanup manifest](REPOSITORY_CLEANUP.md) and [local guide](LOCAL_DEVELOPMENT.md). All tracked root files were classified. No file was moved or deleted; operational and evidence files remain in place. No project licence was added.
+- Added [GitHub metadata proposal](GITHUB_PRESENTATION.md), [temporary access guide](REVIEWER_ACCESS.md), sanitized [media](assets/demo/README.md) and reproducible scripts under scripts/presentation. Description, homepage, topics, social preview, release and pinned links are **proposed**, not remotely applied.
+- Reconciled current snapshots in ARCHITECTURE.md, DEPLOYMENT_ARCHITECTURE.md, EXECUTION_PLAN.md and the learning/defence record in PROJECT_REPORT.md. Historical sections remain labeled and preserved.
 
-## 3. Files changed during this recovery
+**Files modified:** README.md, docs/ARCHITECTURE.md, docs/DEPLOYMENT_ARCHITECTURE.md, docs/EXECUTION_PLAN.md, docs/PROJECT_REPORT.md, docs/SUPERVISOR_HANDOFF.md. Supervisor-owned docs/CURRENT_TASK.md was already modified at the start and was not changed by this milestone.
 
-Only tracked documentation changed: `docs/PROJECT_REPORT.md`,
-`docs/SUPERVISOR_HANDOFF.md`, `docs/ARCHITECTURE.md`, and
-`docs/DEPLOYMENT_ARCHITECTURE.md`. Ignored evidence helpers/reports were added or
-updated under `artifacts/azure-preflight/final-closure-20261019/`.
-No governing file, source, workflow, model, deployment configuration or test changed.
+**Files created:** docs/GITHUB_PRESENTATION.md, docs/HIGH_LEVEL_DESIGN.md, docs/LOCAL_DEVELOPMENT.md, docs/LOW_LEVEL_DESIGN.md, docs/REPOSITORY_CLEANUP.md, docs/REVIEWER_ACCESS.md, docs/SOLID_AND_MAINTAINABILITY.md, docs/assets/demo/README.md, 13 numbered sanitized JPEGs, docs/assets/demo/poster.jpg, docs/assets/demo/walkthrough.webm, and six scripts/presentation/*.mjs files. No files moved or deleted.
 
-## 4. Decisions and problems
+## Live demonstration and privacy
 
-The interrupted controller problem was already fixed: CLI replica discovery
-needed `Microsoft.App/containerApps/revisions/replicas/read` in the existing
-operator-only role, alongside `getAuthToken/action`. Ten assignments remain in
-the preserved verified role evidence. Final commit `929b10d` then tested the
-real MLflow `/health` endpoint instead of an API route that could misleadingly
-return an application 404. Successful hosted execution proves both repairs.
+The bounded public-browser run captured 13 scenes at 1440 × 900, composed a **69-second**, **1,959,921-byte** WebM and reused its real result frame as the poster. The illustrative example produced probability 0.16546872246399696 (16.55% displayed). The script asserted sign-in, HTTP 201 prediction, save, history, reopen, distinct rerun, unchanged original probability and reset; audit events loaded. This is workflow evidence, not a new ML evaluation. Edge decoded the video at 1440 × 900 and a playback frame was visually inspected. Key result, explanation, history, rerun and audit stills were inspected. Fourteen JPEGs including the poster have 1440 × 900 dimensions and zero EXIF entries. The largest media binary is below 2 MiB. View [the video](assets/demo/walkthrough.webm) before any future commit.
 
-Recovery reused the green run. Only changed digests received new scans; the old
-frontend scan cannot validate a new digest. Backup/restore, full regression,
-browser, persistence and live rollback were not repeated.
+The recorder accepts only the approved public origin, reads token material from an ignored local file, omits token entry, redacts identifiers/accounts/digests before every screenshot and builds the video from those images. A linked real-interface poster was chosen over a small animated GIF so the README preview remains readable. No private patient information, raw video, token, key, trace, browser storage or account identifier is included in public media. Demonstration requests created illustrative records in the existing application database; no Azure resource or configuration mutation occurred.
 
-The first readback's HTTPS assertion failed without saving individual probe
-statuses. All six independent retry probes passed. The local ignored helper
-now saves results before asserting; its full rerun passed. The exact original
-failing endpoint/cause is unknown. No inference deadline or runtime limit changed.
-Sandbox access initially prevented reading existing sessions; approved elevated
-read/verification commands succeeded without adding credentials.
+## Checks actually executed
 
-## 5. Checks actually executed and exact results
-
-| Check | Result |
+| Check | Exact outcome |
 |---|---|
-| Live GitHub run/jobs and sanitized log | Run 39277474682 success; job 118145469698; all steps success |
-| Hosted backend | 58 passed, 2 warnings, 4.22s |
-| Hosted frontend | 81 passed across 7 files; lint/typecheck/contract/build passed |
-| Hosted credential scan | 52 deployable source/asset files passed |
-| Fresh local frozen check | 32 tracked inputs plus entrypoint/pin passed |
-| Fresh local credential scan | 53 deployable source/asset files passed |
-| Preserved acceptance hash check | 5 backup files' sizes/SHA-256 match; restore/browser/workflow/persistence evidence consistent; original frontend scan/SBOM hashes match |
-| Changed deployed images | Backend/frontend vulnerability and SBOM commands all exit 0; exact config bindings match |
-| Native backend inventory | SQLite 3.54.0 and binary hash match; 240 components / 772 licence entries |
-| Full final readback retry | Exit 0; frontend/live/ready 200, anonymous history 401, direct API/MLflow health 404 |
-| Recovery evidence validator | Exit 0; 14 unchanged MLflow reports hash-match; changed scan/config/digest bindings and final Azure state agree; credential checks have zero findings |
-| Git checks | HEAD, origin/main and live remote main match; 0 ahead / 0 behind; whitespace check passes; zero staged files |
+| Public URL | HTTPS HEAD 200 after capture; live authenticated browser flow completed |
+| GitHub | Live API returned run 39417029251 success at HEAD; shallow remote clone succeeded at the same SHA with clean status |
+| Privacy helper | Four focused Node tests passed, zero failed |
+| Media playback | Edge decoded WebM, 1440 × 900, playback advanced to 1.53 seconds; 13 scenes and poster reviewed |
+| Documentation links | Final check script found 237 local links and zero missing across 14 documents |
+| Mermaid diagrams | Official Mermaid 11 parsed and browser-rendered all 15 diagrams, zero invalid; one sequence-label separator corrected |
+| Fresh-clone frontend | npm lock installed 343 packages; lint and typecheck passed; 81/81 Vitest tests in seven files; production build passed |
+| Fresh-clone Python | Python 3.12 isolated venv; lock and editable installs passed; pip check found zero broken requirements; project Ruff scopes passed; fixture unit/data tests 64 passed, 15 warnings |
+| Compose | Config rendered from example plus explicit non-secret placeholder values; no image/container build or start |
+| Credentials | Existing scanner passed 53 deployable files in working tree and 52 in fresh clone, zero findings |
+| Git and protected files | git diff --check passed; 252 protected original files match start-of-task SHA-256 baselines, none missing; supervisor task file unchanged since start; zero staged files, 0 ahead/0 behind |
 
-Rollback evidence is preserved from hosted run `39266540207`, which stopped the
-operator and executed the actual recovery branch on a pre-update observation
-failure while healthy API/frontend traffic remained 100%. Earlier manual live
-revision rollback/restoration also passed. The green final run did not inject
-a failure after switching traffic; these checks have different scopes.
+The fresh clone was created outside this checkout and overlaid with only intended public working-tree files. Ignored secrets, frozen model bundles and backups were absent. The raw environment example deliberately omits required release/identity values and cannot alone render or start a full stack. Complete local serving needs an authorized frozen release and private configuration; it was not repeated.
 
-## 6. ML and immutable deployed identities
+## Problems, trade-offs and limits
 
-No new ML experiment, training, calibration or held-out access occurred.
-Prediction probability is a frozen model output, not clinical validation.
+- PowerShell blocked the npm.ps1 shim; npm.cmd worked. Git's Windows CRLF checkout made unchanged frontend files fail default Prettier (48 reported); format:check with end-of-line auto passed. No application source was reformatted.
+- An overbroad Ruff check of all deployment helpers reported 45 existing style errors. Project source scopes and the hosted deployment F-rule scope passed. The local guide now specifies the actual gates.
+- Pytest's shared temp location was inaccessible; an ignored clone-local base temp yielded 64 passing fixture tests. The initial example-only Compose config failed on intentionally empty required values; explicit non-secret placeholders rendered it.
+- Direct Chromium egress timed out while Node HTTPS to the public host worked. Live response interception on the exact public origin enabled recording. A cold-start sign-in timeout led to bounded readiness warmup and at most three login attempts in the recorder; no inference deadline or Azure sizing changed. Frame review corrected result framing, audit loading and a redacted-link selector.
+- Historical-data generalization is unproven, the descriptive threshold has low documented recall, explanations are noncausal and reference-dependent, public onboarding is restricted, monitoring is limited and backend image findings remain. No clinical or vulnerability-free claim is made. The newer deployed frontend digest is not treated as covered by the older zero-finding exact-image scan.
 
-| App | Revision at 100% traffic | Digest |
-|---|---|---|
-| Frontend | `frontend--0000004` | `sha256:c71d3fc586fb41cc7796287ed7f35a0528fc24fa6adb44ecf52042697f763410` |
-| API | `api--0000005` | `sha256:aaa14ef48a2db5f28647bc1599e7d1fdd90c9962d484cc417d32d59b2c1f54e3` |
-| MLflow | `mlflow--0000002` | `sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d` |
+No ML experiment, model comparison, calibration, hold-out evaluation or architecture change occurred. Prior reported Azure state was 13 resources, student spending limit enabled, INR 100 warning budget and month-to-date pre-tax INR 11.7066685215817; billing can lag and was not freshly queried for this presentation. The original zero-cost objective is not demonstrated.
 
-Stopped no-ingress `release-operator--0000010` uses the API digest.
-All three serving apps remain min 0/max 1.
+## Deployment and protected boundaries
 
-Frozen model: `8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`;
-release: `65f2302cc9c4795142567296cc6b16143fad5abfe4df7b04152975748c2ec271`;
-evidence: `2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
+The last preserved Azure readback has 100% traffic on API api--0000006 at sha256:c15f8346e7316cb16f53a950630a69850c6ceaa0b03623531652cc19c1c3ffb9, frontend frontend--0000005 at sha256:1cecb7b183bf00883f411a27a92dfb26e027f0cbd401c5cad7b7c4f5ee0f9056, and MLflow at sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d. API and MLflow ingress remain private; no-ingress release-operator--0000012 is stopped. The presentation made no infrastructure changes and did not touch the protected stash c6b91a13bf4338e559dfaad49f850dd719f5ca47.
 
-## 7. Security and limitations
+## Unresolved questions and suggested next step
 
-Frontend: zero vulnerabilities; 71 SBOM components / 103 licence entries.
-API/operator: 1 critical / 63 high / 112 medium / 105 low / 1 unknown;
-240 complete SBOM components / 772 licence entries. Unchanged MLflow retains
-the same severity counts and complete inventory counts. Findings are preserved.
-Prior MiniZip applicability and pip-vendoring dispositions remain supporting
-evidence, not a clean backend scan or legal clearance. No external CycloneDX
-schema validation was performed.
-
-Earlier protection resolution retains 439 inaccessible generated runtime paths
-as UNVERIFIED, none tracked, and zero unexplained accessible mismatches. No ACL
-or content workaround was made. Provisioned JWT access, cold-start latency,
-the accepted database firewall exception and historical-data/clinical limits
-remain. Current remaining credit and a numeric forecast are not freshly verified.
-
-## 8. Azure resources, budget and cost
-
-Readback 2026-10-20: 13 resources, all Southeast Asia, in
-`rg-aletheia-showcase-sea-01` (8) and `rg-aletheia-workload-sea-01` (5).
-All four old Express apps are stopped. Current environment is WorkloadProfiles,
-Consumption only, Succeeded, with no customer networking or paid log destination.
-PostgreSQL is Ready, version 18, Standard_B1ms, 32 GiB, secure transport ON.
-No Azure resource or existing Docker data was deleted.
-
-Azure for Students is Enabled; spending limit is **On**. Fresh Cost Management
-month-to-date pre-tax cost is **INR 11.7066685215817**. The INR 100 monthly
-warning budget exists with enabled 50/80/100 percent notifications. Notifications
-are not a hard cap. Billing can lag; no zero-cost, zero-forecast, fresh credit
-balance or cash-versus-credit settlement claim is made.
-
-## 9. Architecture and documentation
-
-No architecture change during recovery. Both architecture documents now reflect
-successful hosted execution. PROJECT_REPORT records recovery order, actual
-results, controller diagnosis, evidence reuse, security, billing, observation
-failure and viva explanations. This handoff replaces the stale current-state
-summary; earlier details remain in the report and preserved handoff.
-
-## 10. Evidence to inspect
-
-Under ignored `artifacts/azure-preflight/final-closure-20261019/`:
-
-- `hosted-jobs-39277474682.json` and `hosted-job-118145469698-sanitized.log`.
-- `post-ci-azure-readback.json`, control-plane and completed probe-attempt reports.
-- `hosted-security-39277474682/`: exact digest/config bindings, raw scans/SBOMs,
-  complete backend inventories, native SQLite proof and hashed summary.
-- `recovered-closure-verification.json`: final cross-evidence/credential/Git checks.
-- `preserved-acceptance-evidence.json`, original manifests and earlier rollback logs.
-
-Generated evidence, archives, dumps, keys, certificates and tokens are not staged.
-
-## 11. Git status, unresolved questions and suggested next step
-
-Branch `main`; HEAD/origin/main/live remote main:
-`929b10deb901c715bee05aaba52ac1db3ccbeb80`; **0 ahead / 0 behind**.
-Existing stash: `c6b91a13bf4338e559dfaad49f850dd719f5ca47`.
-Exact working-tree status after recovery, with zero staged or untracked paths:
-
-```text
- M docs/ARCHITECTURE.md
- M docs/DEPLOYMENT_ARCHITECTURE.md
- M docs/PROJECT_REPORT.md
- M docs/SUPERVISOR_HANDOFF.md
-```
-
-The existing green run made another CI repair/push unnecessary. Suggested next
-step: supervisor review of nonzero cost, retained security findings and closure
-evidence, then human review/commit of these documentation updates. Suggested
-message: `docs: reconcile verified Azure CI closure`. No further milestone is
-authorized; no new external permission blocker remains for the CI closure.
+Supervisor: review README claims and [the video](assets/demo/walkthrough.webm), inspect HLD/LLD/SOLID, confirm the licence remains undecided, and assess retained security/cost limitations. If accepted, the owner can commit the prepared files and apply the [proposed GitHub metadata](GITHUB_PRESENTATION.md). Suggested commit message: **docs: complete Aletheia portfolio presentation**. No commit, push, release, metadata change, Azure deletion or Docker cleanup is authorized by this handoff.

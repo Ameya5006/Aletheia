@@ -1,5 +1,9 @@
 # Aletheia — Execution Plan
 
+## Current approved presentation task (2026-10-20)
+
+The sole active authorization is [CURRENT_TASK.md](CURRENT_TASK.md): GitHub presentation, architecture documentation, sanitized live demo media and fresh-clone verification. The application, frozen model, Azure topology and CI/CD are already implemented and verified by preserved evidence; this milestone changes their presentation only. Stop with an uncommitted supervisor handoff. External OIDC onboarding, drift monitoring, vulnerability remediation, licence selection and production clinical validation are deferred and require separate approval. The older gated implementation sequence below records the order in which the project was designed; its unimplemented labels are historical snapshots, not current project status.
+
 ## Current five-milestone roadmap (Macro Milestone 1 decision)
 
 This sequence supersedes the older credit-first phase sequence recorded below. Earlier approved credit Phases 0–4 remain historical evidence, not authorization to resume stashed Phase 5 work. Only `CURRENT_TASK.md` authorizes current work; every later milestone awaits external supervisor approval.
@@ -9,14 +13,14 @@ This sequence supersedes the older credit-first phase sequence recorded below. E
 | 1. Healthcare foundation and deployable design | Official source audit; frozen target/cohort/roles; verified extraction and strict loader; patient-group locked split; offline tests; complete public docs and handoff | Completed; externally approved at `9073c453` |
 | 2. Healthcare research | Group-aware nested CV, bounded model comparison, sigmoid calibration and one locked holdout evaluation; model card and reproducible manifests | Completed; committed frozen prerequisite at `49a1a8c`; preserved |
 | 3. Explainable audit | Tested frozen protocols; global/local calibrated-output explanations; recording stability; guarded subgroup audit; counterfactual feasibility or defensible bounded scenarios; immutable aggregate evidence and defence guide | Completed; externally approved at `ff9dce291f63a6d4241360997ef0aff2308597f9` per CURRENT_TASK.md |
-| 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved synthetic model serving | Stages 1-2 implemented and locally verified; Stage 3 Compose/release-readiness unimplemented |
-| 5. Public delivery and operations | CI/CD, managed deployment, drift monitoring, code dependency graph and final defence evidence | Planned, not authorized |
+| 4. Application and MLOps | MLflow lifecycle, FastAPI, React/TypeScript, PostgreSQL audit, RBAC, Docker, approved model serving | Application, Compose, persistence, backup/restore and security evidence implemented and verified; historical stage gates below are retained |
+| 5. Public delivery and operations | CI/CD, managed deployment, drift monitoring, code dependency graph and final defence evidence | Azure and hosted CI verified; presentation task in review; monitoring and code graph deferred |
 
 Credit remains a secondary benchmark. The older Phase 5 comparator/XAI/counterfactual/stability roadmap and WIP stash are not active implementation instructions. No future application dependencies are installed in milestone 1. See [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) for users and boundaries and [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md) for tooling.
 
 ## Macro Milestone 4 gated implementation sequence
 
-Stages 1-2 implement the local FastAPI/PostgreSQL/MLflow backend, JWT/local-entitlement
+The following paragraphs are the historical Stage 1–3 plan. Stages 1-2 implement the local FastAPI/PostgreSQL/MLflow backend, JWT/local-entitlement
 RBAC and React/TypeScript frontend; evidence is in PROJECT_REPORT.md. Real external
 OIDC-provider integration is unverified; sign-out clears only the local session.
 Live OIDC logout remains a Stage 3 verification item. Docker Compose, CI/CD, public

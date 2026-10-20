@@ -1,6 +1,10 @@
 # Deployable architecture and tooling decision
 
-## Current Azure Workload Profiles deployment (2026-10-19)
+## Current deployed readback and presentation scope (2026-10-20)
+
+The service topology, ingress, migration strategy and image-by-digest deployment described below remain in force. The later successful [hosted run 39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251) at `963050edb817b634c9a69fd692ab839c26121bd3` supersedes the earlier run reference below. Preserved latest readback: API revision `api--0000006` at `sha256:c15f8346e7316cb16f53a950630a69850c6ceaa0b03623531652cc19c1c3ffb9`; frontend `frontend--0000005` at `sha256:1cecb7b183bf00883f411a27a92dfb26e027f0cbd401c5cad7b7c4f5ee0f9056`; MLflow digest `sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d`; stopped no-ingress operator `release-operator--0000012`. This documentation and media milestone did not redeploy any service. The [HLD](HIGH_LEVEL_DESIGN.md) and [LLD](LOW_LEVEL_DESIGN.md) describe the current architecture; older dated checkpoints are retained as historical evidence.
+
+## Earlier Azure Workload Profiles deployment checkpoint (2026-10-19)
 
 The approved cloud path is public HTTPS `frontend` → same-environment
 `http://api` → `http://mlflow`, with API and MLflow private ingress and

@@ -1,428 +1,127 @@
-# Aletheia — Explainable AI Decision Auditor
+# Aletheia
 
-Aletheia is an enterprise-style platform project for reproducible, explainable and auditable high-stakes tabular ML. Its **primary demonstration is 30-day hospital readmission risk** for encounters involving patients with diabetes. The approved South German Credit benchmark remains a **secondary demonstration**. The repository includes a locked healthcare model, local Docker Compose stack and an Azure showcase with authorized manual case entry, immutable results and saved analysis history. It is educational, not a clinical decision system; use invented cases only.
+**An auditable research workbench for manually entered 30-day readmission cases.**
 
-## Azure showcase — supervisor review state
+Aletheia connects a frozen, calibrated prediction pipeline to explanations, access-controlled review, persistent history and hash-linked, append-only audit records. It is an educational engineering project, not a clinical decision system.
 
-The verified public entry point is
-<https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io>.
-The frontend uses Azure-managed HTTPS and proxies `/api` to `http://api` inside
-the Southeast Asia Workload Profiles Container Apps environment. The API (1
-vCPU/2 GiB) and MLflow have internal ingress only; direct public-style requests
-to either returned 404. All three serving apps have zero minimum and one
-maximum replica. PostgreSQL 18/B1ms stores predictions, audits and MLflow
-metadata with required TLS and least-privilege application roles. The
-supervisor-approved Azure-services PostgreSQL firewall exception is a bounded
-showcase limitation. The earlier Express environment and its four apps remain
-stopped and preserved.
+[Open live application](https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io/) · [Architecture](docs/HIGH_LEVEL_DESIGN.md) · [Watch the 60-second walkthrough](docs/assets/demo/walkthrough.webm) · [Documentation](#documentation)
 
-A real authenticated invented-case prediction returned probability
-`0.16546872246399696`; save, history, reopen, changed rerun, immutable
-original, reset, RBAC checks and PostgreSQL persistence after restart and
-scale-to-zero passed. Cold readiness returned 504 twice before 200. Warm the
-URL two to three minutes before a presentation and allow for this cold start.
-The current migration head is `0004_case_input`. On the machine holding the
-existing ignored showcase signing key, refresh a 14-minute reviewer token
-without printing it:
+<a href="docs/assets/demo/walkthrough.webm"><img src="docs/assets/demo/poster.jpg" width="680" alt="Aletheia prediction result showing a 16.55 percent illustrative readmission estimate with model and audit identifiers redacted"></a>
 
-```powershell
-.\.venv\Scripts\python.exe deployment/azure/cloud-identity.py token --role reviewer
-```
+## Access
 
-The command writes only to ignored
-`artifacts/azure-preflight/cloud-private/reviewer.token`. Open `/local-session`
-on the HTTPS frontend and enter the token there; never paste it into Git, logs
-or an issue. The current Azure configuration, evidence and exact
-limits are in [the supervisor handoff](docs/SUPERVISOR_HANDOFF.md) and
-[project report](docs/PROJECT_REPORT.md).
+The frontend is publicly reachable. Creating predictions, saving cases, reading authorized history and inspecting audit events require an operator-provisioned, short-lived identity. Public Signup is intentionally unavailable. Temporary reviewer access can be requested from the project maintainer; no token or signing key is published here. Public pages expose the product and approved model evidence without opening the private API or MLflow service.
 
-The GitHub Actions OIDC workflow is implemented and its local checks plus
-controlled Azure migration/smoke commands passed. Manual live rollback and
-restoration were verified; hosted OIDC deployment and automated rollback
-remain unverified pending an authorized commit/push. Local rollback command
-simulations now verify recovery to the revision serving traffic. No commit,
-push, local Docker cleanup
-or Express-resource deletion was performed in this continuation. Azure Cost
-Management reported nonzero month-to-date pre-tax cost; see the handoff for
-the exact amount, free-service eligibility and settlement limits. An INR 100
-monthly warning budget now exists with enabled 50%, 80% and 100% notifications.
-The earlier `RBACAccessDenied` attempt is preserved as historical evidence;
-the subscription spending limit remains On.
+## In 30 seconds
 
-## Interactive case workflow â€” local supervisor review
+An authorized user enters a **13-field illustrative case**. The API validates and canonicalizes the fields, applies the approved frozen preprocessing and calibrated model, then returns a probability and a **reference-dependent, noncausal** contribution explanation. PostgreSQL stores the prediction and hash-linked audit event. The user can save, reopen and rerun a case with changed inputs; the original output stays unchanged. The same application has a Docker Compose path and a deployed Azure Container Apps path.
 
-The authenticated **Overview** shows a neutral "No analysis is selected" state
-with **New Analysis** and **Analysis History** links, without a preloaded case or
-probability. The authorized workflow starts with an empty **New Analysis** form. Connect
-an existing provisioned local identity, enter all 13 required fields, then choose
-**Run Analysis**. The frozen model supplies probability/category and version-bound
-explanation evidence. Choose **Save Analysis**, open **Analysis History**, and
-reopen the immutable result. **Load inputs into New Analysis** makes an editable
-copy; changing values and running again creates new prediction/audit identifiers.
-**Reset Form** clears unsaved browser state and cannot delete saved records.
-Running already records an immutable audit snapshot; Save controls history
-membership. No preloaded case or dataset row is required.
+The final hosted Azure workflow passed [run 39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251) at [source commit `963050e`](https://github.com/Ameya5006/Aletheia/commit/963050edb817b634c9a69fd692ab839c26121bd3). Its preserved evidence includes 58 backend tests, 81 frontend tests, OIDC login, immutable image deployment, migration observation, authenticated public smoke prediction, private service exposure checks and final Azure readback. See the [supervisor handoff](docs/SUPERVISOR_HANDOFF.md) for exact evidence bindings and limitations.
 
-Use only the supported encounter fields; do not enter names, account numbers,
-patient identifiers or other PII. The complete mapping and count-bound rationale
-are in [PROJECT_REPORT.md](docs/PROJECT_REPORT.md). `None` in result categories
-means not measured. Count ceilings are computation bounds, not clinical ranges.
-Attributions compare with one explicitly disclosed protocol reference and are
-noncausal; frozen stability describes model-level research, not the entered case.
-No LLM generates predictions or explanation values.
-
-The milestone's existing isolated review stack uses
-`artifacts/interactive-verification/resume-20261015b/local/config.env`, project
-`aletheia-interactive-20261015b`, and `http://127.0.0.1:18081`. Its frontend was
-built with `VITE_LOCAL_IDENTITY=true`; the flag defaults false in other builds.
-The backend local-session endpoint separately requires test/development identity
-mode. Refresh the existing short-lived provisioned tokens from the repository
-root without recreating databases, releases or Stage 3 evidence:
-
-```powershell
-$interactiveComposeArgs = @('compose', '--env-file', 'artifacts/interactive-verification/resume-20261015b/local/config.env', '-f', 'deployment/compose.yaml', '-f', 'deployment/compose.test.yaml', '-f', 'artifacts/interactive-verification/resume-20261015b/override.json', '--profile', 'test', '--profile', 'operator')
-& docker @interactiveComposeArgs up -d --wait postgres identity mlflow api frontend
-.\.venv\Scripts\python.exe deployment/tests/interactive_stack.py tokens
-```
-
-Open `/local-session` and supply the provisioned engineer token from the ignored
-`local/secrets/engineer_token` file in that evidence directory. The token stays
-in memory; refresh/sign-out requires reconnecting. The server still verifies its
-signature, expiry, audience and current local role grants. This is the existing
-local provisioned-identity mechanism, not Login, Signup, password management or
-real external OIDC; those remain deferred. The Azure showcase instead uses
-provisioned short-lived tokens and verified application RBAC; the public
-frontend does not expose API or MLflow ingress.
-
-Verification used healthy Docker Desktop desktop-linux 29.8.2 after the engine
-update, a fresh Compose project, focused tests, real browser/axe checks, fresh
-changed-image scans/SBOM/licences and one complete offline regression. Exact
-results and security limitations are in
-[SUPERVISOR_HANDOFF.md](docs/SUPERVISOR_HANDOFF.md). Historical Stage 3 setup/
-restore recipes below are for separate setups; do not rerun preparation into
-retained evidence or mistake restore containers for this milestone stack.
-
-
-## Historical Stage 3 local Docker deployment
-
-`deployment/compose.yaml` implements a loopback-only frontend/proxy, private
-FastAPI, PostgreSQL and MLflow, persistent volumes and explicit operator jobs.
-Images use digest-pinned Python 3.12.10 (required by the frozen loader), Node
-24.20.0, PostgreSQL 18.6 and unprivileged NGINX 1.30.2, with OS security updates
-at build time. OS updates require a package mirror, so the base/dependency pins
-do not make rebuilt image bytes identical. Record the built image IDs for review.
-Image scans still report backend findings; this is not public release approval.
-The backend builds checksum-pinned SQLite 3.54.0 separately to fix the inherited
-SQLite finding while preserving Python 3.12.10. PostgreSQL starts directly as
-UID 70; its unused root-switch helper is removed. The regression image is test-only.
-Exact verification, measurements and limitations are in
-[SUPERVISOR_HANDOFF.md](docs/SUPERVISOR_HANDOFF.md).
-
-For a **new synthetic test setup** from the repository root, with healthy Docker
-Desktop and sufficient disk space, use the pinned Python environment:
-
-```powershell
-.\.venv\Scripts\python.exe deployment/tests/prepare.py
-$composeArgs = @('compose', '--env-file', 'artifacts/stage3-local/config.env', '-f', 'deployment/compose.yaml', '-f', 'deployment/compose.test.yaml', '--profile', 'test', '--profile', 'operator')
-& docker @composeArgs config --quiet
-& docker @composeArgs build --builder default
-& docker @composeArgs up -d --wait postgres identity mlflow
-& docker @composeArgs run --rm migrate
-& docker @composeArgs run --rm release-stage
-```
-
-On first setup, run the operator actions explicitly before API startup:
-
-```powershell
-& docker @composeArgs run --rm release-import operator bootstrap-initial-administrator
-& docker @composeArgs run --rm release-import operator import-release --tracking-uri http://mlflow:5000
-.\.venv\Scripts\python.exe deployment/tests/prepare.py --tokens
-& docker @composeArgs run --rm release-import operator approve-release --tracking-uri http://mlflow:5000 --token-file /run/secrets/operator_token
-& docker @composeArgs run --rm release-import operator activate-release --tracking-uri http://mlflow:5000 --token-file /run/secrets/operator_token
-& docker @composeArgs run --rm release-import operator grant-role --token-file /run/secrets/operator_token --issuer https://identity.test:8443 --subject synthetic-engineer --role engineer
-& docker @composeArgs run --rm release-import operator grant-role --token-file /run/secrets/operator_token --issuer https://identity.test:8443 --subject synthetic-reviewer --role reviewer
-& docker @composeArgs up -d --wait api frontend
-.\.venv\Scripts\python.exe deployment/tests/verify.py --checks-only
-```
-
-Visit `http://127.0.0.1:18080`. The synthetic JWKS fixture provides API test tokens,
-not an interactive OIDC login. Browser sign-in remains unavailable without a
-real configured provider. Preparation refuses existing setups; refresh only
-short-lived test tokens with `prepare.py --tokens`. The release builder copies
-verified frozen bytes; it never retrains or reserializes the model.
-
-Further checks, each from the root, use only synthetic data:
-
-```powershell
-node deployment/tests/browser.mjs
-.\.venv\Scripts\python.exe deployment/tests/recovery.py
-.\.venv\Scripts\python.exe deployment/tests/restore.py
-.\.venv\Scripts\python.exe deployment/tests/resources.py
-.\.venv\Scripts\python.exe deployment/tests/workspace.py
-& docker @composeArgs --profile regression build --builder default regression
-& docker @composeArgs --profile regression run --rm regression
-.\.venv\Scripts\python.exe deployment/tests/scan.py
-.\.venv\Scripts\python.exe deployment/tests/security.py
-& docker @composeArgs stop
-```
-
-The scanner uses the labelled `aletheia-stage3-scanner-cache` Linux volume for
-cache/archive staging and retains it. Production images get vulnerability/licence
-reports and CycloneDX SBOMs. After a test-image combined scan timed out, that
-image uses vulnerability scanning/SBOM plus direct Debian copyright/licence
-inventory; the original timeout log is retained. No clean security gate is claimed.
-
-The regression image alone adds Git; its read-only workspace contains a detached
-snapshot of the existing HEAD objects/index, without branches, parent history or
-stash. Production images contain neither Git nor that metadata. The default
-runner executes the full offline suite. `--resume-without-registry` resumes
-verification only when all nine `test_registry.py` cases already passed in a
-saved run; report both runs and do not claim a single clean full-suite run.
-
-Run resource sampling separately from regression/scanning. `restore.py` quiesces
-application writers, backs up both databases and registry/state/release volumes,
-then restores to a unique project on loopback port 18081, verifies persisted
-prediction/audit/approval and tests revocation there. It stops that project and
-retains backup files and rehearsal volumes. It refuses overwrites. Backups are
-ignored sensitive operator files and need separate retention/access controls.
-`stop` and normal `down` retain volumes; never use `down -v` on retained data.
-Restart service containers with `up -d --wait postgres identity mlflow api frontend`;
-do not rerun bootstrap, staging, import or activation as startup automation.
-
-For **development/release configuration**, copy `deployment/.env.example` to an
-ignored env file, choose an explicit project/port, configure trusted HTTPS OIDC,
-token lifetimes, release digest/version and secret directory. Mount individual
-`postgres_password`, `owner_password`, `app_password`, `mlflow_password`,
-`owner_db_url`, `app_db_url`, `mlflow_db_url`, `identity_ca` (CA trust bundle) and
-`operator_token` files. URL users are `aletheia_owner`, `aletheia_app` and
-`aletheia_mlflow`; databases are `aletheia_app` and `aletheia_mlflow`. Use strong
-distinct credentials and restrict access to the ignored files. Build a verified
-release with the existing `operator build-release --destination` command, set
-`RELEASE_SOURCE` to its directory and its emitted digest. Use the base Compose
-file with `--profile operator`; set `APP_ENV=development` or `release` explicitly.
-Release rejects test identity. No credential defaults or provider secrets exist
-in Git. `VITE_*` values are public build configuration; changes require rebuilding
-the frontend. Set `OIDC_CONNECT_SOURCE` to the matching HTTPS authority origin.
-Register `/auth/callback` for code flow/PKCE and grant local roles explicitly.
-No real provider or provider logout has been verified. PostgreSQL/MLflow have no
-host ports, and this HTTP-only local proxy deliberately emits no HSTS.
-
-## Frontend setup and execution (Macro Milestone 4 Stage 2)
-
-The Stage 1 backend and Stage 2 React/TypeScript frontend are implemented locally.
-At this historical Stage 2 checkpoint, real external OIDC-provider integration
-was unverified and sign-out cleared local session only. Docker Compose was
-implemented locally; the current Azure and CI status is recorded above.
-
-Use Node.js 24 or newer and the pinned npm lockfile. From the repository root:
-
-```powershell
-Set-Location frontend
-npm.cmd ci
-Copy-Item .env.example .env.local
-npm.cmd run dev
-```
-
-The development server proxies `/api` to the separately configured Stage 1 API at
-`http://127.0.0.1:8000`. Start that API from the root in the pinned Python environment,
-with its existing approved release, PostgreSQL and identity settings configured:
-`.\.venv\Scripts\python.exe -m uvicorn aletheia.application.api:app_factory --factory --host 127.0.0.1 --port 8000`.
-This command does not import, approve, activate or train a model; follow the existing backend operator
-contract for release setup. Missing dependencies/readiness remain visible in the UI.
-
-`VITE_API_BASE_URL` defaults to `/api/v1`. Organization sign-in requires the public
-`VITE_OIDC_AUTHORITY`, `VITE_OIDC_CLIENT_ID`, `VITE_OIDC_SCOPE` and
-`VITE_OIDC_AUDIENCE` values in `.env.local`; register the frontend origin's
-`/auth/callback` as a code-flow/PKCE callback. Use the backend's trusted issuer,
-access-token profile and audience, with local entitlements. No client secret belongs
-in a `VITE_` variable. Without provider configuration, public evidence is available
-and sign-in explicitly reports unavailable. Access tokens stay in memory; reload
-requires sign-in again. `.env.local` is ignored; `.env.example` contains public placeholders.
-
-Run these checks from `frontend`:
-
-```powershell
-npm.cmd ls --all
-npm.cmd run typecheck
-npm.cmd run lint
-npm.cmd run format:check
-npm.cmd test
-npm.cmd run build
-npm.cmd run test:browser
-npm.cmd run contract:check
-npm.cmd run licenses
-```
-
-Browser tests use installed Microsoft Edge, one worker and HTTP-boundary test
-fixtures, including a test-only OIDC provider. They start and stop their own Vite
-server on port 4173; no real provider credentials are needed. `contract:check`
-uses the root `.venv` (or `ALETHEIA_PYTHON`) to export the real FastAPI OpenAPI
-and ten public responses from a temporary verified release, without raw data.
-It compares the snapshots rather than updating them silently. `build` produces
-ignored `frontend/dist`; `npm.cmd run preview` previews that build, but requires an
-API proxy or an explicitly configured API URL/CORS because preview has no dev proxy.
-Serve the eventual static build with SPA fallback for deep routes; production
-hosting is outside Stage 2. Runtime code contains no fixture fallback.
-
-## Why and for whom
-
-A risk score alone does not tell an ML engineer whether a model generalizes, or a human reviewer why a decision deserves attention. Aletheia's intended workflow joins valid model comparison, calibrated probabilities, explanations, constrained alternatives, subgroup checks, similar training cases and durable audit evidence. Intended users are ML engineers, human risk/clinical reviewers, and administrators. The healthcare demonstration is educational and **not a clinical decision support device or treatment recommendation**. It must not process real patient submissions in a public demo.
-
-The local engineer workflow implements source/split verification, group-aware model comparison, calibration, a frozen model and immutable research audit evidence. The FastAPI/PostgreSQL/MLflow backend and React UI support independently entered cases, saved immutable analyses, review/audit persistence and operator release/entitlement workflows, alongside the earlier protocol-case route. Real external application OIDC-provider integration remains deferred. Local Compose and the Azure showcase are implemented; the GitHub Actions workflow awaits its first hosted run after a user commit/push. Production monitoring and LLM/RAG remain unimplemented.
-
-## Current capabilities and roadmap
-
-**Implemented:** official UCI 296 source identity and byte hashes; controlled extraction; strict 50-column loading; `?` normalization in seven documented fields; target/cohort/role validation; a frozen patient-group holdout; patient-aware nested CV, bounded candidate comparison, raw/sigmoid calibration comparison, immutable local experiment records and one-time holdout protection. Credit has an approved 1,000-row foundation and training-only Dummy/Logistic Regression baseline with immutable local manifests.
-
-The completed healthcare experiment selected sigmoid-calibrated Histogram
-Gradient Boosting using training-only patient folds. Its single locked-holdout
-evaluation measured ROC-AUC 0.6395 and average precision 0.2026 on 19,535
-encounters; at descriptive threshold 0.5 it detected 12 of 2,240 positives.
-The full metrics and patient-cluster intervals are in the
-[model card](docs/model_cards/healthcare_readmission_v1.md). These are
-retrospective educational results, not clinical validation.
-
-**Macro Milestone 3 implementation:** source-field sampled Shapley explanations
-of the complete calibrated probability; global repeated-sample evidence;
-deterministic local explanations with a fixed synthetic publication example;
-bounded count-recording stability; support-guarded race/gender/source-age-band
-evaluation with patient-cluster intervals; explicit no-recourse feasibility
-assessment; frozen protocols and exclusive audit artifacts. Verification and
-measured results are recorded in the model card, project report and handoff.
-
-**Implemented locally in Milestone 4 Stages 1–2:** MLflow import/registry,
-FastAPI, PostgreSQL, JWT/local-entitlement RBAC and React/TypeScript.
-**Unimplemented:** similar-case retrieval and production monitoring.
-**Implemented but not yet run on GitHub:** the Azure OIDC GitHub Actions workflow.
-**Deferred hosting choices:** DagsHub-hosted MLflow, DVC versus
-source hashes/locks, optional Hugging Face demo and optional
-OpenRouter narrator. **Rejected:** RunwayML, which has no role in tabular auditing.
-Similar-case retrieval is not collaborative filtering; a recommendation project
-would be separate. Clinically actionable counterfactual search remains unjustified.
-
-Five macro milestones are on the roadmap: (1) healthcare foundation and
-deployable design **committed and externally reviewed**; (2) frozen healthcare
-modelling/calibration **completed**, committed at `49a1a8c`; (3) explanations and audit methods
-**completed and externally approved at `ff9dce291`**; (4) application and MLOps; (5) public delivery
-and operations. Definitions of done are in [the execution plan](docs/EXECUTION_PLAN.md).
-Milestone 4 Stages 1–3 are implemented locally. The Azure showcase has passed cloud acceptance and awaits external supervisor review; the GitHub-hosted CI run remains pending a user commit/push. Only the current task and explicit supervisor repair authorize work; completion does not authorize progression.
-
-**Historical Macro Milestone 4 Stage 0:** documentation-only application contract prepared
-for supervisor review. The first application will serve verified aggregate
-audit evidence and the fixed synthetic local example, with authenticated live
-inference limited to `synthetic-discharge-v1`. It will accept no patient uploads
-or editable clinical inputs. MLflow will import the existing calibrated bundle
-without training; FastAPI/PostgreSQL will record synthetic predictions and
-review decisions under OIDC/RBAC; React/TypeScript and local Compose remain
-planned. The [application contract](docs/ARCHITECTURE.md),
-[screen contract](docs/PRODUCT_REQUIREMENTS.md),
-[local runtime contract](docs/DEPLOYMENT_ARCHITECTURE.md),
-[gated stages](docs/EXECUTION_PLAN.md) and
-[ADR 0008](docs/decisions/0008-application-mlops-contract.md) specify the design.
-Stage 0 authorizes no implementation, dependencies or service startup.
-
-## Architecture and data flow
+## System at a glance
 
 ```mermaid
 flowchart LR
-  U[Reviewer / engineer] --> UI[React TypeScript local]
-  UI --> API[FastAPI local]
-  API --> CORE[Python ML/XAI core]
-  CORE --> HC[Healthcare contract implemented]
-  CORE --> CR[Credit benchmark implemented]
-  API --> DB[PostgreSQL local audit]
-  OP[Operator frozen import] --> REG[MLflow local registry]
+  Person["Authorized user"] -->|HTTPS| Web["React UI / NGINX<br/>public Azure ingress"]
+  Web -->|same-origin proxy| API["FastAPI<br/>internal ingress"]
+  API -->|TLS| DB[("PostgreSQL<br/>case + audit state")]
+  API -->|private request| ML["MLflow<br/>internal ingress"]
+  ML -->|TLS| DB
+  Actions["GitHub Actions + OIDC"] -->|immutable images| ACR["Azure Container Registry"]
+  ACR --> Web
+  ACR --> API
+  Operator["Stopped release operator"] -.->|controlled migration + smoke| DB
 ```
 
-**Implemented healthcare research flow:** official UCI archive → size/SHA-256 verification → safe two-file extraction → exact CSV/schema check → `?` normalization and target mapping → discharge-eligible cohort → separate predictor/audit views → patient-group split lock → training-only nested patient CV → frozen selection → full-training fit → exclusive holdout claim → one evaluation and model card → unchanged calibrated model with training-only XAI/stability, counterfactual feasibility and one separately guarded subgroup audit → aggregate audit evidence. **Implemented local prediction flow:** authenticated complete case input → strict schema and approved-version validation → canonical source strings → frozen preprocessing/model/calibrator → probability and disclosed reference contrast → atomic immutable snapshot/audit/idempotency record → response → optional Save marker → scoped history/reopen. Delivery code calls the core without fitting or duplicating preprocessing. The earlier fixed protocol-case route remains compatible.
+The [high-level design](docs/HIGH_LEVEL_DESIGN.md) covers trust boundaries, deployment and recovery; the [low-level design](docs/LOW_LEVEL_DESIGN.md) covers modules, request paths, data ownership and failure handling. [SOLID and maintainability](docs/SOLID_AND_MAINTAINABILITY.md) assesses the actual code, including its compromises.
 
-## Healthcare dataset and leakage boundary
+## Prediction path
 
-Source: [UCI Diabetes 130-US Hospitals for Years 1999–2008](https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008), ID 296, DOI [10.24432/C5230J](https://doi.org/10.24432/C5230J), CC BY 4.0; see [Strack et al. 2014](https://doi.org/10.1155/2014/781670). There are 101,766 raw inpatient encounters, 50 columns and 71,518 patient IDs. The target is `readmitted_30d=1` for `<30`; `>30` and `NO` are 0. The prediction time is **discharge**, after disposition is known and before the 30-day outcome is known. Death/hospice dispositions are excluded, leaving 99,343 encounters and 69,990 patients. The encounter key is `uci296-<encounter_id>`; `patient_nbr` is used for grouping. Both identifiers, discharge disposition and sensitive race/gender/age are barred from predictors. The policy currently allows 13 conservative discharge-time fields. Exact source/missingness/field decisions are in the [healthcare audit](docs/HEALTHCARE_DATASET_AUDIT.md).
+1. **Enter** an illustrative case through 13 labeled fields; the UI checks values against the API-published schema.
+2. **Validate** again in FastAPI and canonicalize the input. The server, rather than the browser, owns the authoritative contract.
+3. **Infer** with pinned preprocessing, model and calibration artifacts. No training or refitting occurs during a request.
+4. **Explain** the output against a published reference case. Contributions describe a model contrast; they do not establish causes or clinical advice.
+5. **Commit** the prediction and audit evidence in PostgreSQL. Saving changes visibility in History without rewriting the original output.
+6. **Reopen or rerun** with a changed input. A rerun creates a new analysis identity and leaves the saved original intact.
 
-The SHA-256 patient-group split assigns approximately 80%/20% independent of labels: training 79,808 encounters (70,734 negative, 9,074 positive; 56,178 patients), locked holdout 19,535 (17,295 negative, 2,240 positive; 13,812 patients). No patient or encounter crosses. Modelling CV also groups patients in five outer and three inner folds. The dataset lacks dates/hospital IDs, so this split is not temporal or external validation. Missing race and sparse subgroups constrain the implemented subgroup audit; historical administered treatments and counts are not automatically actionable counterfactuals. Similar-case retrieval may use only authorized training cases with privacy controls and a versioned distance metric.
+The [sanitized walkthrough](docs/assets/demo/walkthrough.webm) shows the actual public deployment: provisioned sign-in, manual entry, prediction, explanation, save, history, reopen, rerun, audit trail and reset. The [media notes](docs/assets/demo/README.md) explain recording, privacy checks and limits.
 
-## Technology and connection map
+## What each technology does
 
-Status is explicit. Configuration and artifacts are detailed in [deployment architecture](docs/DEPLOYMENT_ARCHITECTURE.md).
+| Component | Responsibility here |
+|---|---|
+| React + TypeScript | Accessible manual workflow, typed API contracts and role-aware pages |
+| FastAPI + Python | Validation, release checks, inference orchestration, authorization and audit writes |
+| PostgreSQL + Alembic | Durable case, review and audit state; controlled schema migration through `0004_case_input` |
+| MLflow | Private experiment and model-release metadata; approved artifacts remain frozen |
+| Docker + Compose | Reproducible local service topology; local volumes hold state |
+| NGINX | Serves the frontend and proxies same-origin API calls |
+| Azure Container Apps + Container Registry | Public frontend, internal API/MLflow and immutable image deployment |
+| GitHub Actions + Azure OIDC | Passwordless hosted build, checks, migration, deployment, smoke and rollback path |
+| Pytest, Vitest, Playwright, Ruff | Backend, frontend, browser and lint verification |
+| Image scanning, SBOM and licence inventory | Digest-bound component and vulnerability evidence; findings need disposition |
 
-| Tool | Status, use and connection | Configuration, limits and alternative |
+**Storage boundaries:** application PostgreSQL holds cases, grants, reviews and audit events. MLflow uses a separate database role for tracking metadata and approved artifacts. Registry images are deployment bytes, not application records. Local Docker volumes hold local service state. Backups and restore evidence are protected operational artifacts outside the public source tree; none is bundled with this repository.
+
+## How the project developed
+
+| Stage | Objective and deliverable | Verification and lesson |
 |---|---|---|
-| Python 3.12, pandas, scikit-learn | Implemented credit baseline and healthcare data/model/calibration/XAI/audit core; CLI produces validated tables, frozen model evidence and aggregate audit records | `pyproject.toml`, `requirements.lock.txt`, versioned TOML; 8 GB laptop limits. Fold-local fit required. Polars is an unneeded alternative. |
-| Healthcare nested-CV runner and local joblib | Implemented research experiment; frozen selection and checksummed model live under ignored `artifacts/healthcare-model-v1` | `configs/experiments/healthcare_model_v1.toml`; trusted local artifact only, never load user-supplied pickle/joblib. The one-time holdout claim prevents reruns. |
-| Local JSON manifests | Implemented for credit and healthcare model/audit evidence; research runners write ignored artifacts | `artifacts/runs`, `artifacts/healthcare-model-v1`, `artifacts/healthcare-audit-v1`; research history preserved separately from the local MLflow import. |
-| MLflow | Implemented local frozen import, historical metrics and registry lifecycle | `MLFLOW_TRACKING_URI`; no training/PHI; outage blocks promotion, verified pinned serving can continue. |
-| DagsHub-hosted MLflow | Deferred remote alternative after local self-hosted v1 | Future secret endpoint/credentials, non-sensitive metadata only; cost/retention review. |
-| DVC | Provisional data pointer/version tool for training | Current raw SHA-256 + split lock suffice for UCI; remote storage and cost must be justified before adoption. |
-| FastAPI | Implemented local typed REST layer calling research use cases | Registry URI, `DATABASE_URL`, auth issuer/audience; validate and rate-limit. Django REST is heavier. |
-| PostgreSQL | Implemented local transactional append-only audit/version metadata | Secret `DATABASE_URL`, migrations/least privilege; audit write failure blocks served decision. SQLite is weaker for concurrent managed use. |
-| React + TypeScript | Implemented local reviewer browser interface calling API JSON | `VITE_API_BASE_URL`; no PHI browser persistence. Next.js adds unneeded server surface. |
-| Docker + Compose | Implemented local API/static images and Compose stack | Pinned bases, secret files and health checks; Compose is not public orchestration. Host installs drift. |
-| GitHub Actions | Azure OIDC build/test/immutable-digest deployment workflow implemented; local checks and controlled Azure commands passed; hosted run pending authorized commit/push | No long-lived Azure GitHub credential or regression-image deployment; rollback traffic logic passes local command simulations, with hosted execution still unverified. |
-| Azure showcase | Southeast Asia Consumption-only Workload Profiles Container Apps, Standard ACR and PostgreSQL B1ms deployed | Public HTTPS frontend, internal API/MLflow, synthetic examples only; observed Cost Management charge and Azure-services PostgreSQL rule are documented limitations. |
-| Monitoring/drift | Selected aggregate service/model checks after deployment | Versioned baselines/alerts; drift is not proof of harm. Manual review fallback. |
-| Hugging Face cards | Selected future model/dataset provenance and limitations | No sensitive artifact upload; repository Markdown fallback. Hosted demo provisional and synthetic only. |
-| OpenRouter narrator | Provisional optional prose from computed explanations | Future API key secret; no patient values, hallucination/cost risk. Deterministic templates default. |
-| Authentication/RBAC, append-only audit | Implemented JWT/local-entitlement enforcement and prediction/review trail in API/PostgreSQL | External OIDC integration unverified; database admins still require governance. No anonymous real-data serving. |
-| RunwayML | Rejected media generation service | No tabular audit requirement; reconsider only for a real media use case. |
+| Problem and governance | Define an auditable educational decision-support boundary | Original vision, approved tasks and report keep claims separate from evidence |
+| Data foundation | Version and validate the research data contract | Reproducibility requires data provenance before model comparison |
+| Leakage-safe modelling | Train baselines and compare candidate families with fixed splits | Avoid fitting preprocessing on held-out data or optimizing on the final test |
+| Calibration and reliability | Measure probability quality and threshold behavior | A useful risk estimate needs calibration; the 0.5 threshold is descriptive |
+| Explanation and audit | Preserve model contrasts, stability work and evidence identity | Explanations are reference-dependent and cannot prove causality |
+| API and persistence | Add typed endpoints, PostgreSQL state, RBAC and release checks | Server-side validation and transaction boundaries protect invariants |
+| Local deployment | Compose services, migrations, backups and security evidence | A runnable stack needs explicit state and secret ownership |
+| Manual case workflow | Add 13-field input, save, reopen, rerun, review and audit pages | A rerun must not mutate the prior prediction |
+| Azure deployment | Use public frontend, private API/MLflow and TLS database access | Effective ingress must be checked from inside and outside |
+| Hosted CI/CD | Federated OIDC, immutable builds, migration, smoke and rollback | Controller observation and actual migration are separate conditions |
+| Recovery and security closure | Verify backups, restore, browser behavior, scans and digest binding | A scan exit code is not a claim of zero vulnerabilities |
+| Presentation | Document design, record sanitized live media and verify a fresh clone | Public claims must remain bound to preserved evidence |
 
-## Repository map
+The [project report](docs/PROJECT_REPORT.md) records experimental rationale, meaningful bugs, trade-offs, results and viva preparation.
 
-`src/aletheia/data`, `ml`, `experiments` contain the existing credit pipeline. `src/aletheia/domains/healthcare` contains the foundation, modelling, evaluation, experiment and CLI. `configs/datasets`, `features`, `splits`, `experiments` hold healthcare identities, roles, split lock and modelling protocol; credit configurations remain. `src/aletheia/application`, `migrations`, `tests/application` and `frontend` contain local delivery code and tests. `tests/healthcare` contains offline tests; `docs` records audit, architecture, decisions, model card, report and supervisor evidence. Raw data and run artifacts are ignored.
+## Security and operating limits
 
-Healthcare `explain.py`, `stability.py`, `fairness.py`, `counterfactual.py` and
-`audit.py` compose the research audit. Its protocol is
-`configs/audit/healthcare_audit_v1.toml`; [ADR 0007](docs/decisions/0007-healthcare-explanation-responsible-audit.md)
-records the method, alternatives and gates. No new package was installed.
+- The browser uses a short-lived provisioned JWT; the API checks its signature, issuer, audience and stored entitlements. Roles limit case and audit access. Public Signup and external organizational OIDC remain deferred.
+- API and MLflow have internal Azure ingress. The public NGINX route is the intended browser path; TLS protects the public edge and PostgreSQL connection.
+- GitHub Actions obtains Azure access through federation. Deployment selects immutable image digests and verifies migration, smoke behavior and post-deployment state. The operator is stopped when idle.
+- Backups, restoration and a rollback branch have been exercised and preserved as evidence. Those checks do not prove every future failure can be recovered automatically.
+- Exact-image scan reports and SBOMs are digest-bound. A previously scanned frontend image had zero reported vulnerabilities; the backend image retained known findings with documented dispositions. Neither a scanner exit code nor an SBOM is a guarantee of safety or legal clearance. Review the [current handoff](docs/SUPERVISOR_HANDOFF.md) before citing counts for a deployed digest.
 
-## Installation and commands
+The source data are historical; representativeness and real-world generalization are unproven. The threshold has low recall in the documented evaluation. Explanations depend on a reference and are noncausal. The cloud showcase has limited monitoring and operator-provisioned access; it has not undergone clinical validation or production governance review. Future work should prioritize governed onboarding, monitoring and prospective validation before any real deployment.
 
-Use Python 3.12 in a virtual environment; the lock includes Stage 1 application dependencies. The commands below preserve historical research setup, not authorization to rerun the completed model or audit. From the repository root:
+## Run and verify locally
+
+**Prerequisites:** Python 3.12, Node.js 24+, npm and Git for source checks; Docker Engine/Desktop with Linux containers and Compose v2 for the full stack. A fresh clone contains no frozen model bundle, secrets, credentials or backup data. The full serving stack requires the separately approved frozen artifacts; do not train a replacement merely to make it start.
 
 ```powershell
-py -3.12 -m venv .venv
+python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.lock.txt
-.\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -m aletheia.domains.healthcare acquire
-.\.venv\Scripts\python.exe -m aletheia.domains.healthcare verify
-.\.venv\Scripts\python.exe -m aletheia.domains.healthcare model
-.\.venv\Scripts\python.exe -m ruff check .
-.\.venv\Scripts\python.exe -m ruff format --check .
-.\.venv\Scripts\python.exe -m pytest -m "not live_data"
+.\.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e .
+.\.venv\Scripts\python.exe -m ruff check src tests
+New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+.\.venv\Scripts\python.exe -m pytest tests/unit tests/data -m "not live_data" --basetemp=artifacts/fresh-pytest
+npm.cmd --prefix frontend ci
+npm.cmd --prefix frontend run format:check -- --end-of-line auto
+npm.cmd --prefix frontend run lint
+npm.cmd --prefix frontend run typecheck
+npm.cmd --prefix frontend test
+npm.cmd --prefix frontend run build
 ```
 
-The archive and CSV go under ignored `data/raw/healthcare`. `acquire` downloads only the official HTTPS archive, verifies byte identity and extracts two approved members. On a local Python TLS certificate failure, obtain the same official URL through a trusted TLS-capable client into that ignored path, then rerun `acquire`; never bypass checksum validation. `verify` checks the frozen lock and prints partition sizes. `lock` creates a new lock only if absent and is for protocol regeneration under approval; it refuses overwrite. `model` is a single-use experiment: it runs training-only evidence twice, freezes selection, then claims and evaluates the holdout once. It refuses an existing run directory; do not delete a completed run to tune against its result. Configuration files are versioned TOML; no credentials are needed now. The local API uses environment-backed secrets; `.env` files stay ignored. The ordinary test suite is synthetic and offline; `live_data` tests are opt-in.
+These are source-level checks; database, frozen-artifact and live-browser tests have separate prerequisites. [Local development and verification](docs/LOCAL_DEVELOPMENT.md) gives the checked Compose configuration, environment-file preparation, migration/bootstrap, safe local identity, health checks and non-destructive shutdown steps. [Azure deployment architecture](docs/DEPLOYMENT_ARCHITECTURE.md) explains the hosted route without requiring account identifiers in public copy.
 
-The audit uses the preserved model and raw CSV; it never trains. Before the first
-audit, run the protocol tests, then these commands in the pinned environment:
+## Documentation
 
-```powershell
-.\.venv\Scripts\python.exe -m aletheia.domains.healthcare.audit freeze
-.\.venv\Scripts\python.exe -m aletheia.domains.healthcare.audit run
-.\.venv\Scripts\python.exe -m aletheia.domains.healthcare.audit inspect
-```
+| Read | Purpose |
+|---|---|
+| [High-level design](docs/HIGH_LEVEL_DESIGN.md) · [Low-level design](docs/LOW_LEVEL_DESIGN.md) | Topology, trust, sequences, modules and data ownership |
+| [Architecture record](docs/ARCHITECTURE.md) · [Deployment architecture](docs/DEPLOYMENT_ARCHITECTURE.md) | Approved current architecture and historical decisions |
+| [SOLID assessment](docs/SOLID_AND_MAINTAINABILITY.md) · [Cleanup manifest](docs/REPOSITORY_CLEANUP.md) | Maintainability and repository disposition |
+| [Project report](docs/PROJECT_REPORT.md) · [Execution plan](docs/EXECUTION_PLAN.md) | Engineering, ML learning and approved sequencing |
+| [Model card](docs/model_cards/healthcare_readmission_v1.md) · [Local guide](docs/LOCAL_DEVELOPMENT.md) | Model limits and reproducible source/local checks |
+| [Supervisor handoff](docs/SUPERVISOR_HANDOFF.md) | Current review evidence and unresolved items |
 
-The audit has completed locally; use `inspect` for the existing evidence.
-The first two commands exclusively reserve
-`artifacts/healthcare-audit-v1`; do not delete or overwrite an existing run or
-claim. A failed claimed audit needs supervisor review. Use
-`python -m aletheia.domains.healthcare.audit inspect` to verify saved hashes,
-bindings and publication privacy without recalculating outcomes. The local
-example's values are synthetic; real local patient evidence is not published.
-
-## Limits, licence and review
-
-The UCI records are historical (1999–2008), omit hospital/date identity, contain
-missing and rare groups, and have no clinical or external validation. Predictive
-and subgroup evidence use the frozen retrospective patient split. XAI uses a
-small training reference and marginal combinations that may be unlikely;
-stability is a limited recording-sensitivity probe. No clinical recourse,
-fairness certification, latency claim, security certification or clinical deployment is
-established. The Azure showcase is educational. Aggregate publication is not formal differential privacy. The repo's
-software licence should be checked before reuse; dataset reuse follows
-**CC BY 4.0** with UCI/Strack attribution. This is not medical advice.
-
-Read [product requirements](docs/PRODUCT_REQUIREMENTS.md), [dataset audit](docs/HEALTHCARE_DATASET_AUDIT.md), [architecture](docs/ARCHITECTURE.md), [deployment design](docs/DEPLOYMENT_ARCHITECTURE.md), [execution plan](docs/EXECUTION_PLAN.md), [project report](docs/PROJECT_REPORT.md), [credit audit](docs/DATASET_AUDIT.md), [ADRs](docs/decisions), and [supervisor handoff](docs/SUPERVISOR_HANDOFF.md).
-The current Azure task and supervisor instructions authorize only this deployment
-continuation. Exact acceptance status and pending hosted-CI verification are in
-SUPERVISOR_HANDOFF.md. No subsequent milestone or Git mutation is authorized.
+**Responsible use:** Aletheia demonstrates engineering and explainability techniques on historical data. Its outputs are not medical advice, a diagnosis, an individual outcome guarantee or a basis for real-world automated clinical decisions.

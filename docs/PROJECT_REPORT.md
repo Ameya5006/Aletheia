@@ -1,6 +1,95 @@
 # Aletheia — Project Report
 
-## Final hosted Azure closure recovery (2026-10-20)
+## GitHub presentation and design defence (2026-10-20)
+
+**Milestone and order.** After Azure deployment, hosted CI, backup/restore,
+rollback and exact-image security evidence were preserved, the active
+[presentation task](CURRENT_TASK.md) called for a clear public entry point,
+current HLD/LLD, a candid maintainability assessment, live demo media and a
+fresh-clone check. This order matters: public claims could now be tied to
+completed source, run and digest evidence rather than plans. No model training,
+held-out data, runtime, schema, workflow, Azure topology, ingress or Docker
+data changed. The latest successful hosted run is
+[39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251)
+at source `963050edb817b634c9a69fd692ab839c26121bd3`, after the earlier
+green closure run described below. Documentation and media remain uncommitted
+for external supervisor review.
+
+**What the presentation adds and why.** The [README](../README.md) is a short
+interviewer entry point; it links the [HLD](HIGH_LEVEL_DESIGN.md),
+[LLD](LOW_LEVEL_DESIGN.md), [SOLID assessment](SOLID_AND_MAINTAINABILITY.md),
+[local guide](LOCAL_DEVELOPMENT.md), [repository audit](REPOSITORY_CLEANUP.md)
+and [media](assets/demo/README.md). The HLD follows users, trust boundaries,
+local/cloud topology, lifecycle and recovery. The LLD follows code modules,
+real database tables, request, authorization, inference, save/rerun and CI
+sequences. These views complement the long architecture record: a new reader
+can understand the current system without treating historical plans as live
+services. An alternative was to extend only the already long architecture
+file; that would keep the evidence but hide the current design. No new ADR
+or abstraction was warranted because no technical architecture changed.
+
+**Worked illustrative case.** The real public browser walkthrough used all
+13 required fields with non-sensitive values. It returned a calibrated
+probability of `0.16546872246399696` (16.55% displayed), below the
+descriptive 0.5 threshold. Its explanation lists contributions relative to
+a published reference case and is **not causal**. The authorized engineer
+saved and reopened the analysis, changed one input, reran it as a new record,
+then checked that the original probability stayed unchanged. The audit page
+showed committed, role-scoped events; it does not verify the complete chain.
+This exercise demonstrates workflow and persistence, not clinical correctness
+or a new model evaluation.
+
+**Media decision and privacy trade-off.** The reusable
+[Playwright recorder](../scripts/presentation/record-demo.mjs) captures the
+live approved public frontend at 1440 × 900 and builds a 69-second WebM from
+DOM-redacted stills. It never records token entry and hides identifiers,
+account strings and digests. The poster is a real redacted result frame.
+Raw screen video or a fictional mockup were rejected: the former could expose
+a short-lived credential or operational identifiers; the latter would not
+demonstrate the deployed product. Still-frame composition is less fluid than
+continuous capture, but it gives bounded reviewable privacy checkpoints and
+a small media artifact. The demo itself creates real illustrative case and
+audit records in the existing showcase database; those records are not
+bundled in the repository.
+
+**Meaningful problems and recovery.** Direct Edge navigation from this managed
+desktop timed out even though HTTPS and Node requests to the public frontend
+returned 200. The recorder now intercepts only the exact approved origin and
+fulfils those browser requests from live HTTPS responses, keeping the rendered
+page on the public origin. API scale-to-zero caused a retryable login timeout
+on one capture attempt; bounded readiness warming and at most three sign-in
+attempts resolved it without changing inference deadlines or Azure sizing.
+Frame review caught a result screenshot positioned above the output and an
+audit screenshot taken while loading. Scrolling to the result/explanation and
+waiting for committed events corrected those frames. DOM redaction changed
+history-link text, so the recorder selects the unchanged link destination
+after redaction. These are recording issues, not changes to application
+semantics. The lesson is to inspect actual visual evidence after automated
+browser assertions and to distinguish cold-start delay from incorrect auth.
+
+**Concept and viva defence.** A high-level design describes service ownership,
+trust and recovery; a low-level design explains the modules, schema and
+request sequence that enforce those boundaries. SOLID is a set of change and
+testability heuristics, not a compliance score: the current modular monolith
+has useful seams but also large orchestration files and direct SQL coupling.
+Basic question: why does the browser not hold the approved model? It only
+collects and displays data; the API validates and executes the pinned release.
+Intermediate: why is a saved analysis not overwritten by a rerun? Each rerun
+gets a new prediction and audit event, preserving the original evidence.
+Difficult: what do the screenshots prove? They prove that a real authorized
+journey rendered and responded at capture time, while frozen research and
+hosted evidence support separate model, deployment and recovery claims.
+
+**Verification and remaining limits.** The exact presentation checks and
+fresh-clone results are recorded in the current
+[supervisor handoff](SUPERVISOR_HANDOFF.md). The walkthrough passed its bounded
+predicted/saved/reopened/immutable/reset assertions and the privacy helper's
+four focused tests passed. Presentation does not change the frozen model,
+historical-data representativeness, known backend findings, limited monitoring,
+operator-provisioned access or the nonzero billing observation below. It adds
+no new resume metric beyond verifiable source, run and demo evidence.
+
+## Earlier final hosted Azure closure recovery (2026-10-20)
 
 **Milestone and sequencing.** Recovery started from a clean `main` at
 `929b10deb901c715bee05aaba52ac1db3ccbeb80`, matching remote `main` exactly

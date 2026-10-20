@@ -1,6 +1,12 @@
 # Aletheia — System Architecture
 
-## Current approved Azure architecture (2026-10-19)
+## Current presentation snapshot (2026-10-20)
+
+The approved topology below is unchanged. The later successful [hosted run 39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251) at source commit `963050edb817b634c9a69fd692ab839c26121bd3` supersedes the earlier run reference in the historical closure checkpoint below. The most recent preserved Azure readback has API `api--0000006` at digest `sha256:c15f8346e7316cb16f53a950630a69850c6ceaa0b03623531652cc19c1c3ffb9`, frontend `frontend--0000005` at `sha256:1cecb7b183bf00883f411a27a92dfb26e027f0cbd401c5cad7b7c4f5ee0f9056`, and unchanged MLflow at `sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d`. The no-ingress release operator revision `release-operator--0000012` is stopped. Production traffic and resources were untouched by the presentation work.
+
+See the [high-level design](HIGH_LEVEL_DESIGN.md), [low-level design](LOW_LEVEL_DESIGN.md) and [SOLID assessment](SOLID_AND_MAINTAINABILITY.md) for current explanatory diagrams and code boundaries. The older dated sections below remain project history.
+
+## Earlier approved Azure architecture checkpoint (2026-10-19)
 
 The running showcase uses the Southeast Asia Azure Container Apps **Workload
 Profiles** environment `cae-aletheia-workload-sea-01` with exactly one
