@@ -19,10 +19,14 @@ by immutable ACR digest, uses a stopped-by-default no-ingress operator for
 migration and smoke prediction, and can route traffic back to prior revisions.
 GitHub Actions uses an Entra federated identity credential and narrowly scoped
 RBAC; no long-lived Azure credential is stored in GitHub. The workflow is
-implemented and locally checked, and its migration/smoke commands passed in
-Azure. The user's explicit one-time Git exception enabled the first hosted run;
-that run failed before deployment on a Windows/Linux newline comparison and a
-bounded correction is being verified. Current Cost Management returned a nonzero INR
+implemented and verified by successful hosted
+[run 39277474682](https://github.com/Ameya5006/Aletheia/actions/runs/39277474682)
+at commit `929b10deb901c715bee05aaba52ac1db3ccbeb80`. Migration observation,
+digest deployment, authenticated public prediction and real API/MLflow health
+isolation passed; the operator is stopped. The user's explicit one-time Git
+exception authorized the closure commits and bounded CI repairs. The first
+failed run and its Windows/Linux newline correction remain historical evidence.
+The 2026-10-19 Cost Management read returned a nonzero INR
 11.7066685215817 month-to-date pre-tax amount, mostly from the earlier
 Express apps; a numeric zero future forecast is not asserted. The historical
 ingress checkpoints below are preserved for the supervisor.

@@ -1,267 +1,175 @@
-# Supervisor Handoff - final Azure closure checks (2026-10-19)
+# Supervisor Handoff - recovered final Azure/CI closure (2026-10-20)
 
 ## 1. Current milestone and status
 
-Azure application acceptance and the remaining local/evidence gates are verified,
-with the retained security findings below. **The milestone remains open until
-the actual hosted GitHub Actions run passes.** The user explicitly granted a
-one-time exception to the no-commit/no-push restrictions for this reviewed Azure
-closure. Permanent governing files remain unchanged by that exception.
+**PASS: hosted CI and final Azure readback.** External supervisor acceptance is
+still required. Nonzero reported cost and retained backend security findings
+remain explicit limitations; the original zero-cost objective and production
+security acceptance are not established.
 
 Public URL: https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io
 
-Hosted continuation: reviewed commit `aa8c5179704956bc1964fed6e16ca1591678a154`
-was pushed. [Run 39261782677](https://github.com/Ameya5006/Aletheia/actions/runs/39261782677)
-failed before Azure login/deployment because approved Windows CRLF hashes differ
-from Linux checkout LF bytes. A bounded checker repair preserves all approved
-hashes and accepts only newline conversion; three regression cases pass. The
-three non-secret Azure identifiers now also have encrypted repository settings
-for automatic log masking, and the workflow reads those masked settings. Required
-variables remain configured; no long-lived Azure credential was introduced.
-The second [run 39262552221](https://github.com/Ameya5006/Aletheia/actions/runs/39262552221)
-passed frozen checks, then had 7 passing tests / 39 errors because ignored frozen
-fixtures were absent. No Azure deployment ran. The bounded repair retains the
-deployment application tests, retrieves ten immutable-image fixtures after OIDC,
-verifies all 42 release-file hashes, pins Python 3.12.10, and supplies disposable
-runner PostgreSQL 18. PR checks remain artifact-free and cannot access Azure.
-The isolated fixture-preparation check matched all hashes and rejected tampering.
-The third [run 39263626020](https://github.com/Ameya5006/Aletheia/actions/runs/39263626020)
-failed before checkout: runner parsing preserved single quotes around Docker's
-health command (`unknown shorthand flag: 'U' in -U`, exit 125). A one-line double
-quote correction preserves the health command; Azure was unchanged. Corrected
-hosted execution is pending.
+Final deployed commit: `929b10deb901c715bee05aaba52ac1db3ccbeb80`.
+[Hosted run 39277474682](https://github.com/Ameya5006/Aletheia/actions/runs/39277474682)
+completed **successfully**, with every job step successful. Recovery found this
+existing green run through GitHub's live API; no replacement run, new deployment,
+CI correction, commit or push was necessary. The previous handoff is preserved
+as ignored `final-closure-20261019/handoff-before-recovery-20261020.md`.
 
-The fourth [run 39263931188](https://github.com/Ameya5006/Aletheia/actions/runs/39263931188)
-passed runner setup/frozen checks but Azure OIDC returned `AADSTS700213` because
-the trust used a name-only subject. GitHub emits the immutable owner/repository-ID
-subject. Existing authenticated tooling updated the single trust to the exact
-observed main subject after confirming repository IDs; issuer/audience and RBAC
-were preserved. Readback matches `deployment/azure/github-oidc.json`; old trust
-and failure evidence remain preserved. Hosted login must still be rerun.
+## 2. Implemented and verified
 
-The fifth [run 39264655113](https://github.com/Ameya5006/Aletheia/actions/runs/39264655113)
-passed OIDC, fixture retrieval, 46 backend tests (2 warnings, 6.60s), frontend
-lint/type checks and 81 frontend tests. Contract export failed because it assumed
-`.venv/bin/python`; the workflow sets its existing `ALETHEIA_PYTHON=python`
-override. Deployment runs retain the contract gate; PRs remain artifact-free.
-Image builds and Azure deployment have not run yet.
+- Hosted OIDC, frozen-input verification and verified fixture retrieval.
+- 58 backend tests, 81 frontend tests, Ruff, frontend lint/typecheck, contract,
+  production build and deployable credential scan.
+- Immutable ACR builds/pushes, Bicep validation/structured what-if, migration
+  marker observation at `0004_case_input`, controlled API/frontend deployment.
+- Authenticated public prediction HTTP 201, probability `0.165468722464`,
+  matching frozen identities; save, reopen, history and audit checks passed.
+- Anonymous history 401, engineer/admin boundary 403; real internal API and
+  MLflow health 200, outside effective-host and alias probes 404.
+- Final hosted topology/digest guard; operator stopped after migration and smoke.
+- Fresh readback: healthy serving revisions at 100% traffic; private ingress,
+  resource inventory, student spending limit, cost and budget verified.
+- Exact changed-image security/SBOM/licence reconciliation; unchanged evidence
+  reused after identity checks.
 
-The sixth [run 39265385717](https://github.com/Ameya5006/Aletheia/actions/runs/39265385717)
-passed all tests, contract/build/credential gates, OIDC and immutable image
-build/push, then the Azure guard and Bicep validation. What-if required the CLI
-`--no-pretty-print` flag for JSON parsing; the failure occurred before migration
-or app update. The one-flag correction is covered by the shell regression.
-Built but undeployed images and failed logs remain preserved.
+## 3. Files changed during this recovery
 
-Run 39266540207 passed structured what-if and started controlled migration.
-Independent sanitized log read confirmed `0004_case_input`, but the controller
-did not advance. CLI/provider inspection proved logs require the omitted
-`Microsoft.App/containerApps/getAuthToken/action`. A new one-action custom role
-is assigned only to release-operator; four role templates and all ten exact
-assignments are verified. Existing nine assignments and federation are unchanged.
-Hosted completion remains pending. The new operator digest `sha256:b4b741f0ab70c22a055400b249b13cfea52c3057f3976d610a50ee16434ea2ec`
-has scan/SBOM exits 0 and unchanged retained severity counts; complete inventory
-is 240 components / 772 licence entries with verified SQLite 3.54.0.
+Only tracked documentation changed: `docs/PROJECT_REPORT.md`,
+`docs/SUPERVISOR_HANDOFF.md`, `docs/ARCHITECTURE.md`, and
+`docs/DEPLOYMENT_ARCHITECTURE.md`. Ignored evidence helpers/reports were added or
+updated under `artifacts/azure-preflight/final-closure-20261019/`.
+No governing file, source, workflow, model, deployment configuration or test changed.
 
-Run 39266540207 timed out observing the marker, stopped the operator and executed
-the actual hosted rollback branch; API/front-end healthy traffic remained 100%.
-Run 39269266858 again completed database work but hid CLI errors, so cancellation
-was requested for replacement; the operator is explicitly stopped and the
-serving apps retain API revision 3/frontend revision 2 and their approved images.
-The repair adds bounded, sanitized exact-revision log observation and safe smoke
-probability reporting; four focused tests pass, lint/format/PowerShell parsing
-pass, and local read-only observation reports completion without raw logs.
-No inference deadline changed. Corrected hosted deployment remains pending.
+## 4. Decisions and problems
 
-Run 39272451787's new observer exposed `Could not find a replica for this app`.
-The CLI validator requires `Microsoft.App/containerApps/revisions/replicas/read`,
-which was missing from the CI grants. This read was added only to the existing
-operator-scoped log role (alongside getAuthToken), with no new assignment: ten
-remain. The diagnostic run is cancelled, operator stopped, and serving apps
-unchanged. Hosted discovery/migration/deployment/smoke verification must resume.
+The interrupted controller problem was already fixed: CLI replica discovery
+needed `Microsoft.App/containerApps/revisions/replicas/read` in the existing
+operator-only role, alongside `getAuthToken/action`. Ten assignments remain in
+the preserved verified role evidence. Final commit `929b10d` then tested the
+real MLflow `/health` endpoint instead of an API route that could misleadingly
+return an application 404. Successful hosted execution proves both repairs.
 
-**Verified hosted acceptance:** [run 39275058032](https://github.com/Ameya5006/Aletheia/actions/runs/39275058032),
-commit `1428e30714df3375885777732e5e881d51834150`, succeeded through OIDC,
-50 backend tests (2 warnings, 5.14s), 81 frontend tests, contract/build/credential
-checks, immutable push, Bicep validation/what-if, migration, digest deployment,
-and authenticated prediction/save/reopen/history/audit. Probability
-`0.165468722464`; frozen identities and negative RBAC passed; operator stopped.
-Final review found the MLflow public probe used an API-only route. The correction
-tests real endpoints on effective internal FQDNs and aliases from the outside
-runner, plus real short-name health from inside the operator. Twelve focused
-tests pass (0.67s); four fresh outside health requests returned 404 with valid TLS.
-This stronger hosted verification and final digest/security reconciliation remain.
+Recovery reused the green run. Only changed digests received new scans; the old
+frontend scan cannot validate a new digest. Backup/restore, full regression,
+browser, persistence and live rollback were not repeated.
 
-## 2. What changed and why
+The first readback's HTTPS assertion failed without saving individual probe
+statuses. All six independent retry probes passed. The local ignored helper
+now saves results before asserting; its full rerun passed. The exact original
+failing endpoint/cause is unknown. No inference deadline or runtime limit changed.
+Sandbox access initially prevented reading existing sessions; approved elevated
+read/verification commands succeeded without adding credentials.
 
-- Formatted only `frontend/browser/cloud.spec.ts`; frontend formatting now passes.
-- Finished API, MLflow and stopped-operator scans/SBOMs/licence inventories. The
-  API archive was reused after blob/config/layer/ACR binding; only missing archives
-  were exported. No image rebuild, push or app deployment occurred in this closure.
-- Fixed `deployment/azure/ci-deploy.sh` to snapshot the revision actually serving
-  100% traffic, rather than a possibly failed latest revision. Missing/ambiguous
-  traffic fails before migration/update. Added three command-boundary regression
-  tests in `tests/deployment/test_ci_rollback.py` and included them in the workflow.
-- Removed literal non-secret Azure account identifiers from the pending workflow
-  and role templates to follow CURRENT_TASK's handling rule. The workflow reads
-  masked repository settings `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and
-  `AZURE_SUBSCRIPTION_ID`; matching required Actions variables are verified.
-  Role JSON templates require in-memory substitution of
-  `${AZURE_SUBSCRIPTION_ID}`. Live identities, permissions and architecture did
-  not change. All three required GitHub repository Actions variables were absent,
-  were configured through existing authenticated tooling, and were read back to
-  match the approved Azure identity. Their values were never printed or recorded.
-- Reconciled README, PROJECT_REPORT, DEPLOYMENT_ARCHITECTURE and this handoff.
-  Prior handoffs, original scan bytes, failed candidates and attempts are preserved.
+## 5. Checks actually executed and exact results
 
-## 3. Exact security evidence
-
-| Image | Critical / High / Medium / Low / Unknown | Complete SBOM / licence entries |
-|---|---|---|
-| Frontend (preserved verified result) | 0 / 0 / 0 / 0 / 0 | 71 / 103 |
-| api | 1 / 63 / 112 / 105 / 1 | 240 / 772 |
-| mlflow | 1 / 63 / 112 / 105 / 1 | 240 / 772 |
-| ci_operator | 1 / 63 / 112 / 105 / 1 | 240 / 772 |
-
-All six remaining Trivy scan/SBOM commands exited 0. These are successful
-evidence-generation commands, **not clean backend scans**. All 282 findings per
-backend-family image remain recorded, without suppression. Raw CycloneDX 1.7
-outputs contain 239 components and 771 licence entries each; separate complete
-inventories add native SQLite 3.54.0 with its actual SHA-256 and public-domain
-licence/source reference. Component/reference and exact-digest binding checks
-passed. An external JSON-schema validator was not installed/run; licence
-inventory is not legal clearance.
-
-The critical zlib finding concerns MiniZip; the inspected binary/library and
-affected symbol are absent, consistent with Debian Bookworm's published note.
-Six fix-version findings (four HIGH, two MEDIUM) are pip-vendored packages.
-Installed top-level setuptools 84.0.0 and urllib3 2.8.0 are fixed; pip 26.2.1
-is still the latest official release checked. No user-directed installer path
-exists in reviewed serving entrypoints. Other distribution findings have no
-fixed Bookworm version reported and remain residual risk. No unsupported vendor
-surgery or unrelated dependency upgrade was made. Inspect every disposition in
-`artifacts/azure-preflight/final-closure-20261019/*-dispositions.json`.
-
-Exact current ACR index digests:
-
-- Frontend: `sha256:12176c6a16302f1f4208c7878ead164701c08704ad3620fddc744ada63547416`
-- API: `sha256:06f7bb2229fb1c77b6561afaeccdbf51c9a0243005fb0ea647a8d6de44f683ab`
-- MLflow: `sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d`
-- Stopped operator: `sha256:3f6b5f2fc264d26c57da3d9b87174eae37438c7bfdbc2f0ef22164ddb65ec8dd`
-
-Frontend scan SHA-256, corrected from an earlier 65-character transcription:
-`78e3cdf93a18350b1d6b6c4da2a9cd38bc56ebdbf74a5b445c8bfa4f9b72d344`.
-Its 194,958-byte JSON and original timestamp are unchanged. Frontend SBOM hash:
-`99b867cf4a7ec05e2275c84a8f38e716c00d49fe14dbb9a26827b2720c8c108b`.
-
-## 4. Tests actually executed and preserved acceptance
-
-| Check | Exact result |
+| Check | Result |
 |---|---|
-| Frontend formatting | Passed after Prettier-only correction |
-| Rollback regression before fix | 2 failed, 1 passed; correct failures reproduced |
-| Rollback regression after fix | 3 passed; local command simulation only |
-| Focused deployment unit suite | 8 passed in 2.67s; no real backup/restore/cloud workflow |
-| Local CI static checks | 1 workflow, 3 rendered role templates, 7 Python files, 6 shell scripts and 12 PowerShell scripts parsed; Ruff passed |
-| Credential-pattern/source review | Zero findings across the 74 reviewed candidate paths; 50 deployable source/asset files also passed; no files staged |
-| Frozen/protected inputs | 32 tracked frozen inputs, entrypoint and pin passed; accessible protection result below |
-| Fresh read-only Azure guard | Spending limit On, Consumption-only mode, exact inventory, internal ingress, min/max and current image digests passed |
-| Fresh federation/RBAC read | One exact main-branch trust, zero application password/certificate credentials, nine scoped role assignments; custom role actions match templates |
-| Preserved public acceptance | HTTPS/live/ready 200; public API/MLflow 404; unauthorized history 401; engineer/admin boundary 403 |
-| Preserved prediction/workflow | 201; probability `0.16546872246399696`; sign-in/manual case/save/history/reopen/changed rerun/immutable original/reset/review/audit passed |
-| Preserved restart/cold persistence | Saved predictions/audits retained; actual zero replicas observed; readiness 504, 504, then 200 |
-| Preserved manual live rollback | MLflow previous `0000001` ready, then current `0000002` restored ready; attempted API previous `0000002` live 200/ready 503, then current `0000003` restored ready |
-| Hosted CI / OIDC / automated rollback | **Not run; no run URL or hosted success claimed** |
+| Live GitHub run/jobs and sanitized log | Run 39277474682 success; job 118145469698; all steps success |
+| Hosted backend | 58 passed, 2 warnings, 4.22s |
+| Hosted frontend | 81 passed across 7 files; lint/typecheck/contract/build passed |
+| Hosted credential scan | 52 deployable source/asset files passed |
+| Fresh local frozen check | 32 tracked inputs plus entrypoint/pin passed |
+| Fresh local credential scan | 53 deployable source/asset files passed |
+| Preserved acceptance hash check | 5 backup files' sizes/SHA-256 match; restore/browser/workflow/persistence evidence consistent; original frontend scan/SBOM hashes match |
+| Changed deployed images | Backend/frontend vulnerability and SBOM commands all exit 0; exact config bindings match |
+| Native backend inventory | SQLite 3.54.0 and binary hash match; 240 components / 772 licence entries |
+| Full final readback retry | Exit 0; frontend/live/ready 200, anonymous history 401, direct API/MLflow health 404 |
+| Recovery evidence validator | Exit 0; 14 unchanged MLflow reports hash-match; changed scan/config/digest bindings and final Azure state agree; credential checks have zero findings |
+| Git checks | HEAD, origin/main and live remote main match; 0 ahead / 0 behind; whitespace check passes; zero staged files |
 
-The current traffic query selected API `api--0000003` and repaired frontend
-`frontend--0000002` as CI rollback bases. The preserved older frontend
-`frontend--0000001` retains its baseline findings. Manual and simulated rollback
-evidence does not establish hosted execution of the rollback branch.
+Rollback evidence is preserved from hosted run `39266540207`, which stopped the
+operator and executed the actual recovery branch on a pre-update observation
+failure while healthy API/frontend traffic remained 100%. Earlier manual live
+revision rollback/restoration also passed. The green final run did not inject
+a failure after switching traffic; these checks have different scopes.
+
+## 6. ML and immutable deployed identities
+
+No new ML experiment, training, calibration or held-out access occurred.
+Prediction probability is a frozen model output, not clinical validation.
+
+| App | Revision at 100% traffic | Digest |
+|---|---|---|
+| Frontend | `frontend--0000004` | `sha256:c71d3fc586fb41cc7796287ed7f35a0528fc24fa6adb44ecf52042697f763410` |
+| API | `api--0000005` | `sha256:aaa14ef48a2db5f28647bc1599e7d1fdd90c9962d484cc417d32d59b2c1f54e3` |
+| MLflow | `mlflow--0000002` | `sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d` |
+
+Stopped no-ingress `release-operator--0000010` uses the API digest.
+All three serving apps remain min 0/max 1.
 
 Frozen model: `8c3a99dd8dfe20d2a3a0a721637b4be500ee1b32843f7cefc3af265f07262f7a`;
 release: `65f2302cc9c4795142567296cc6b16143fad5abfe4df7b04152975748c2ec271`;
 evidence: `2d073fa0d0bbbd4debfdf445cd80ec478fef0f7098c7ef356dbb3edd28894ea8`.
-No model training, fitting, calibration, held-out analysis or full offline
-regression was repeated. Application OIDC/Signup and clinical validation remain
-outside this educational showcase.
 
-## 5. Protection report resolution
+## 7. Security and limitations
 
-The 2,193-path baseline has 1,744 immutable matches, six authorized edits,
-four classified mutable credential paths and 439 inaccessible generated runtime
-paths. None of those 439 is tracked repository input. They remain UNVERIFIED;
-no content or ACL change was made. **Zero unexplained accessible mismatches**
-is the gate, and it passes. Original manifests/policies remain preserved; the
-reviewed README status correction has a separate exact-hash/diff classification.
-The inaccessible runtime class is a disclosed evidence limitation, not a mismatch.
+Frontend: zero vulnerabilities; 71 SBOM components / 103 licence entries.
+API/operator: 1 critical / 63 high / 112 medium / 105 low / 1 unknown;
+240 complete SBOM components / 772 licence entries. Unchanged MLflow retains
+the same severity counts and complete inventory counts. Findings are preserved.
+Prior MiniZip applicability and pip-vendoring dispositions remain supporting
+evidence, not a clean backend scan or legal clearance. No external CycloneDX
+schema validation was performed.
 
-## 6. Backup/restore and PostgreSQL
+Earlier protection resolution retains 439 inaccessible generated runtime paths
+as UNVERIFIED, none tracked, and zero unexplained accessible mismatches. No ACL
+or content workaround was made. Provisioned JWT access, cold-start latency,
+the accepted database firewall exception and historical-data/clinical limits
+remain. Current remaining credit and a numeric forecast are not freshly verified.
 
-Fresh backup `artifacts/azure-preflight/final-local-backup-20261019T051444Z`
-still matches all five full SHA-256 values and sizes in its manifest. Reused
-isolated restore evidence confirms `0004_case_input`, approved active release,
-one registered model, readiness 200, prediction 201 and matching restored volume
-contents; the initial cold prediction 504 and successful retry are retained.
-Only that temporary restore project was removed earlier. The original expired
-identity certificate, 13 October Stage 3 backup, fresh archives and original
-source volumes remain preserved. No restore or backup operation was repeated.
+## 8. Azure resources, budget and cost
 
-Fresh PostgreSQL control-plane read: Ready, version 18, Standard_B1ms, 32 GiB,
-seven-day backup, HA Disabled, `require_secure_transport=ON`. Its sole firewall
-rule remains `AllowAzureServicesShowcase` (0.0.0.0/0.0.0.0), the approved bounded
-Azure-services exception. Prior verified migration head is `0004_case_input`;
-application/MLflow roles, TLS and persistence semantics remain unchanged.
+Readback 2026-10-20: 13 resources, all Southeast Asia, in
+`rg-aletheia-showcase-sea-01` (8) and `rg-aletheia-workload-sea-01` (5).
+All four old Express apps are stopped. Current environment is WorkloadProfiles,
+Consumption only, Succeeded, with no customer networking or paid log destination.
+PostgreSQL is Ready, version 18, Standard_B1ms, 32 GiB, secure transport ON.
+No Azure resource or existing Docker data was deleted.
 
-## 7. Exact Azure inventory, budget and cost
+Azure for Students is Enabled; spending limit is **On**. Fresh Cost Management
+month-to-date pre-tax cost is **INR 11.7066685215817**. The INR 100 monthly
+warning budget exists with enabled 50/80/100 percent notifications. Notifications
+are not a hard cap. Billing can lag; no zero-cost, zero-forecast, fresh credit
+balance or cash-versus-credit settlement claim is made.
 
-There are 13 approved group resources, all in Southeast Asia:
+## 9. Architecture and documentation
 
-- `rg-aletheia-showcase-sea-01` (8): `cae-aletheia-sea-01` (Express environment),
-  `acraletheiasea1017` (Standard ACR), `id-aletheia-pull-sea-01` (pull identity),
-  `pg-aletheia-sea-1017` (PostgreSQL), and stopped apps `frontend`, `api`,
-  `mlflow`, `db-bootstrap`.
-- `rg-aletheia-workload-sea-01` (5): `cae-aletheia-workload-sea-01`
-  (WorkloadProfiles/Consumption only), serving apps `frontend`, `api`, `mlflow`,
-  and stopped no-ingress `release-operator`.
+No architecture change during recovery. Both architecture documents now reflect
+successful hosted execution. PROJECT_REPORT records recovery order, actual
+results, controller diagnosis, evidence reuse, security, billing, observation
+failure and viva explanations. This handoff replaces the stale current-state
+summary; earlier details remain in the report and preserved handoff.
 
-Only frontend is external HTTPS. API is 1 vCPU/2 GiB; all three serving apps
-are min 0/max 1. API/MLflow retain `.internal.` FQDNs and `http://api` /
-`http://mlflow` discovery. No Dedicated profile, VNet, NAT, Private DNS,
-load balancer or paid monitoring workspace was introduced. No Azure resource
-or persistent Docker data was deleted.
+## 10. Evidence to inspect
 
-The additional subscription warning budget `aletheia-showcase-warning` now
-exists: INR 100 monthly, enabled 50/80/100 notifications, one contact per alert.
-The earlier `RBACAccessDenied` is preserved as historical evidence and is no
-longer an active budget limitation. A budget warns; spending limit remains On
-separately. Fresh Cost Management month-to-date pre-tax cost remains
-**INR 11.7066685215817**. No numeric zero forecast, future free-tier guarantee,
-cash-versus-credit settlement or fresh remaining-credit amount is asserted;
-billing can lag. Existing student benefits do not erase the reported cost.
+Under ignored `artifacts/azure-preflight/final-closure-20261019/`:
 
-## 8. Evidence, Git state and next action
+- `hosted-jobs-39277474682.json` and `hosted-job-118145469698-sanitized.log`.
+- `post-ci-azure-readback.json`, control-plane and completed probe-attempt reports.
+- `hosted-security-39277474682/`: exact digest/config bindings, raw scans/SBOMs,
+  complete backend inventories, native SQLite proof and hashed summary.
+- `recovered-closure-verification.json`: final cross-evidence/credential/Git checks.
+- `preserved-acceptance-evidence.json`, original manifests and earlier rollback logs.
 
-Inspect ignored `artifacts/azure-preflight/final-closure-20261019/`: summary,
-exact archive bindings, raw and complete SBOM/licence inventories, complete
-findings/dispositions, component applicability, preserved acceptance hashes,
-protection resolution, cost/budget readback, federation/scopes, static checks,
-and the explicit reviewed source list. Original failed attempts and earlier
-handoffs remain preserved. Generated evidence, archives, dumps, tokens,
-certificates, keys and local secrets are excluded from Git.
+Generated evidence, archives, dumps, keys, certificates and tokens are not staged.
 
-Branch `main`; HEAD `07415aaf9eb58b028e2f629d884199016ccbe13f`; live upstream was read at the same SHA,
-0 ahead / 0 behind. **12 modified tracked paths, 62 untracked
-paths, zero staged files.** The exact status and reviewed source lists are
-stored as ignored closure evidence. Existing stash remains
-`c6b91a13bf4338e559dfaad49f850dd719f5ca47`. This describes the pre-commit review
-snapshot; the authorized commit/push and subsequent hosted attempt are recorded
-at the top of this handoff.
+## 11. Git status, unresolved questions and suggested next step
 
-Next action under the user's explicit one-time exception: selectively stage the
-74 reviewed source/documentation paths, verify the index, commit and push main,
-then observe a real hosted run through OIDC, tests, image builds/digest deployment,
-controlled migration and smoke checks. Variable configuration is now verified.
-The required commit message is:
-`feat: deploy Aletheia to Azure with secure CI/CD`.
-Stop for external supervisor review only after the hosted gate passes, or
-report a reproduced external permission/security blocker without claiming closure.
+Branch `main`; HEAD/origin/main/live remote main:
+`929b10deb901c715bee05aaba52ac1db3ccbeb80`; **0 ahead / 0 behind**.
+Existing stash: `c6b91a13bf4338e559dfaad49f850dd719f5ca47`.
+Exact working-tree status after recovery, with zero staged or untracked paths:
+
+```text
+ M docs/ARCHITECTURE.md
+ M docs/DEPLOYMENT_ARCHITECTURE.md
+ M docs/PROJECT_REPORT.md
+ M docs/SUPERVISOR_HANDOFF.md
+```
+
+The existing green run made another CI repair/push unnecessary. Suggested next
+step: supervisor review of nonzero cost, retained security findings and closure
+evidence, then human review/commit of these documentation updates. Suggested
+message: `docs: reconcile verified Azure CI closure`. No further milestone is
+authorized; no new external permission blocker remains for the CI closure.

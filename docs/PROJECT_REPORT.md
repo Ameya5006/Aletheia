@@ -1,6 +1,127 @@
 # Aletheia — Project Report
 
+## Final hosted Azure closure recovery (2026-10-20)
+
+**Milestone and sequencing.** Recovery started from a clean `main` at
+`929b10deb901c715bee05aaba52ac1db3ccbeb80`, matching remote `main` exactly
+(0 ahead / 0 behind). GitHub's live API showed that the interrupted conversation
+had already reached successful [run 39277474682](https://github.com/Ameya5006/Aletheia/actions/runs/39277474682),
+created on 2026-10-19 and completed at 15:31 UTC. Its previous handoff still
+described hosted acceptance as pending. Reading durable evidence first prevented
+an unnecessary deployment and repeat backup, restore, browser or regression run.
+This recovery updates documentation and completes evidence reconciliation; it
+does not introduce another application or infrastructure change.
+
+**Implemented and verified flow.** The hosted runner checked the frozen source,
+obtained an Azure OIDC session, retrieved hash-verified frozen fixtures, passed
+58 backend tests (2 warnings, 4.22 seconds) and 81 frontend tests across seven
+files, and passed Ruff, frontend lint/typecheck, OpenAPI contract comparison,
+production build and credential scanning of 52 deployable source/asset files.
+It pushed immutable images, validated Bicep and its structured what-if, observed
+`0004_case_input`, updated API/frontend images and switched traffic. The
+no-ingress operator then used the public HTTPS frontend to authenticate, create
+a prediction (HTTP 201), save/reopen it, find it in history and read its audit
+event. Reported probability was `0.165468722464`; the approved model, release
+and evidence hashes matched. Anonymous history returned 401 and an engineer's
+admin request returned 403. API and MLflow real health routes were healthy
+inside Azure and rejected with 404 at both effective internal FQDNs and aliases
+from the outside runner. The final topology/digest guard passed. Migration and
+smoke each stopped the operator in `finally`.
+
+**Controller failure and recovery.** The cancelled run `39272451787` repeatedly
+reported `Could not find a replica for this app` despite completed migration.
+The earlier bounded log observer exposed the missing operator-scoped
+`Microsoft.App/containerApps/revisions/replicas/read` permission; log access
+also needs `getAuthToken/action`. Commit `1428e30` and the existing scoped role
+repair resolved discovery, with no extra role assignment. The successful final
+commit `929b10d` additionally corrected a misleading MLflow boundary probe:
+an API-only path could yield an application 404 even on a public MLflow service.
+The tests now use each service's real health endpoint and check both its
+effective FQDN and alias. The twelve-case focused boundary/observer suite and
+then the final hosted suite provide the repair evidence. No new repair was
+needed during recovery.
+
+**Rollback evidence and its limit.** Preserved hosted run `39266540207` exercised
+the actual recovery branch after a migration-observation failure: the operator
+stopped and the prior healthy API/frontend revisions retained 100% traffic.
+Earlier manual revision rollback and restoration evidence remains preserved.
+The successful final run did not deliberately fail or exercise rollback after
+switching traffic. These are separate checks, not a claim that the green run
+injected every possible deployment failure.
+
+**Final serving identities.** Fresh Azure readback confirms 100% traffic on
+`api--0000005`, `frontend--0000004` and `mlflow--0000002`. All serving apps are
+min 0/max 1; API/MLflow ingress remains internal and `release-operator--0000010`
+is stopped with no ingress. Public URL:
+https://frontend.whiteflower-9d03c62c.southeastasia.azurecontainerapps.io.
+
+| Role | Deployed immutable digest |
+|---|---|
+| API and stopped operator | `sha256:aaa14ef48a2db5f28647bc1599e7d1fdd90c9962d484cc417d32d59b2c1f54e3` |
+| Frontend | `sha256:c71d3fc586fb41cc7796287ed7f35a0528fc24fa6adb44ecf52042697f763410` |
+| MLflow | `sha256:062f3fb2700fa152d6cab44aeec154f44ade7c2116f63038dca1ccd38342ab5d` |
+
+**Security reconciliation.** Only the changed backend/frontend digests were
+scanned; unchanged MLflow reports are reused after hash verification. All four
+Trivy scan/SBOM commands exited 0, with ACR manifest/config and scanner ImageID
+bindings. The deployed frontend has zero reported vulnerabilities, 71 SBOM
+components and 103 licence entries. The backend shared by API/operator retains
+1 critical / 63 high / 112 medium / 105 low / 1 unknown findings. Its complete
+inventory has 240 components and 772 licence entries, including separately
+verified native SQLite 3.54.0 with the unchanged approved binary hash. The
+previous MiniZip applicability and pip-vendoring dispositions remain supporting
+evidence; findings were not suppressed. Successful scan generation does not
+mean a clean backend image or legal clearance. No external CycloneDX schema
+validator was introduced. Evidence is under
+`artifacts/azure-preflight/final-closure-20261019/hosted-security-39277474682/`.
+
+**Final Azure and billing readback.** The 2026-10-20 read confirms 13 resources
+across the two existing Southeast Asia groups, all four old Express apps
+stopped, the current Consumption-only environment and no custom networking or
+paid log destination. PostgreSQL is Ready, version 18, Standard_B1ms, 32 GiB,
+with secure transport ON. Azure for Students is Enabled with spending limit
+On. Cost Management still reports month-to-date pre-tax cost
+**INR 11.7066685215817**. The INR 100 monthly warning budget exists and its
+50/80/100 percent notifications are enabled. A budget is not a hard cap;
+billing can lag. The original zero-cost objective is not demonstrated, and no
+fresh remaining-credit amount, numeric forecast or settlement claim is made.
+The supervisor must review that limitation alongside residual security risk.
+
+**Recovery observation problem.** The first single-pass readback failed its
+HTTPS assertion after inactivity, but the helper saved results only after the
+assertion; individual first-attempt statuses were lost. An independent retry
+returned frontend/live/ready 200, unauthenticated history 401 and direct API/
+MLflow health 404. The local ignored helper now persists the control-plane
+report and each completed probe set before asserting. Its full rerun passed
+all six probes and saved the final report. Cold-start transients are a known
+system limitation, but the exact first failing endpoint and its cause cannot
+be established from that attempt. No runtime setting was changed to hide it.
+
+**Preserved acceptance and local checks.** The five backup files still match
+their manifest sizes and full SHA-256 hashes. Preserved restore, browser,
+workflow and persistence results agree, including the frozen identities and
+probability `0.16546872246399696`. The original frontend scan/SBOM hashes match.
+Recovery reran only identity/evidence checks: the frozen checker passed 32
+tracked inputs plus entrypoint/pin, credential scanning passed 53 local
+deployable source/asset files, and Git whitespace checks passed. There was no
+model training, held-out access or inference deadline change. The protected
+stash remains `c6b91a13bf4338e559dfaad49f850dd719f5ca47`.
+
+**Learning and defence.** A successful migration and an observer's ability to
+see it are different conditions. Bounded sanitized observation makes the
+failure diagnosable without exposing operator credentials. A 404 establishes
+an ingress boundary only when the requested route would be healthy inside the
+service. Immutable digests bind deployed bytes to scan evidence; source commit
+identity alone does not do that. Basic viva: why check a real health endpoint?
+Intermediate: why can completed database work still fail CI? Difficult: what
+does the preserved rollback run prove, and what failure did it not exercise?
+The answers are the actual boundaries and limitations above.
+
 ## Current Azure Workload Profiles deployment and CI preparation (2026-10-19)
+
+The following is the preserved chronological implementation record. Statements
+that a later hosted run is pending describe that earlier checkpoint; the final
+verified state is the recovery record above and `SUPERVISOR_HANDOFF.md`.
 
 ### Final closure continuation (2026-10-19)
 

@@ -33,10 +33,15 @@ bounded Azure-services firewall exception. No Dedicated profile, VNet, NAT,
 Private DNS, paid load balancer or Log Analytics workspace exists.
 
 The original Express environment and its four apps remain stopped and
-preserved. Its earlier private-ingress failure below is historical evidence,
-not the current serving route. The GitHub OIDC deployment workflow has local
-and Azure command verification, but has not executed on GitHub because no
-commit or push is authorized in this task.
+preserved. Its earlier private-ingress failure below is historical evidence.
+Under the user's explicit final-closure Git exception, the GitHub OIDC workflow
+[completed successfully](https://github.com/Ameya5006/Aletheia/actions/runs/39277474682)
+at commit `929b10deb901c715bee05aaba52ac1db3ccbeb80`. It verified migration,
+immutable deployment, authenticated public prediction and the real API/MLflow
+health routes from both sides of the ingress boundary. Recovery readback on
+2026-10-20 confirms API revision `0000005`, frontend revision `0000004` and
+MLflow revision `0000002` each receive 100% traffic, with the no-ingress operator
+stopped. This closes hosted verification without changing the architecture.
 
 ## Private-ingress repair checkpoint (2026-10-18)
 
