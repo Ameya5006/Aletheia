@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented in Phase 4 and pending external supervisor review. This record does
+Implemented in Phase 4 and pending independent technical review. This record does
 not authorize held-out evaluation or a later milestone.
 
 ## Context

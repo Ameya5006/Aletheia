@@ -1,7 +1,7 @@
 # ADR 0007 — Frozen healthcare explanation and responsible-audit protocol
 
 Status: implemented and locally verified for Macro Milestone 3. Exclusive
-protocol freezing preceded the completed empirical audit; external supervisor
+protocol freezing preceded the completed empirical audit; independent technical
 review is pending. Model and original experiment bindings remained unchanged.
 
 Canonical protocol SHA-256:

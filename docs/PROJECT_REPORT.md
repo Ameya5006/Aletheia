@@ -1,10 +1,22 @@
 # Aletheia — Project Report
 
+## Public documentation organization (2026-10-22)
+
+After the verified presentation commit `1778581cfff682e9597ecd65daf6e696df614706`,
+the public documentation was separated from internal coordination records.
+Architecture, implementation history, failures, limitations, model identities
+and sanitized media remain available. Local Docker recovery has its own
+[guide](LOCAL_DOCKER_CLEANUP.md), alongside the [setup guide](LOCAL_DEVELOPMENT.md).
+The alternative was to retain every coordination snapshot in public navigation;
+that obscured current technical guidance with obsolete review instructions.
+Removing those snapshots does not remove them from previous Git commits.
+No product, ML method or deployment architecture changed.
+
 ## GitHub presentation and design defence (2026-10-20)
 
 **Milestone and order.** After Azure deployment, hosted CI, backup/restore,
-rollback and exact-image security evidence were preserved, the active
-[presentation task](CURRENT_TASK.md) called for a clear public entry point,
+rollback and exact-image security evidence were preserved, the presentation
+work called for a clear public entry point,
 current HLD/LLD, a candid maintainability assessment, live demo media and a
 fresh-clone check. This order matters: public claims could now be tied to
 completed source, run and digest evidence rather than plans. No model training,
@@ -12,15 +24,16 @@ held-out data, runtime, schema, workflow, Azure topology, ingress or Docker
 data changed. The latest successful hosted run is
 [39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251)
 at source `963050edb817b634c9a69fd692ab839c26121bd3`, after the earlier
-green closure run described below. Documentation and media remain uncommitted
-for external supervisor review.
+green closure run described below. The presentation files were committed at
+`1778581cfff682e9597ecd65daf6e696df614706` after review; this later
+public-tree hygiene pass remains uncommitted.
 
 **What the presentation adds and why.** The [README](../README.md) is a short
 interviewer entry point; it links the [HLD](HIGH_LEVEL_DESIGN.md),
 [LLD](LOW_LEVEL_DESIGN.md), [SOLID assessment](SOLID_AND_MAINTAINABILITY.md),
-[local guide](LOCAL_DEVELOPMENT.md), [repository audit](REPOSITORY_CLEANUP.md)
-and [media](assets/demo/README.md). The HLD follows users, trust boundaries,
-local/cloud topology, lifecycle and recovery. The LLD follows code modules,
+[local guide](LOCAL_DEVELOPMENT.md) and [media](assets/demo/README.md). The HLD
+follows users, trust boundaries, local/cloud topology, lifecycle and recovery.
+The LLD follows code modules,
 real database tables, request, authorization, inference, save/rerun and CI
 sequences. These views complement the long architecture record: a new reader
 can understand the current system without treating historical plans as live
@@ -80,9 +93,12 @@ Difficult: what do the screenshots prove? They prove that a real authorized
 journey rendered and responded at capture time, while frozen research and
 hosted evidence support separate model, deployment and recovery claims.
 
-**Verification and remaining limits.** The exact presentation checks and
-fresh-clone results are recorded in the current
-[supervisor handoff](SUPERVISOR_HANDOFF.md). The walkthrough passed its bounded
+**Verification and remaining limits.** The presentation's fresh-clone checks
+passed 81 frontend tests and 64
+Python fixture tests (15 warnings), frontend lint/typecheck/build, Python package
+consistency and scoped Ruff checks. Compose rendered with explicit non-secret
+placeholder values. These historical source checks did not start a complete
+stack or repeat the model regression. The walkthrough passed its bounded
 predicted/saved/reopened/immutable/reset assertions and the privacy helper's
 four focused tests passed. Presentation does not change the frozen model,
 historical-data representativeness, known backend findings, limited monitoring,
@@ -210,7 +226,7 @@ The answers are the actual boundaries and limitations above.
 
 The following is the preserved chronological implementation record. Statements
 that a later hosted run is pending describe that earlier checkpoint; the final
-verified state is the recovery record above and `SUPERVISOR_HANDOFF.md`.
+verified state is the recovery record above.
 
 ### Final closure continuation (2026-10-19)
 
@@ -726,7 +742,8 @@ tests reachability from outside and inside the environment. Why was
 Container Apps environment mode; the general service guide and the Express
 feature matrix differ. Tests must follow the deployed mode rather than assume
 one document applies to every mode. The exact evidence for that historical
-checkpoint is in `docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md`.
+checkpoint is summarized in this section; its original review snapshot remains
+in Git history.
 
 ## Azure deployment continuation: secured stop at Express ingress (2026-10-18)
 
@@ -796,8 +813,7 @@ handoff could remove the only safe recovery path. Why is schema `CREATE`
 different from database ownership? A role can own its database yet lack rights
 on a separately owned `public` schema, causing `pg_restore` or Alembic to fail.
 The relevant implementation is under `deployment/azure/`; review evidence
-for that historical checkpoint is in
-`docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md`. The account's free-service
+for that historical checkpoint is summarized here and retained in Git history. The account's free-service
 allowances are eligibility evidence, not a guaranteed zero bill; current
 month-to-date actual cost and future forecast were not re-established here.
 
@@ -842,8 +858,8 @@ recorded, while Cost Management's numeric forecast remains unavailable.
 ARM API versions, including after outbound HTTPS from a live replica. The
 environment has no usable reported egress list either. Without that input,
 the mandated exact-IP PostgreSQL firewall cannot be built or reconciled.
-The delayed read over ten minutes later also returned null, so the explicit
-stop condition in `docs/CURRENT_TASK.md` applies. The stopped database mutation and all Azure resource names,
+The delayed read over ten minutes later also returned null, so the approved
+exact-IP networking gate could not pass. The stopped database mutation and all Azure resource names,
 image digest, API observations and safe alternatives are recorded in the
 ignored `artifacts/azure-preflight/EGRESS_GATE_20261017.md`. The existing
 frontend endpoint must not be presented as a deployed decision-auditor URL.
@@ -1047,7 +1063,7 @@ handoff documents differ. No new ML experiment, deployment, runtime defect or
 clinical performance result occurred. The engineering lesson is that portal
 free indicators must be matched to the complete resource inventory, and a
 blank cost forecast is unknown rather than zero. See the per-image map in
-`artifacts/azure-preflight/PREFLIGHT.md` and the current supervisor handoff.
+`artifacts/azure-preflight/PREFLIGHT.md` and the historical review record in Git history.
 
 **Interview/viva follow-up:** Why did the new screenshots not unblock Azure?
 They establish key account and PostgreSQL entitlements, but do not establish
@@ -1162,7 +1178,7 @@ zone pays only for name resolution, not that network path.
 security preflight. No Azure resource was created, no cloud image was built or
 pushed, and no Azure URL or cloud verification result exists. The local system
 and frozen model/release/evidence identities remain unchanged. This is a blocked
-milestone, not a deployment result; the external supervisor must review before
+milestone, not a deployment result; the independent technical reviewer must review before
 any further implementation or revised scope.
 
 The local architecture is still React/NGINX → FastAPI → PostgreSQL/MLflow with
@@ -1211,8 +1227,8 @@ application regression tests. Cash charged, promotional credit used, current
 free-tier consumption and cost forecast are unknown. The user's earlier
 INR 9,599 credit, INR 0 October cost and 2027-06-26 expiry observations have not
 been independently reverified. Exact ignored evidence and sources are in
-`artifacts/azure-preflight/PREFLIGHT.md`; the separate Docker cleanup dry run is
-`docs/LOCAL_CLEANUP_DRY_RUN.md`. No meaningful runtime bug occurred; the
+`artifacts/azure-preflight/PREFLIGHT.md`. Local Docker backup and recovery guidance is in
+[LOCAL_DOCKER_CLEANUP.md](LOCAL_DOCKER_CLEANUP.md). No meaningful runtime bug occurred; the
 meaningful blockers were missing account-level entitlement evidence and an
 unproven free network/artifact path.
 
@@ -1300,7 +1316,7 @@ dependency licence entries were checked. The scan helper's added
 `--only-frontend` option was directly exercised and checked with Ruff; no old
 Python regression result is claimed for that changed helper.
 
-CURRENT_TASK requires one complete applicable offline regression after focused
+The verification policy required one complete applicable offline regression after focused
 gates. The changed frontend received the complete 80-test run above. The prior
 Python regression remains 304 collected, 303 passed, 0 failed, 0 skipped,
 1 live-data test deselected, 63 warnings, 3378.28s, exit 0, one invocation of
@@ -1360,7 +1376,7 @@ Final protection checks found no unexplained edits: 1,338 baseline files checked
 files unchanged, and all three frontend fixture files byte-identical. The task
 SHA-256, branch/HEAD/upstream, 0/0 divergence and stash are preserved.
 
-The remaining scope is external supervisor review. Login, Signup, real external
+The remaining scope is independent technical review. Login, Signup, real external
 OIDC, public deployment and clinical/commercial validation remain deferred.
 
 
@@ -1542,7 +1558,7 @@ component, installed/fixed versions, layer, exposure and mitigation.
 | Complete offline regression | 304 collected; 303 passed, 1 deselected, 63 warnings in 3378.28s (0:56:18); 0 failed, 0 skipped; exit 0 (one invocation) |
 
 Focused runs overlap and are not summed into a full-suite count. The single full
-invocation and runner details are recorded in the current supervisor handoff.
+invocation and runner details are recorded in the historical review record in Git history.
 Warnings include Starlette/httpx deprecation, MLflow type-hint notices, sklearn
 penalty deprecation and the deliberately rejected short-HMAC test fixture; no
 dependency was changed merely to silence them. This milestone adds software checks, **no new ML
@@ -1814,7 +1830,7 @@ volume and earlier cache/logs are retained; production images/pins did not chang
 
 **Review evidence:** `artifacts/stage3-verification` contains E2E, recovery,
 restore, proxy-browser and final scanner/SBOM outputs; exact remaining checks and
-measurements are recorded in `SUPERVISOR_HANDOFF.md`. All 158 protected baseline
+measurements are recorded in `PROJECT_REPORT.md`. All 158 protected baseline
 hashes, including task bytes and frozen research files, match. No held-out access,
 training/reselection, responsible audit rerun, stash modification, later stage,
 branch/history change, commit or push occurred.
@@ -1851,7 +1867,7 @@ run: 205 passed, 68 PostgreSQL/MLflow tests skipped, 1 live-data test deselected
 27 warnings in 110.64s; this does not satisfy database/container acceptance.
 Frontend typecheck/lint/format/build/contract/license/dependency checks pass;
 production npm audit finds zero vulnerabilities. Full exact results and remaining
-gates are in SUPERVISOR_HANDOFF.md. No new research metric is recorded.
+gates are in PROJECT_REPORT.md. No new research metric is recorded.
 
 **Important problems and recovery evidence:** Docker was initially stopped;
 permission-approved startup exposed a 3.72 GiB Linux engine. Compose's initial
@@ -1877,7 +1893,7 @@ health, then resumes this same Stage 3 task. Container E2E, migrations/registry
 integration, proxy browser/accessibility, outage/revocation/audit failure,
 backup/restore, security scans/SBOM and actual resource/image measurements remain
 unverified; backup/restore tooling still needs implementation. Protected research,
-CURRENT_TASK and stash remain unchanged. No model training/reselection, holdout
+the dated task authorization and stash remain unchanged. No model training/reselection, holdout
 access, responsible audit rerun, public hosting, CI/CD, later feature, commit or
 push occurred. This partial record authorizes no subsequent milestone.
 
@@ -1910,7 +1926,7 @@ versions/metadata present. Production audit with `--omit=dev --audit-level=high`
 exited 0, zero vulnerabilities. Seven-document checks resolve 60 local links,
 balance all fences and count 14 Mermaid blocks (not rendered); contextual stale
 status review and lint-only lock scope pass. `git diff --check` passes. Exact
-commands, final scope and limitations are in SUPERVISOR_HANDOFF.md.
+commands, final scope and limitations are in PROJECT_REPORT.md.
 
 **Problems/recovery and lesson:** sandbox registry queries failed with EACCES;
 approved outside-sandbox npm queries/install/audit succeeded. An initial patch
@@ -2120,7 +2136,7 @@ fits are software tests. No frontend/Stage 2 or Git mutation.
 ## Macro Milestone 4 Stage 0 — Application contract planning (2026-10-11)
 
 **Current state and authority:** Macro Milestones 1–3 are completed.
-CURRENT_TASK.md records external Macro Milestone 3 approval at
+Macro Milestone 3 approval was recorded at
 `ff9dce291f63a6d4241360997ef0aff2308597f9`. Stage 0 is documentation only,
 prepared for supervisor review; all application/MLOps components below remain
 planned and unimplemented. Earlier milestone/repair sections retain historical
@@ -2225,7 +2241,7 @@ then establishes registered identity. Schema/migrations precede HTTP writes;
 API/RBAC precedes audit persistence so permissions and atomic success are defined.
 UI follows stable APIs; Compose follows known service boundaries; full security,
 regression, synthetic E2E and documentation gates close the sequence. Stages
-1–3 and their definitions of done are in [EXECUTION_PLAN.md](EXECUTION_PLAN.md).
+1–3 and their definitions of done are in [architecture and verification](ARCHITECTURE.md).
 Stage 1 combines backend packaging/registry/migrations/API/RBAC/audit and tests
 in that dependency order; activation and successful POSTs wait for verified
 atomic release/audit transactions. Stage 2 integrates the React/TypeScript UI;
@@ -2318,7 +2334,7 @@ Existing 122-test evidence is historical, not rerun here. Research limitations
 remain unchanged. Provider/host/region/real-user retention and clinical validation
 remain future work; package/image compatibility and laptop budgets require later
 verification. No production drift detector is implemented. Required Stage 0
-checks and exact repository evidence are recorded in SUPERVISOR_HANDOFF.md.
+checks and exact repository evidence are recorded in PROJECT_REPORT.md.
 Next step is supervisor review of this contract; no implementation begins here.
 
 **Initial Stage 0 verification (before supervisor repair):** `git diff --check` exited 0. Read-only link/fence
@@ -2328,7 +2344,7 @@ contradiction searches and current/historical context review passed. Snapshot
 comparison found all 87 protected files unchanged, including user-owned task
 and ten frozen model/audit files. Branch remains main, HEAD equals origin/main
 at `ff9dce291f63a6d4241360997ef0aff2308597f9`, stash unchanged and staged file
-list empty. Only seven authorized docs, one new ADR and user-owned CURRENT_TASK
+list empty. Only seven authorized docs, one new ADR and user-owned task document
 appear in status; the handoff records the exact inventory. No implementation
 tests, training, inference, holdout access, artifact writes, commit or push occurred.
 
@@ -2375,12 +2391,12 @@ frozen byte-bound experiment and make its required checkout representation
 explicit instead of silently changing its evidence.
 
 **Documentation consistency:** README, this report, PRODUCT_REQUIREMENTS,
-DEPLOYMENT_ARCHITECTURE, ARCHITECTURE, EXECUTION_PLAN and SUPERVISOR_HANDOFF agree
+the deployment and architecture records agree
 that Macro Milestones 1–2 are completed and Macro Milestone 3 is implemented,
 pending external review. Historical foundation/credit states are labelled.
 Application, MLOps and deployment remain unimplemented. No additional current-state
 contradiction required correction. Final repair checks and the portable complete
-review patch are recorded in SUPERVISOR_HANDOFF.md. This repair authorizes no
+review patch are recorded in PROJECT_REPORT.md. This repair authorizes no
 Macro Milestone 4, audit/model run or new holdout access.
 
 **Final verification:** `git check-attr text eol --
@@ -2414,7 +2430,7 @@ planned. README understated the engineer workflow, and foundation/credit report
 passages used historical "current" or "future" language without sufficiently
 local labels. The documents had evolved at different milestones, so readers
 could mistake an old state for today's implementation. Reconciled README,
-PRODUCT_REQUIREMENTS, DEPLOYMENT_ARCHITECTURE, ARCHITECTURE, EXECUTION_PLAN and
+PRODUCT_REQUIREMENTS, DEPLOYMENT_ARCHITECTURE, ARCHITECTURE and
 this report against the existing model card, ADRs and saved audit bindings.
 Retained earlier decisions/results with explicit historical labels. Feasibility
 assessment is implemented; actionable recourse/search is not. Application/API,
@@ -2428,7 +2444,7 @@ evidence integrity, and a failed edit must be checked before retrying.
 
 **Verification in this repair:** branch `main`, HEAD and origin/main remained
 `49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb`. The initial file inventory matched
-the reported Macro Milestone 3 changes, including the user-owned CURRENT_TASK
+the reported Macro Milestone 3 changes, including the user-owned task document
 modification. The credit WIP stash was preserved. Read-only `audit inspect`
 returned `verified`, checking saved artifact hashes, bindings, inventory and
 publication schema without patient-data loading or new predictions. Pip check
@@ -2438,7 +2454,7 @@ files already formatted. Complete offline pytest with cache disabled and ignored
 **122 passed, 1 deselected, 25 existing credit L2-deprecation warnings in 33.94s**.
 The live-data test was excluded. No audit freeze/run, model selection, retraining
 or new holdout access occurred. Final whitespace, protected-file, ZIP and status
-evidence is recorded in SUPERVISOR_HANDOFF.md and the external-review bundle.
+evidence is recorded in PROJECT_REPORT.md and the external-review bundle.
 
 **Review delivery:** the portable bundle at
 `%TEMP%\aletheia-macro3-review-evidence.zip` contains the four existing aggregate
@@ -2463,7 +2479,7 @@ in Windows PowerShell and verify portable copies by bytes rather than filenames.
 This is the current healthcare audit record. Older milestone/credit sections
 preserve the state at those earlier times; their future-work statements are
 historical. Starting `main`, `HEAD` and `origin/main` all identified
-`49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb`; only user-owned CURRENT_TASK.md was
+`49a1a8c7fdc5cbfb197b7533d3d40a8e9aa6f2eb`; only user-owned task document was
 modified, and the existing credit WIP stash was preserved. No Git mutation is
 authorized. The model, 13 predictors, calibration, patient split, thresholds,
 source and earlier measurements remain frozen.
@@ -2725,7 +2741,7 @@ storage/governance is outside the current local research boundary.
 
 ### Empirical results and completion evidence
 
-Implemented and verified locally; external supervisor review is pending. The
+Implemented and verified locally; independent technical review is pending. The
 protocol was frozen at `2026-10-11T05:15:09.910670+00:00`, before outcomes. The
 completed manifest timestamp is `2026-10-11T05:17:30.784462+00:00`. The audit
 claimed one post-selection subgroup access to 19,535 encounters/13,812 patients.
@@ -2874,7 +2890,7 @@ cohort or a patient-leaking split would be misleading. The older credit-first
 and Milestone 1 text below remains historical; statements there that say
 healthcare modelling is future work describe the state at that earlier time.
 The complete numerical record is stored in ignored immutable local manifests
-and summarized in the model card and supervisor handoff.
+and summarized in the model card and this report.
 
 **Component path and data flow.** `configs/experiments/healthcare_model_v1.toml`
 freezes identities, grids, seeds, metrics and selection. `foundation.py` verifies
@@ -3062,7 +3078,7 @@ one 19,535-encounter patient-disjoint holdout was evaluated once. Best outer
 mean AP was 0.199591 and held-out AP was 0.202633. The model uses one
 calibration technique, no XAI technique, and no deployed application. The
 offline suite passed 87 tests after the guard addition; final verification
-counts are recorded in the current supervisor handoff. No inference-latency
+counts are recorded in the historical review record in Git history. No inference-latency
 claim was measured.
 
 **Decision record.** [ADR 0006](decisions/0006-healthcare-model-selection-protocol.md)
@@ -3194,11 +3210,11 @@ The dataset was selected because the official UCI record and Strack et al. paper
 
 The existing credit code and manifests remain in place; healthcare lives in `src/aletheia/domains/healthcare`. Future shared experiment, XAI and serving use cases should depend on domain contracts. Selected future architecture is MLflow registry, FastAPI, PostgreSQL audit, React/TypeScript, Docker/Compose, GitHub Actions, managed deployment, monitoring, cards and RBAC. DagsHub, DVC, managed host and optional OpenRouter narration remain provisional. RunwayML is rejected. Data/version identities and secrets must be separated; public demonstrations must use synthetic/de-identified examples. Similar-case retrieval will use training cases and a versioned distance metric, not collaborative filtering. A Python/TypeScript import graph with cycle/direction checks is planned for later CI. See [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md) for caller, artifact, alternative, security and failure details.
 
-**Milestone order:** (1) foundation/design committed and externally reviewed, with this minor repair pending; (2) healthcare models and calibration; (3) explanations/conditional audits; (4) application/MLOps; (5) delivery/monitoring/code graph. This order prevents a polished UI from hiding invalid evidence. Only the first milestone exists as implemented work. Exact software-test evidence and unresolved questions are in the current [SUPERVISOR_HANDOFF.md](SUPERVISOR_HANDOFF.md). No healthcare ML experiment or fairness result exists.
+**Milestone order:** (1) foundation/design committed and externally reviewed, with this minor repair pending; (2) healthcare models and calibration; (3) explanations/conditional audits; (4) application/MLOps; (5) delivery/monitoring/code graph. This order prevents a polished UI from hiding invalid evidence. Only the first milestone exists as implemented work. Exact software-test evidence and unresolved questions are in the current [project report](PROJECT_REPORT.md). No healthcare ML experiment or fairness result exists.
 
 ### WIP stash reuse assessment (read-only inventory)
 
-`stash@{0}` was inspected, never applied. Tracked changes: `docs/CURRENT_TASK.md` is obsolete task text and must be discarded, not restored; `src/aletheia/experiments/manifest.py` and `src/aletheia/ml/baseline.py` contain credit research-core changes requiring independent verification before any later reuse. Untracked stash contents: `configs/experiments/comparator_v1.toml`, `src/aletheia/ml/comparator.py`, `comparator_run.py`, `protocol.py`, `selection.py`, `tests/integration/test_comparator_pipeline.py`, `tests/unit/test_comparator.py`, and ADR 0003 are credit-comparator specific, deferred and must be re-versioned/reverified; `configs/audit/explanation_v1.toml`, `src/aletheia/xai/{__init__,audit_run,evidence}.py`, and ADR 0004 contain potentially reusable explanation ideas but require healthcare adaptation and independent verification; `configs/audit/counterfactual_v1.toml`, `src/aletheia/counterfactual/{__init__,search}.py`, and ADR 0005 are credit-constraint specific and must not be reused as clinical recourse; `configs/audit/stability_v1.toml`, `src/aletheia/stability/{__init__,metrics,perturb}.py`, and ADR 0006 have potentially generic metric/perturbation ideas but require healthcare feasibility checks. No stashed file was restored. Stashed ADR numbers do not reserve committed identifiers.
+`stash@{0}` was inspected, never applied. Tracked changes: the dated task authorization is obsolete task text and must be discarded, not restored; `src/aletheia/experiments/manifest.py` and `src/aletheia/ml/baseline.py` contain credit research-core changes requiring independent verification before any later reuse. Untracked stash contents: `configs/experiments/comparator_v1.toml`, `src/aletheia/ml/comparator.py`, `comparator_run.py`, `protocol.py`, `selection.py`, `tests/integration/test_comparator_pipeline.py`, `tests/unit/test_comparator.py`, and ADR 0003 are credit-comparator specific, deferred and must be re-versioned/reverified; `configs/audit/explanation_v1.toml`, `src/aletheia/xai/{__init__,audit_run,evidence}.py`, and ADR 0004 contain potentially reusable explanation ideas but require healthcare adaptation and independent verification; `configs/audit/counterfactual_v1.toml`, `src/aletheia/counterfactual/{__init__,search}.py`, and ADR 0005 are credit-constraint specific and must not be reused as clinical recourse; `configs/audit/stability_v1.toml`, `src/aletheia/stability/{__init__,metrics,perturb}.py`, and ADR 0006 have potentially generic metric/perturbation ideas but require healthcare feasibility checks. No stashed file was restored. Stashed ADR numbers do not reserve committed identifiers.
 
 ### Concepts, trade-offs and defence notes
 
@@ -3222,7 +3238,7 @@ The existing credit code and manifests remain in place; healthcare lives in `src
 
 ### External review repair after commit 49753d5
 
-The external supervisor passed Macro Milestone 1 with minor fixes. The public
+The independent technical reviewer passed Macro Milestone 1 with minor fixes. The public
 overview and handoff still carried pre-commit or credit-first wording, and the
 healthcare tests lacked direct assertions for all six death/hospice codes,
 eligible-row preservation, existing-lock overwrite refusal, and cleanup after
@@ -3233,7 +3249,7 @@ monkeypatched `acquire`; all pass without a source or contract change. The
 current overview and README identify healthcare as flagship and credit as
 secondary, while the detailed credit methods below remain historical evidence.
 The earlier `git diff --check` failure was a trailing blank line in user-owned
-`CURRENT_TASK.md`; the user removed it before committing, and the committed
+the dated task authorization; the user removed it before committing, and the committed
 check passed. This repair's check also passes. The lesson is to test exclusion
 and cleanup rules directly and to distinguish an unresolved check from a
 resolved pre-commit problem. No model or later milestone was started.
@@ -3278,7 +3294,7 @@ measure selected properties, not legal compliance or universal fairness.
 Macro Milestone 2 is the preserved committed model prerequisite at `49a1a8c`.
 Macro Milestone 3 adds the locally verified explanation/stability/subgroup audit
 and no-recourse assessment documented above, externally approved at `ff9dce291`
-as recorded by CURRENT_TASK.md.
+as recorded by the dated task authorization.
 Earlier approved credit phases provide the secondary benchmark,
 including a training-only dummy/Logistic Regression baseline. Healthcare now has a local Compose application with independent case entry; its research result remains retrospective educational evidence. Credit remains research-only; training CV is not held-out or production evidence.
 
@@ -3294,7 +3310,7 @@ before the dataset is understood.
 
 `prompt.txt` preserves Aletheia's permanent original vision. It describes the
 complete platform ambition, not permission to implement every feature now.
-`docs/CURRENT_TASK.md` authorizes only Macro Milestone 4 Stage 0 documentation
+The authorization at that checkpoint covered only Macro Milestone 4 Stage 0 documentation
 planning. Macro Milestone 3's completed audit is externally approved at
 `ff9dce291`. Planning completion does not authorize implementation. The frozen
 contracts, split, source, model, dependencies, preserved credit work and earlier
@@ -3778,7 +3794,7 @@ payload SHA-256:
 The run contains only `manifest.json`; its held-out flag is false and fitted-model
 reference is null. `git check-ignore -v` confirms the raw file and run manifest
 are ignored. `git diff --check` passes; only authorized paths appear in status.
-Exact final replay and review commands are in `SUPERVISOR_HANDOFF.md`.
+The original replay and review commands remain in the historical Git record.
 
 The manifest's Git diff checksum records its creation state, before subsequent
 documentation edits. It is preserved as historical evidence rather than changed
@@ -4447,7 +4463,7 @@ columns enter the model matrix.
 
 **What should be inspected for Phase 2?** docs/ARCHITECTURE.md contains the
 complete design, docs/decisions/0001-research-first-modular-monolith.md records
-the decision trade-offs, docs/EXECUTION_PLAN.md contains the gates, and this
+the decision trade-offs, and this
 report is the concise defence record.
 
 **Why verify both the archive and extracted raw file?** Archive identity proves
@@ -4546,9 +4562,9 @@ or serve as a confidence interval?
 
 ## Resume Evidence
 
-Current interactive milestone: 13 explicitly mapped inputs, 28 new backend software tests, 66 frontend unit tests, one real browser journey and 15 accessibility state/width checks with zero violations. Complete regression: 304 collected; 303 passed, 1 deselected, 63 warnings in 3378.28s (0:56:18); 0 failed, 0 skipped; exit 0 (one invocation). No new empirical ML experiment. New image identities, security limits and exact checks are recorded above and in the handoff.
+Current interactive milestone: 13 explicitly mapped inputs, 28 new backend software tests, 66 frontend unit tests, one real browser journey and 15 accessibility state/width checks with zero violations. Complete regression: 304 collected; 303 passed, 1 deselected, 63 warnings in 3378.28s (0:56:18); 0 failed, 0 skipped; exit 0 (one invocation). No new empirical ML experiment. New image identities, security limits and exact checks are recorded above.
 
-Historical Stage 3 snapshot: Current local Stage 3 evidence: three built/scanned images; five serving/test-identity containers; synthetic prediction/review/audit persistence and backup/restore; 33 proxy accessibility checks; five deployment unit tests; measured local startup/resources/HTTP latency. Exact counts, scope and remaining security findings are in the Stage 3 record and handoff above. Earlier research-only statements below are historical and do not describe current application deployment.
+Historical Stage 3 snapshot: Current local Stage 3 evidence: three built/scanned images; five serving/test-identity containers; synthetic prediction/review/audit persistence and backup/restore; 33 proxy accessibility checks; five deployment unit tests; measured local startup/resources/HTTP latency. Exact counts, scope and remaining security findings are in the Stage 3 record above. Earlier research-only statements below are historical and do not describe current application deployment.
 
 Current healthcare evidence: four model families, eight raw/calibrated
 protocols, 79,808 training and 19,535 single held-out encounters, outer best
@@ -4600,10 +4616,8 @@ controls reduce but cannot eliminate reproducibility risk.
 
 ## Future Work
 
-**Useful next step, subject to approval:** external supervisor review of Macro
-Milestone 4 Stage 0 and its implementation contract. A later task could examine clinically reviewed
-feasibility or external validation with appropriate data and approval. This
-report authorizes neither a later milestone nor the stashed credit work.
+**Useful next steps:** improve identity operations, monitoring and the documented
+dependency-security dispositions before broader operation.
 
 **Research extensions:** larger pre-registered XAI/stability samples, justified
 conditional attribution, clinician-reviewed intervention feasibility, and

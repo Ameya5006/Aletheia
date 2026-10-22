@@ -6,12 +6,11 @@ const root = resolve(import.meta.dirname, '../..');
 const files = [
   'README.md',
   'docs/HIGH_LEVEL_DESIGN.md', 'docs/LOW_LEVEL_DESIGN.md',
-  'docs/SOLID_AND_MAINTAINABILITY.md', 'docs/REPOSITORY_CLEANUP.md',
-  'docs/LOCAL_DEVELOPMENT.md', 'docs/GITHUB_PRESENTATION.md',
+  'docs/SOLID_AND_MAINTAINABILITY.md',
+  'docs/LOCAL_DEVELOPMENT.md',
   'docs/REVIEWER_ACCESS.md', 'docs/assets/demo/README.md',
   'docs/ARCHITECTURE.md', 'docs/DEPLOYMENT_ARCHITECTURE.md',
-  'docs/EXECUTION_PLAN.md', 'docs/PROJECT_REPORT.md',
-  'docs/SUPERVISOR_HANDOFF.md',
+  'docs/LOCAL_DOCKER_CLEANUP.md', 'docs/PROJECT_REPORT.md',
 ];
 const missing = [];
 let checked = 0;

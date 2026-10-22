@@ -1,6 +1,10 @@
 # Aletheia product requirements — healthcare flagship
 
-Status: research Milestones 1-3 and local Milestone 4 Stages 1-2 are implemented.
+Historical local Stages 1–2 requirements snapshot. For the current deployed
+system, see the [high-level design](HIGH_LEVEL_DESIGN.md) and
+[deployment architecture](DEPLOYMENT_ARCHITECTURE.md).
+
+Status at this checkpoint: research Milestones 1-3 and local Milestone 4 Stages 1-2 are implemented.
 FastAPI/PostgreSQL/MLflow, JWT/local-entitlement RBAC and React/TypeScript are
 locally verified. Real external OIDC-provider integration is unverified; sign-out
 clears the local session, with live OIDC logout a Stage 3 verification item.
@@ -34,12 +38,10 @@ Healthcare inference is defined at discharge after disposition is known; outcome
 4. **Application and MLOps — Stages 1-2 implemented locally:** MLflow import/lifecycle, FastAPI, React/TypeScript, PostgreSQL, JWT/local-entitlement RBAC and synthetic application audit. Stage 3 Docker Compose/release-readiness requires separate approval.
 5. **Public delivery and operations — planned, unimplemented:** GitHub Actions, managed deployment, monitoring/drift, code dependency graph, threat and recovery checks, final viva/report evidence. Separate approval required.
 
-Milestone acceptance requires checks, documentation and independent supervisor
-review. The Macro Milestone 3 approval comes from CURRENT_TASK.md; the model
-card's earlier pending-review statement is historical and is not rewritten by
-this task. See [EXECUTION_PLAN.md](EXECUTION_PLAN.md), [PROJECT_REPORT.md](PROJECT_REPORT.md),
-the [model card](model_cards/healthcare_readmission_v1.md) and
-[SUPERVISOR_HANDOFF.md](SUPERVISOR_HANDOFF.md). No clinical readiness, fairness
+Milestone acceptance required checks, documentation and independent technical
+review. Macro Milestone 3 was approved; the frozen model card retains its earlier
+historical review status. See the [architecture](ARCHITECTURE.md),
+[project report](PROJECT_REPORT.md) and [model card](model_cards/healthcare_readmission_v1.md). No clinical readiness, fairness
 certification, actionable recourse, production scale or deployment is established.
 
 ## First application journeys — implemented locally
@@ -110,4 +112,4 @@ fake realtime events, autoplay, decorative 3D, pervasive glass or gradients.
 accessibility targets above are historical requirements; bounded Stage 2 browser
 verification is recorded in PROJECT_REPORT.md, not full accessibility certification. See the
 [HTTP/RBAC contract](ARCHITECTURE.md), [runtime](DEPLOYMENT_ARCHITECTURE.md) and
-[test gates](EXECUTION_PLAN.md).
+[architecture and verification](ARCHITECTURE.md).

@@ -16,7 +16,7 @@ The frontend is publicly reachable. Creating predictions, saving cases, reading 
 
 An authorized user enters a **13-field illustrative case**. The API validates and canonicalizes the fields, applies the approved frozen preprocessing and calibrated model, then returns a probability and a **reference-dependent, noncausal** contribution explanation. PostgreSQL stores the prediction and hash-linked audit event. The user can save, reopen and rerun a case with changed inputs; the original output stays unchanged. The same application has a Docker Compose path and a deployed Azure Container Apps path.
 
-The final hosted Azure workflow passed [run 39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251) at [source commit `963050e`](https://github.com/Ameya5006/Aletheia/commit/963050edb817b634c9a69fd692ab839c26121bd3). Its preserved evidence includes 58 backend tests, 81 frontend tests, OIDC login, immutable image deployment, migration observation, authenticated public smoke prediction, private service exposure checks and final Azure readback. See the [supervisor handoff](docs/SUPERVISOR_HANDOFF.md) for exact evidence bindings and limitations.
+The final hosted Azure workflow passed [run 39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251) at [source commit `963050e`](https://github.com/Ameya5006/Aletheia/commit/963050edb817b634c9a69fd692ab839c26121bd3). Its preserved evidence includes 58 backend tests, 81 frontend tests, OIDC login, immutable image deployment, migration observation, authenticated public smoke prediction, private service exposure checks and final Azure readback. See the [project report](docs/PROJECT_REPORT.md) for exact evidence bindings and limitations.
 
 ## System at a glance
 
@@ -88,7 +88,7 @@ The [project report](docs/PROJECT_REPORT.md) records experimental rationale, mea
 - API and MLflow have internal Azure ingress. The public NGINX route is the intended browser path; TLS protects the public edge and PostgreSQL connection.
 - GitHub Actions obtains Azure access through federation. Deployment selects immutable image digests and verifies migration, smoke behavior and post-deployment state. The operator is stopped when idle.
 - Backups, restoration and a rollback branch have been exercised and preserved as evidence. Those checks do not prove every future failure can be recovered automatically.
-- Exact-image scan reports and SBOMs are digest-bound. A previously scanned frontend image had zero reported vulnerabilities; the backend image retained known findings with documented dispositions. Neither a scanner exit code nor an SBOM is a guarantee of safety or legal clearance. Review the [current handoff](docs/SUPERVISOR_HANDOFF.md) before citing counts for a deployed digest.
+- Exact-image scan reports and SBOMs are digest-bound. A previously scanned frontend image had zero reported vulnerabilities; the backend image retained known findings with documented dispositions. Neither a scanner exit code nor an SBOM is a guarantee of safety or legal clearance. Review the [project report](docs/PROJECT_REPORT.md) before citing counts for a deployed digest.
 
 The source data are historical; representativeness and real-world generalization are unproven. The threshold has low recall in the documented evaluation. Explanations depend on a reference and are noncausal. The cloud showcase has limited monitoring and operator-provisioned access; it has not undergone clinical validation or production governance review. Future work should prioritize governed onboarding, monitoring and prospective validation before any real deployment.
 
@@ -119,9 +119,16 @@ These are source-level checks; database, frozen-artifact and live-browser tests 
 |---|---|
 | [High-level design](docs/HIGH_LEVEL_DESIGN.md) · [Low-level design](docs/LOW_LEVEL_DESIGN.md) | Topology, trust, sequences, modules and data ownership |
 | [Architecture record](docs/ARCHITECTURE.md) · [Deployment architecture](docs/DEPLOYMENT_ARCHITECTURE.md) | Approved current architecture and historical decisions |
-| [SOLID assessment](docs/SOLID_AND_MAINTAINABILITY.md) · [Cleanup manifest](docs/REPOSITORY_CLEANUP.md) | Maintainability and repository disposition |
-| [Project report](docs/PROJECT_REPORT.md) · [Execution plan](docs/EXECUTION_PLAN.md) | Engineering, ML learning and approved sequencing |
+| [SOLID assessment](docs/SOLID_AND_MAINTAINABILITY.md) | Maintainability and trade-offs |
+| [Project report](docs/PROJECT_REPORT.md) | Engineering history, ML learning and verified results |
 | [Model card](docs/model_cards/healthcare_readmission_v1.md) · [Local guide](docs/LOCAL_DEVELOPMENT.md) | Model limits and reproducible source/local checks |
-| [Supervisor handoff](docs/SUPERVISOR_HANDOFF.md) | Current review evidence and unresolved items |
+| [Local Docker cleanup and recovery](docs/LOCAL_DOCKER_CLEANUP.md) | Backup, rebuild, restore and verification |
 
 **Responsible use:** Aletheia demonstrates engineering and explainability techniques on historical data. Its outputs are not medical advice, a diagnosis, an individual outcome guarantee or a basis for real-world automated clinical decisions.
+
+## Repository metadata
+
+Suggested description: Auditable readmission research workbench with calibrated
+prediction, noncausal explanations, case history and protected Azure delivery.
+Useful discovery topics: `explainable-ai`, `mlops`, `fastapi`, `react`,
+`postgresql`, `mlflow`, `azure-container-apps`, `github-actions`, `model-governance`.

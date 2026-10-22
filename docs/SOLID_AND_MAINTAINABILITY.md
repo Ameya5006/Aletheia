@@ -272,6 +272,5 @@ describing successful scan execution as a clean security result.
    approval.
 
 These recommendations are advisory, not authorization to advance a milestone.
-The [project report](PROJECT_REPORT.md) and
-[supervisor handoff](SUPERVISOR_HANDOFF.md) remain the sources for actual
-verification results and remaining acceptance gates.
+The [project report](PROJECT_REPORT.md) records actual verification results
+and remaining limitations.

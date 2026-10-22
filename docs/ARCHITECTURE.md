@@ -60,7 +60,7 @@ service discovery is unsupported, so the standard `http://api` and
 At that historical checkpoint the cloud architecture remained incomplete:
 API and MLflow were denied and stopped; frontend and bootstrap were stopped.
 The prior implementation checkpoint below is historical evidence. See
-`docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md` for exact observations.
+[project report](PROJECT_REPORT.md) for the observations and engineering lessons.
 
 ## Historical Azure implementation checkpoint (2026-10-18)
 
@@ -76,7 +76,7 @@ returned HTTP 200 from outside Azure despite `ingress.external=false`, while
 an ingress deny rule blocked the frontend proxy too. No secure operating cloud
 topology, authenticated Azure prediction or persistence journey is established.
 The exact state and remaining decision at that checkpoint are in
-`docs/history/SUPERVISOR_HANDOFF_20261018_EXPRESS_REPAIR.md`.
+[project report](PROJECT_REPORT.md).
 
 ## Current post-Stage-3 interactive case architecture (2026-10-15)
 
@@ -604,7 +604,7 @@ certification or production drift detection is implemented.
 
 See [product requirements](PRODUCT_REQUIREMENTS.md) for screen/role journeys,
 [deployment contract](DEPLOYMENT_ARCHITECTURE.md) for Compose topology and package
-choices, [execution plan](EXECUTION_PLAN.md) for gated tests/order, and
+choices, [project report](PROJECT_REPORT.md) for verification and sequencing, and
 [ADR 0008](decisions/0008-application-mlops-contract.md) for alternatives.
 
 ## Macro Milestone 3 research audit boundary (historical milestone)
@@ -705,7 +705,7 @@ The healthcare-primary design remains approved. Its foundation-only implementati
 state below is historical as of Macro Milestone 1; the Macro Milestone 2 and 3
 sections above describe the current implemented model and research audit. Macro
 Milestones 1–3 are completed; Macro Milestone 3 external approval is recorded in
-CURRENT_TASK.md at `ff9dce291f63a6d4241360997ef0aff2308597f9`.
+the dated task authorization at `ff9dce291f63a6d4241360997ef0aff2308597f9`.
 
 The current product is healthcare-primary and credit-secondary. Sections below this new decision describe the earlier credit-first architecture and preserve its approved implementation history; where scope or tooling differs, this section and [ADR 0003](decisions/0003-healthcare-primary-multi-domain-platform.md), [ADR 0004](decisions/0004-healthcare-target-and-patient-split.md), and [ADR 0005](decisions/0005-flagship-tooling-and-deployment-strategy.md) are current. The detailed future tool connections, alternatives, security and failures are in [DEPLOYMENT_ARCHITECTURE.md](DEPLOYMENT_ARCHITECTURE.md).
 
@@ -752,7 +752,7 @@ experiment configuration, fold-local `ColumnTransformer`/`Pipeline`, a dummy
 reference, regularized Logistic Regression, fixed five-fold stratified CV,
 predeclared metrics, stable transformed-feature lineage, and atomic immutable
 JSON run manifests. It is implemented and verified by Codex but remains pending
-external supervisor review. No held-out prediction or metric was calculated,
+independent technical review. No held-out prediction or metric was calculated,
 and no fitted model was persisted.
 
 The raw loader enforces the approved fixed file's exact byte size and SHA-256

@@ -11,7 +11,7 @@ Do not run training, recalibration or held-out evaluation to fill that gap.
 Prerequisites: Python 3.12, Node.js 24 or later, npm, Git and network access to
 the locked package distributions. Commands below use PowerShell from the
 repository root. They describe the source-supported setup; exact checks
-executed for this milestone are recorded in [the handoff](SUPERVISOR_HANDOFF.md).
+from the presentation milestone are recorded in [the project report](PROJECT_REPORT.md).
 
 ```powershell
 python -m venv .venv
@@ -146,8 +146,8 @@ Existing projects use their own config paths and project names; do not replace
 them with the new-setup defaults above.
 
 Full regression, recovery and security harnesses are operator verification
-workflows with additional evidence/fixture prerequisites. The historical
-[cleanup dry run](LOCAL_CLEANUP_DRY_RUN.md) and
-[deployment architecture](DEPLOYMENT_ARCHITECTURE.md) describe their preservation
-boundaries. They are not required to browse the source or run the focused
-artifact-free checks.
+workflows with additional evidence/fixture prerequisites. The
+[deployment architecture](DEPLOYMENT_ARCHITECTURE.md) and
+[local Docker recovery guide](LOCAL_DOCKER_CLEANUP.md) describe their
+preservation boundaries. They are not required to browse the source or run
+the focused artifact-free checks.

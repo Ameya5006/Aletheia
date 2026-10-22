@@ -1,7 +1,7 @@
 # ADR 0008 — Application and MLOps contract for frozen healthcare evidence
 
 Status: proposed contract frozen for external Stage 0 review, not permission to
-implement. CURRENT_TASK.md records Macro Milestone 3 approval at
+implement. Macro Milestone 3 approval was recorded at
 `ff9dce291f63a6d4241360997ef0aff2308597f9`. No service or package is added here.
 
 ## Context
@@ -60,7 +60,7 @@ frontend or HTTP schema committing the system to unsupported patient processing.
    migrations → explicit bootstrap → FastAPI/OIDC/RBAC → transactional audit and
    backend tests; Stage 2 is React/TypeScript and complete API integration;
    Stage 3 is Compose, E2E/security/accessibility/resource verification and release
-   readiness. Preserve every gate in EXECUTION_PLAN.md; no activation/successful
+   readiness. Preserve every gate in ARCHITECTURE.md; no activation/successful
    POST before atomic audit/release checks. Each stage requires its own task.
    Future milestones use 95% implementation/testing and 5% concise documentation.
 
@@ -102,7 +102,7 @@ The endpoint/role/schema/failure tables and diagrams are in
 [ARCHITECTURE.md](../ARCHITECTURE.md); screens are in
 [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md); resources/dependencies are
 in [DEPLOYMENT_ARCHITECTURE.md](../DEPLOYMENT_ARCHITECTURE.md); stage test gates are
-in [EXECUTION_PLAN.md](../EXECUTION_PLAN.md). Stage 0 checks documents only.
+in [architecture and verification](../ARCHITECTURE.md). Stage 0 checks documents only.
 
 Later acceptance requires exact-copy/runtime/synthetic parity, JWT/RBAC/object
 access, PostgreSQL transaction/concurrency/migration/tamper, frontend accessibility,

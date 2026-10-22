@@ -33,7 +33,7 @@ failed run and its Windows/Linux newline correction remain historical evidence.
 The 2026-10-19 Cost Management read returned a nonzero INR
 11.7066685215817 month-to-date pre-tax amount, mostly from the earlier
 Express apps; a numeric zero future forecast is not asserted. The historical
-ingress checkpoints below are preserved for the supervisor.
+ingress checkpoints below preserve the failure and recovery history.
 
 Repository Actions variables named
 `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` with the
@@ -67,7 +67,7 @@ feature guide instead says apps communicate by public URLs and short-name
 service discovery is unavailable. The frontend remains configured for its
 prior HTTPS upstream, and the backend's MLflow endpoint remains unmodified;
 neither route has been reopened. API and MLflow retain deny-all ingress rules.
-The stopped apps and all eight resources are preserved for supervisor review.
+The stopped apps and all eight resources remain preserved at that checkpoint.
 The observed mismatch does not establish a usable private Express topology.
 
 ## Historical 2026-10-18 Azure checkpoint: implementation stopped at private ingress
@@ -90,8 +90,8 @@ did not provide a private working path. This means the approved architecture
 has **not** been verified or activated. Frontend, API, MLflow and temporary
 app are stopped; API and MLflow have deny-all ingress restrictions. No real
 Azure prediction or persistence verification has occurred. The exact probes,
-image digests and remaining work are in `docs/SUPERVISOR_HANDOFF.md`. A revised
-topology requires external supervisor review before reopening service ingress.
+image digests and remaining work are in `docs/PROJECT_REPORT.md`. A revised
+topology requires independent technical review before reopening service ingress.
 
 ## Historical 2026-10-17 Azure checkpoint
 
@@ -102,10 +102,9 @@ public static frontend; the backend, MLflow, PostgreSQL, migration and CI/CD
 are not deployed. The frontend HTTPS health route passed, but the application
 cannot serve predictions. The exact outbound IP list required by the approved
 public PostgreSQL firewall is `null` in Azure's app control-plane response,
-including a delayed reread after outbound traffic. This triggers the current
-task's network hard stop. The complete current design and cost decision are
-recorded in `docs/CURRENT_TASK.md` and ignored
-`artifacts/azure-preflight/{RESOURCE_GATE_SEA_20261017,EGRESS_GATE_20261017}.md`.
+including a delayed reread after outbound traffic. Without that list, the
+approved exact-IP network gate could not pass. The historical design and cost
+constraints are explained in the [project report](PROJECT_REPORT.md).
 No database networking relaxation or paid private networking was deployed.
 
 ## Historical design snapshot
@@ -322,4 +321,4 @@ Each row preserves its historical design status, role and connection, configurat
 
 Implemented flow: official HTTPS archive → SHA-256 verification → controlled two-member extraction → strict CSV/schema/target validation → discharge-eligible cohort → feature and audit views → locked patient split → training-only nested group CV/model comparison and calibration → frozen selection and trusted local joblib artifact → one locked holdout evaluation. The completed audit then uses the unchanged calibrated model, training-only XAI/stability, counterfactual feasibility and one separately guarded post-selection subgroup audit → aggregate evidence and checksummed manifest. This repair only inspects existing records; no part of either run is repeated.
 
-The historical registry/serving proposals above are superseded by local Stage 1 frozen import, verified MLflow packaging and an explicit approved release pin, without retraining. Secrets belong in future deployment secret managers/environment, never TOML or Git. Self-hosted MLflow is implemented locally; public host, hosted registry and DVC remain deferred. Future network outages, registry unavailability, schema/version mismatch and audit-write failure must prevent untracked serving. The five-milestone statuses and definitions of done agree with [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) and [EXECUTION_PLAN.md](EXECUTION_PLAN.md); existing evidence is in the [model card](model_cards/healthcare_readmission_v1.md), [PROJECT_REPORT.md](PROJECT_REPORT.md) and [SUPERVISOR_HANDOFF.md](SUPERVISOR_HANDOFF.md).
+The historical registry/serving proposals above are superseded by local Stage 1 frozen import, verified MLflow packaging and an explicit approved release pin, without retraining. Secrets belong in future deployment secret managers/environment, never TOML or Git. Self-hosted MLflow is implemented locally; public host, hosted registry and DVC remain deferred. Future network outages, registry unavailability, schema/version mismatch and audit-write failure must prevent untracked serving. The five-milestone statuses and definitions of done agree with [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) and [architecture and verification](ARCHITECTURE.md); existing evidence is in the [model card](model_cards/healthcare_readmission_v1.md) and [project report](PROJECT_REPORT.md).
