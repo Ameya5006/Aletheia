@@ -14,9 +14,11 @@ The frontend is publicly reachable. Creating predictions, saving cases, reading 
 
 ## In 30 seconds
 
-An authorized user enters a **13-field illustrative case**. The API validates and canonicalizes the fields, applies the approved frozen preprocessing and calibrated model, then returns a probability and a **reference-dependent, noncausal** contribution explanation. PostgreSQL stores the prediction and hash-linked audit event. The user can save, reopen and rerun a case with changed inputs; the original output stays unchanged. The same application has a Docker Compose path and a deployed Azure Container Apps path.
+Aletheia is a learning project that estimates **how likely a patient is to return to hospital within 30 days of leaving**. It also helps people understand which details influenced that estimate.
 
-The final hosted Azure workflow passed [run 39417029251](https://github.com/Ameya5006/Aletheia/actions/runs/39417029251) at [source commit `963050e`](https://github.com/Ameya5006/Aletheia/commit/963050edb817b634c9a69fd692ab839c26121bd3). Its preserved evidence includes 58 backend tests, 81 frontend tests, OIDC login, immutable image deployment, migration observation, authenticated public smoke prediction, private service exposure checks and final Azure readback. See the [project report](docs/PROJECT_REPORT.md) for exact evidence bindings and limitations.
+A user with permission to use the app fills in 13 details about an example patient. The app checks the entries, gives an estimate as a percentage, and shows how those details affect the result compared with a reference example. Users can save a case, return to it later, or change the details to see a new result. The original result and a record of what happened are kept for review.
+
+The app runs online and has passed checks covering predictions, saved records and access permissions. See the [project report](docs/PROJECT_REPORT.md) for the recorded results and limits. **For now it is an educational demonstration, not a tool for medical decisions.** Its explanations do not prove what causes a patient to return to hospital.
 
 ## System at a glance
 
